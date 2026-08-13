@@ -31,7 +31,6 @@ function renderTable(data) {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = ''; 
 
-    // Định dạng số tiền VNĐ có dấu chấm
     const formatMoney = (num) => {
         if (num === 0) return '0';
         return parseFloat(num).toLocaleString('vi-VN');
@@ -57,7 +56,6 @@ function renderTable(data) {
         
         const chenhLech = sanDaTra - tienPhaiNhan;
         
-        // CSS Trạng thái Chênh Lệch
         let htmlChenhLech = `<strong>${formatMoney(chenhLech)}</strong>`;
         if (chenhLech < -1000) { 
             htmlChenhLech = `<span class="status-err">${formatMoney(chenhLech)}</span>`;
