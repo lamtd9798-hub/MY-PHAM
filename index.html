@@ -11,7 +11,7 @@
 <body>
     <div class="app-container">
         
-        <!-- ================= CỘT MENU TRÁI ================= -->
+        <!-- ================= SIDEBAR MENU ================= -->
         <aside class="sidebar">
             <div class="logo">
                 QUẢN TRỊ <span class="brand-text">RUCOS</span>
@@ -29,17 +29,57 @@
             </ul>
         </aside>
 
-        <!-- ================= KHÔNG GIAN BÊN PHẢI ================= -->
+        <!-- ================= MAIN CONTENT ================= -->
         <main class="main-content">
             
             <!-- TAB 1: ĐỐI SOÁT SHOPEE -->
             <div id="tab-doisoat" class="workspace active">
                 <div class="card">
+                    <!-- Khu vực Tiêu đề và Bộ lọc Thời gian -->
                     <div class="card-header">
-                        <h2 class="card-title">Hệ Thống Đối Soát Đơn Hàng</h2>
-                        <p class="card-subtitle">Tự động bóc tách và tính toán chênh lệch dòng tiền từ Shopee</p>
+                        <div class="header-text">
+                            <h2 class="card-title">Hệ Thống Đối Soát Đơn Hàng</h2>
+                            <p class="card-subtitle">Tự động bóc tách và tính toán chênh lệch dòng tiền từ Shopee</p>
+                        </div>
+                        
+                        <div class="header-filters">
+                            <div class="filter-group">
+                                <label>Kỳ đối soát:</label>
+                                <select id="filterMonth" class="custom-select">
+                                    <option value="1">Tháng 1</option>
+                                    <option value="2">Tháng 2</option>
+                                    <option value="3">Tháng 3</option>
+                                    <option value="4">Tháng 4</option>
+                                    <option value="5">Tháng 5</option>
+                                    <option value="6">Tháng 6</option>
+                                    <option value="7">Tháng 7</option>
+                                    <option value="8" selected>Tháng 8</option>
+                                    <option value="9">Tháng 9</option>
+                                    <option value="10">Tháng 10</option>
+                                    <option value="11">Tháng 11</option>
+                                    <option value="12">Tháng 12</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Năm:</label>
+                                <select id="filterYear" class="custom-select">
+                                    <option value="2025">2025</option>
+                                    <option value="2026" selected>2026</option>
+                                    <option value="2027">2027</option>
+                                    <option value="2028">2028</option>
+                                    <option value="2029">2029</option>
+                                    <option value="2030">2030</option>
+                                    <option value="2031">2031</option>
+                                    <option value="2032">2032</option>
+                                    <option value="2033">2033</option>
+                                    <option value="2034">2034</option>
+                                    <option value="2035">2035</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     
+                    <!-- Khu vực Upload File -->
                     <div class="upload-zone">
                         <div class="upload-icon">📄</div>
                         <p class="upload-desc">Kéo thả hoặc tải lên báo cáo thu nhập Shopee (.xlsx)</p>
@@ -80,20 +120,20 @@
             <!-- TAB 2: NHÂN SỰ -->
             <div id="tab-nhansu" class="workspace">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header" style="border-bottom: none; margin-bottom: 0;">
                         <h2 class="card-title">Giao Diện Quản Lý Nhân Sự</h2>
                     </div>
-                    <p style="color: #64748b; padding: 20px 0;">Không gian dành cho chấm công, tiền lương, KPI (Sẽ cập nhật sau).</p>
+                    <p style="color: #64748b; padding-bottom: 20px;">Không gian dành cho chấm công, tiền lương, KPI (Sẽ cập nhật sau).</p>
                 </div>
             </div>
 
             <!-- TAB 3: TÍCH HỢP AI -->
             <div id="tab-ai" class="workspace">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header" style="border-bottom: none; margin-bottom: 0;">
                         <h2 class="card-title">Trung Tâm Tích Hợp AI</h2>
                     </div>
-                    <p style="color: #64748b; padding: 20px 0;">Không gian kết nối AI phân tích chỉ số kinh doanh (Sẽ cập nhật sau).</p>
+                    <p style="color: #64748b; padding-bottom: 20px;">Không gian kết nối AI phân tích chỉ số kinh doanh (Sẽ cập nhật sau).</p>
                 </div>
             </div>
 
