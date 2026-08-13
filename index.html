@@ -1,1171 +1,350 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>RUCOS - Đối Soát Thương Mại Điện Tử</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 
-    <!-- THƯ VIỆN ĐỌC / XUẤT EXCEL -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-
 <body>
+<div class="app-layout">
 
-    <div class="app-layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">R</div>
+            <div>
+                <div class="logo-title">RUCOS</div>
+                <div class="logo-subtitle">E-COMMERCE</div>
+            </div>
+        </div>
 
-        <!-- ========================================================= -->
-        <!-- SIDEBAR -->
-        <!-- ========================================================= -->
+        <div class="sidebar-section-title">ĐỐI SOÁT SÀN</div>
+        <nav class="sidebar-menu">
+            <button class="nav-item active" data-view="overview">
+                <span class="nav-icon">📊</span><span>Tổng quan</span>
+            </button>
 
-        <aside class="sidebar">
+            <button class="nav-item" data-view="import">
+                <span class="nav-icon">📥</span><span>Nhập dữ liệu</span>
+            </button>
 
-            <div class="sidebar-logo">
-                <div class="logo-icon">R</div>
+            <button class="nav-item sku-nav" data-view="sku-stats">
+                <span class="nav-icon">🧮</span><span>Thống kê SKU</span>
+                <span class="nav-badge" id="navSkuCount">0</span>
+            </button>
 
-                <div>
-                    <div class="logo-title">RUCOS</div>
-                    <div class="logo-subtitle">E-COMMERCE</div>
+            <button class="nav-item" data-view="orders">
+                <span class="nav-icon">📦</span><span>Đơn hàng</span>
+                <span class="nav-badge" id="navOrderCount">0</span>
+            </button>
+
+            <button class="nav-item" data-view="fees">
+                <span class="nav-icon">💳</span><span>Phí sàn</span>
+            </button>
+
+            <button class="nav-item" data-view="returns">
+                <span class="nav-icon">↩️</span><span>Hoàn / Hủy</span>
+                <span class="nav-badge warning" id="navReturnCount">0</span>
+            </button>
+
+            <button class="nav-item" data-view="payments">
+                <span class="nav-icon">💰</span><span>Thanh toán</span>
+            </button>
+
+            <button class="nav-item danger-nav" data-view="issues">
+                <span class="nav-icon">⚠️</span><span>Sai lệch</span>
+                <span class="nav-badge danger" id="navIssueCount">0</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-section-title second-section">QUẢN TRỊ</div>
+        <nav class="sidebar-menu">
+            <button class="nav-item" data-view="nhansu">
+                <span class="nav-icon">👥</span><span>Nhân sự</span>
+            </button>
+            <button class="nav-item" data-view="ai">
+                <span class="nav-icon">🤖</span><span>Tích hợp AI</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="shop-info">
+                <div class="shop-avatar">MP</div>
+                <div class="shop-text">
+                    <div class="shop-name">Mỹ phẩm</div>
+                    <div class="shop-platform">Shopee</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <h1 id="pageTitle">Tổng quan đối soát</h1>
+                <p id="pageSubtitle">Theo dõi doanh thu, thanh toán và sai lệch</p>
+            </div>
+
+            <div class="topbar-actions">
+                <div class="period-filter">
+                    <select id="filterMonth">
+                        <option value="1">Tháng 1</option><option value="2">Tháng 2</option>
+                        <option value="3">Tháng 3</option><option value="4">Tháng 4</option>
+                        <option value="5">Tháng 5</option><option value="6">Tháng 6</option>
+                        <option value="7">Tháng 7</option><option value="8" selected>Tháng 8</option>
+                        <option value="9">Tháng 9</option><option value="10">Tháng 10</option>
+                        <option value="11">Tháng 11</option><option value="12">Tháng 12</option>
+                    </select>
+                    <select id="filterYear">
+                        <option>2025</option><option selected>2026</option><option>2027</option>
+                        <option>2028</option><option>2029</option><option>2030</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-light" id="btnDemo">Dữ liệu mẫu</button>
+                <button class="btn btn-danger-outline" id="btnReset">Xóa dữ liệu</button>
+            </div>
+        </header>
+
+        <!-- TỔNG QUAN -->
+        <section id="view-overview" class="view active">
+            <div class="kpi-grid">
+                <div class="kpi-card"><div class="kpi-top"><span>TỔNG ĐƠN HÀNG</span><div class="kpi-icon blue">📦</div></div><div class="kpi-value" id="kpiOrders">0</div><div class="kpi-footer">Đơn trong kỳ</div></div>
+                <div class="kpi-card"><div class="kpi-top"><span>DOANH THU</span><div class="kpi-icon purple">📈</div></div><div class="kpi-value money" id="kpiRevenue">0 ₫</div><div class="kpi-footer">Tổng giá trị sản phẩm</div></div>
+                <div class="kpi-card"><div class="kpi-top"><span>PHẢI NHẬN</span><div class="kpi-icon green">💰</div></div><div class="kpi-value money" id="kpiExpected">0 ₫</div><div class="kpi-footer">Theo dữ liệu đối soát</div></div>
+                <div class="kpi-card"><div class="kpi-top"><span>SÀN ĐÃ TRẢ</span><div class="kpi-icon cyan">🏦</div></div><div class="kpi-value money" id="kpiActual">0 ₫</div><div class="kpi-footer">Theo báo cáo thanh toán</div></div>
+                <div class="kpi-card"><div class="kpi-top"><span>CHÊNH LỆCH</span><div class="kpi-icon orange">⚖️</div></div><div class="kpi-value money" id="kpiDifference">0 ₫</div><div class="kpi-footer" id="kpiDifferenceText">Chưa có dữ liệu</div></div>
+                <div class="kpi-card issue-card"><div class="kpi-top"><span>CẦN KIỂM TRA</span><div class="kpi-icon red">⚠️</div></div><div class="kpi-value" id="kpiIssues">0</div><div class="kpi-footer">Đơn có bất thường</div></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header"><div><h2>Quy trình đối soát</h2><p>Kiểm tra dữ liệu từ đơn hàng đến tiền thực nhận</p></div></div>
+                <div class="process-grid">
+                    <div class="process-item"><div class="process-number">1</div><div><strong>Đơn hàng</strong><span id="processOrders">0 đơn</span></div></div><div class="process-arrow">→</div>
+                    <div class="process-item"><div class="process-number">2</div><div><strong>Giao hàng</strong><span id="processDelivered">0 đơn</span></div></div><div class="process-arrow">→</div>
+                    <div class="process-item"><div class="process-number">3</div><div><strong>Hoàn / Hủy</strong><span id="processReturns">0 đơn</span></div></div><div class="process-arrow">→</div>
+                    <div class="process-item"><div class="process-number">4</div><div><strong>Phí sàn</strong><span id="processFees">0 ₫</span></div></div><div class="process-arrow">→</div>
+                    <div class="process-item"><div class="process-number">5</div><div><strong>Thanh toán</strong><span id="processPayment">0 ₫</span></div></div><div class="process-arrow">→</div>
+                    <div class="process-item red-process"><div class="process-number">6</div><div><strong>Sai lệch</strong><span id="processIssues">0 lỗi</span></div></div>
                 </div>
             </div>
 
-            <div class="sidebar-section-title">
-                ĐỐI SOÁT SÀN
+            <div class="dashboard-two-column">
+                <div class="panel">
+                    <div class="panel-header"><div><h2>Cảnh báo cần xử lý</h2><p>Tự động phát hiện các đơn có vấn đề</p></div><button class="text-button" data-open-view="issues">Xem tất cả →</button></div>
+                    <div id="issueSummary" class="issue-summary"><div class="empty-box">Chưa có dữ liệu đối soát.</div></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><div><h2>Tổng hợp phí</h2><p>Các khoản sàn đã khấu trừ</p></div><button class="text-button" data-open-view="fees">Chi tiết →</button></div>
+                    <div id="feeSummary" class="fee-summary"><div class="empty-box">Chưa có dữ liệu phí.</div></div>
+                </div>
             </div>
 
-            <nav class="sidebar-menu">
+            <div class="panel">
+                <div class="panel-header"><div><h2>Đơn cần kiểm tra gần nhất</h2><p>Ưu tiên những đơn có chênh lệch tài chính</p></div></div>
+                <div class="table-scroll">
+                    <table><thead><tr><th>Mã đơn</th><th>Trạng thái</th><th>Doanh thu</th><th>Phải nhận</th><th>Sàn đã trả</th><th>Chênh lệch</th><th>Vấn đề</th></tr></thead>
+                    <tbody id="dashboardIssueBody"><tr><td colspan="7" class="empty-table">Chưa có dữ liệu</td></tr></tbody></table>
+                </div>
+            </div>
+        </section>
 
-                <button class="nav-item active" data-view="overview">
-                    <span class="nav-icon">📊</span>
-                    <span>Tổng quan</span>
-                </button>
-
-                <button class="nav-item" data-view="import">
-                    <span class="nav-icon">📥</span>
-                    <span>Nhập dữ liệu</span>
-                </button>
-
-                <button class="nav-item" data-view="orders">
-                    <span class="nav-icon">📦</span>
-                    <span>Đơn hàng</span>
-                    <span class="nav-badge" id="navOrderCount">0</span>
-                </button>
-
-                <button class="nav-item" data-view="fees">
-                    <span class="nav-icon">💳</span>
-                    <span>Phí sàn</span>
-                </button>
-
-                <button class="nav-item" data-view="returns">
-                    <span class="nav-icon">↩️</span>
-                    <span>Hoàn / Hủy</span>
-                    <span class="nav-badge warning" id="navReturnCount">0</span>
-                </button>
-
-                <button class="nav-item" data-view="payments">
-                    <span class="nav-icon">💰</span>
-                    <span>Thanh toán</span>
-                </button>
-
-                <button class="nav-item danger-nav" data-view="issues">
-                    <span class="nav-icon">⚠️</span>
-                    <span>Sai lệch</span>
-                    <span class="nav-badge danger" id="navIssueCount">0</span>
-                </button>
-
-            </nav>
-
-
-            <div class="sidebar-section-title second-section">
-                QUẢN TRỊ
+        <!-- NHẬP DỮ LIỆU -->
+        <section id="view-import" class="view">
+            <div class="import-intro">
+                <h2>Nhập dữ liệu đối soát</h2>
+                <p>File đơn hàng Shopee được dùng đồng thời cho Đơn hàng và Thống kê SKU.</p>
             </div>
 
-            <nav class="sidebar-menu">
+            <div class="import-grid">
+                <div class="upload-card important">
+                    <div class="upload-step">BƯỚC 1</div><div class="upload-large-icon">🛍️</div>
+                    <h3>File đơn hàng Shopee</h3>
+                    <p>File Order.all... xuất trực tiếp từ Shopee. Hệ thống tự đọc cột Trạng Thái Đơn Hàng, SKU sản phẩm và Số lượng.</p>
+                    <label class="upload-button primary">Chọn file đơn hàng<input type="file" id="orderFile" accept=".xlsx,.xls,.csv"></label>
+                    <div class="upload-file-status" id="orderFileStatus">Chưa có file</div>
+                </div>
 
-                <button class="nav-item" data-view="nhansu">
-                    <span class="nav-icon">👥</span>
-                    <span>Nhân sự</span>
-                </button>
+                <div class="upload-card">
+                    <div class="upload-step">BƯỚC 2 - ĐỐI SOÁT</div><div class="upload-large-icon">💰</div>
+                    <h3>Báo cáo thu nhập</h3>
+                    <p>File tài chính của sàn để kiểm tra phí và số tiền thực nhận.</p>
+                    <label class="upload-button">Chọn file thu nhập<input type="file" id="financeFile" accept=".xlsx,.xls,.csv"></label>
+                    <div class="upload-file-status" id="financeFileStatus">Chưa có file</div>
+                </div>
 
-                <button class="nav-item" data-view="ai">
-                    <span class="nav-icon">🤖</span>
-                    <span>Tích hợp AI</span>
-                </button>
+                <div class="upload-card">
+                    <div class="upload-step">BƯỚC 3 - TÙY CHỌN</div><div class="upload-large-icon">🏦</div>
+                    <h3>Sao kê ngân hàng</h3>
+                    <p>Dùng để kiểm tra khoản tiền thực tế đã về tài khoản.</p>
+                    <label class="upload-button">Chọn file ngân hàng<input type="file" id="bankFile" accept=".xlsx,.xls,.csv"></label>
+                    <div class="upload-file-status" id="bankFileStatus">Chưa có file</div>
+                </div>
+            </div>
 
-            </nav>
+            <div class="panel import-result-panel">
+                <div class="panel-header"><div><h2>Trạng thái dữ liệu</h2><p>Kiểm tra dữ liệu trước khi chạy đối soát</p></div></div>
+                <div class="import-status-grid">
+                    <div class="import-status-box"><span>Dòng đơn hàng đọc được</span><strong id="importOrderCount">0</strong></div>
+                    <div class="import-status-box"><span>Dòng tài chính</span><strong id="importFinanceCount">0</strong></div>
+                    <div class="import-status-box"><span>Giao dịch ngân hàng</span><strong id="importBankCount">0</strong></div>
+                </div>
+                <div class="reconcile-actions">
+                    <button id="btnOpenSkuStats" class="btn btn-light btn-large">🧮 XEM THỐNG KÊ SKU</button>
+                    <button id="btnReconcile" class="btn btn-primary btn-large">🔍 CHẠY KIỂM TRA ĐỐI SOÁT</button>
+                </div>
+            </div>
+        </section>
 
+        <!-- THỐNG KÊ SKU -->
+        <section id="view-sku-stats" class="view">
+            <div class="sku-top-grid">
+                <div class="mini-kpi accent"><span>DÒNG SKU ĐƯỢC TÍNH</span><strong id="skuFilteredRows">0</strong></div>
+                <div class="mini-kpi"><span>SKU KHÁC NHAU</span><strong id="skuUniqueCount">0</strong></div>
+                <div class="mini-kpi"><span>SỐ LƯỢNG SKU</span><strong id="skuTotalCount">0</strong></div>
+                <div class="mini-kpi total"><span>TỔNG SP SAU QUY ĐỔI</span><strong id="skuConvertedTotal">0</strong></div>
+            </div>
 
-            <div class="sidebar-footer">
-
-                <div class="shop-info">
-                    <div class="shop-avatar">
-                        MP
+            <div class="panel">
+                <div class="panel-header table-toolbar">
+                    <div>
+                        <h2>Điều kiện thống kê</h2>
+                        <p>Mặc định tích đúng 3 trạng thái bạn yêu cầu. Có thể đổi trạng thái ngay tại đây.</p>
                     </div>
-
-                    <div class="shop-text">
-                        <div class="shop-name">
-                            Mỹ phẩm
-                        </div>
-
-                        <div class="shop-platform">
-                            Shopee
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-        </aside>
-
-
-        <!-- ========================================================= -->
-        <!-- MAIN -->
-        <!-- ========================================================= -->
-
-        <main class="main-content">
-
-            <!-- ===================================================== -->
-            <!-- TOP BAR -->
-            <!-- ===================================================== -->
-
-            <header class="topbar">
-
-                <div>
-
-                    <h1 id="pageTitle">
-                        Tổng quan đối soát
-                    </h1>
-
-                    <p id="pageSubtitle">
-                        Theo dõi doanh thu, thanh toán và sai lệch
-                    </p>
-
-                </div>
-
-
-                <div class="topbar-actions">
-
-                    <div class="period-filter">
-
-                        <select id="filterMonth">
-                            <option value="1">Tháng 1</option>
-                            <option value="2">Tháng 2</option>
-                            <option value="3">Tháng 3</option>
-                            <option value="4">Tháng 4</option>
-                            <option value="5">Tháng 5</option>
-                            <option value="6">Tháng 6</option>
-                            <option value="7">Tháng 7</option>
-                            <option value="8" selected>Tháng 8</option>
-                            <option value="9">Tháng 9</option>
-                            <option value="10">Tháng 10</option>
-                            <option value="11">Tháng 11</option>
-                            <option value="12">Tháng 12</option>
+                    <div class="toolbar">
+                        <select id="skuCountMode" class="select-control">
+                            <option value="rows" selected>Đếm số lần SKU xuất hiện ở cột T</option>
+                            <option value="quantity">Cộng theo cột Số lượng (AF)</option>
                         </select>
+                        <button id="btnExportSku" class="btn btn-primary">Xuất Excel</button>
+                    </div>
+                </div>
+                <div class="status-filter-wrap" id="skuStatusFilters">
+                    <div class="empty-box">Hãy nhập file đơn hàng Shopee trước.</div>
+                </div>
+            </div>
 
-                        <select id="filterYear">
-                            <option>2025</option>
-                            <option selected>2026</option>
-                            <option>2027</option>
-                            <option>2028</option>
-                            <option>2029</option>
-                            <option>2030</option>
-                            <option>2031</option>
-                            <option>2032</option>
-                            <option>2033</option>
-                            <option>2034</option>
-                            <option>2035</option>
+            <div class="panel">
+                <div class="panel-header table-toolbar">
+                    <div>
+                        <h2>Bảng thống kê & quy đổi SKU</h2>
+                        <p>Số lượng SKU = số lần SKU xuất hiện ở cột T theo trạng thái đã tích. Hệ số quy đổi có thể sửa trực tiếp.</p>
+                    </div>
+                    <div class="toolbar">
+                        <button id="btnAddBaseSku" class="btn btn-light">+ Thêm SKU quy đổi</button>
+                        <button id="btnResetConversions" class="btn btn-danger-outline">Khôi phục quy đổi mẫu</button>
+                    </div>
+                </div>
+
+                <div id="conversionWarning" class="conversion-warning hidden"></div>
+
+                <div class="table-scroll conversion-scroll">
+                    <table class="conversion-table">
+                        <thead id="skuStatsHead"></thead>
+                        <tbody id="skuStatsBody">
+                            <tr><td class="empty-table">Chưa có dữ liệu</td></tr>
+                        </tbody>
+                        <tfoot id="skuStatsFoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header"><div><h2>Tổng số lượng sản phẩm sau quy đổi</h2><p>Dùng cho kho chuẩn bị hàng thực tế sau khi nhân hệ số combo/quà tặng.</p></div></div>
+                <div class="table-scroll">
+                    <table>
+                        <thead><tr><th>SKU kho / SKU quy đổi</th><th>Tổng số lượng cần chuẩn bị</th></tr></thead>
+                        <tbody id="convertedTotalsBody"><tr><td colspan="2" class="empty-table">Chưa có dữ liệu</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ĐƠN HÀNG -->
+        <section id="view-orders" class="view">
+            <div class="panel">
+                <div class="panel-header table-toolbar">
+                    <div><h2>Danh sách đơn hàng</h2><p id="orderTableSummary">0 đơn</p></div>
+                    <div class="toolbar">
+                        <input type="text" id="orderSearch" class="search-input" placeholder="Tìm mã đơn, SKU, sản phẩm...">
+                        <select id="orderStatusFilter" class="select-control">
+                            <option value="">Tất cả trạng thái</option><option value="delivered">Giao thành công</option>
+                            <option value="return">Hoàn / Trả</option><option value="cancelled">Đã hủy</option><option value="other">Khác</option>
                         </select>
-
                     </div>
-
-                    <button class="btn btn-light" id="btnDemo">
-                        Dữ liệu mẫu
-                    </button>
-
-                    <button class="btn btn-danger-outline" id="btnReset">
-                        Xóa dữ liệu
-                    </button>
-
                 </div>
-
-            </header>
-
-
-            <!-- ===================================================== -->
-            <!-- VIEW: TỔNG QUAN -->
-            <!-- ===================================================== -->
-
-            <section id="view-overview" class="view active">
-
-                <!-- KPI -->
-
-                <div class="kpi-grid">
-
-                    <div class="kpi-card">
-                        <div class="kpi-top">
-                            <span>TỔNG ĐƠN HÀNG</span>
-                            <div class="kpi-icon blue">📦</div>
-                        </div>
-
-                        <div class="kpi-value" id="kpiOrders">
-                            0
-                        </div>
-
-                        <div class="kpi-footer">
-                            Đơn trong kỳ
-                        </div>
-                    </div>
-
-
-                    <div class="kpi-card">
-
-                        <div class="kpi-top">
-                            <span>DOANH THU</span>
-                            <div class="kpi-icon purple">📈</div>
-                        </div>
-
-                        <div class="kpi-value money" id="kpiRevenue">
-                            0 ₫
-                        </div>
-
-                        <div class="kpi-footer">
-                            Tổng giá trị sản phẩm
-                        </div>
-
-                    </div>
-
-
-                    <div class="kpi-card">
-
-                        <div class="kpi-top">
-                            <span>PHẢI NHẬN</span>
-                            <div class="kpi-icon green">💰</div>
-                        </div>
-
-                        <div class="kpi-value money" id="kpiExpected">
-                            0 ₫
-                        </div>
-
-                        <div class="kpi-footer">
-                            Theo dữ liệu đối soát
-                        </div>
-
-                    </div>
-
-
-                    <div class="kpi-card">
-
-                        <div class="kpi-top">
-                            <span>SÀN ĐÃ TRẢ</span>
-                            <div class="kpi-icon cyan">🏦</div>
-                        </div>
-
-                        <div class="kpi-value money" id="kpiActual">
-                            0 ₫
-                        </div>
-
-                        <div class="kpi-footer">
-                            Theo báo cáo thanh toán
-                        </div>
-
-                    </div>
-
-
-                    <div class="kpi-card">
-
-                        <div class="kpi-top">
-                            <span>CHÊNH LỆCH</span>
-                            <div class="kpi-icon orange">⚖️</div>
-                        </div>
-
-                        <div class="kpi-value money" id="kpiDifference">
-                            0 ₫
-                        </div>
-
-                        <div class="kpi-footer" id="kpiDifferenceText">
-                            Chưa có dữ liệu
-                        </div>
-
-                    </div>
-
-
-                    <div class="kpi-card issue-card">
-
-                        <div class="kpi-top">
-                            <span>CẦN KIỂM TRA</span>
-                            <div class="kpi-icon red">⚠️</div>
-                        </div>
-
-                        <div class="kpi-value" id="kpiIssues">
-                            0
-                        </div>
-
-                        <div class="kpi-footer">
-                            Đơn có bất thường
-                        </div>
-
-                    </div>
-
+                <div class="table-scroll large-table">
+                    <table><thead><tr><th>Mã đơn</th><th>Ngày</th><th>SKU</th><th>Sản phẩm</th><th>SL</th><th>Trạng thái</th><th>Doanh thu</th><th>Phải nhận</th><th>Đã trả</th><th>Chênh lệch</th></tr></thead>
+                    <tbody id="orderTableBody"><tr><td colspan="10" class="empty-table">Chưa có dữ liệu đơn hàng</td></tr></tbody></table>
                 </div>
+            </div>
+        </section>
 
+        <!-- PHÍ -->
+        <section id="view-fees" class="view">
+            <div class="fee-kpi-grid">
+                <div class="mini-kpi"><span>Phí hoa hồng / cố định</span><strong id="feeCommission">0 ₫</strong></div>
+                <div class="mini-kpi"><span>Phí dịch vụ</span><strong id="feeService">0 ₫</strong></div>
+                <div class="mini-kpi"><span>Phí thanh toán</span><strong id="feePayment">0 ₫</strong></div>
+                <div class="mini-kpi"><span>Phí vận chuyển</span><strong id="feeShipping">0 ₫</strong></div>
+                <div class="mini-kpi"><span>Affiliate</span><strong id="feeAffiliate">0 ₫</strong></div>
+                <div class="mini-kpi total"><span>Tổng phí</span><strong id="feeTotal">0 ₫</strong></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><div><h2>Chi tiết phí theo đơn hàng</h2><p>Kiểm tra các khoản sàn đã khấu trừ</p></div></div>
+                <div class="table-scroll"><table><thead><tr><th>Mã đơn</th><th>Hoa hồng</th><th>Dịch vụ</th><th>Thanh toán</th><th>Vận chuyển</th><th>Affiliate</th><th>Phí khác</th><th>Tổng phí</th></tr></thead>
+                <tbody id="feeTableBody"><tr><td colspan="8" class="empty-table">Chưa có dữ liệu</td></tr></tbody></table></div>
+            </div>
+        </section>
 
-                <!-- QUY TRÌNH -->
+        <!-- HOÀN HỦY -->
+        <section id="view-returns" class="view">
+            <div class="panel">
+                <div class="panel-header"><div><h2>Đơn hoàn / hủy</h2><p>Theo dõi hàng hoàn và khoản tiền bị thu hồi</p></div></div>
+                <div class="table-scroll"><table><thead><tr><th>Mã đơn</th><th>Sản phẩm</th><th>SKU</th><th>Trạng thái</th><th>Giá trị đơn</th><th>Tiền hoàn</th><th>Kho hàng hoàn</th><th>Cảnh báo</th></tr></thead>
+                <tbody id="returnTableBody"><tr><td colspan="8" class="empty-table">Không có đơn hoàn / hủy</td></tr></tbody></table></div>
+            </div>
+        </section>
 
-                <div class="panel">
+        <!-- THANH TOÁN -->
+        <section id="view-payments" class="view">
+            <div class="panel">
+                <div class="panel-header"><div><h2>Kỳ thanh toán</h2><p>Đối chiếu tiền sàn phải trả và số tiền đã thanh toán</p></div></div>
+                <div class="table-scroll"><table><thead><tr><th>Mã kỳ</th><th>Số đơn</th><th>Phải nhận</th><th>Sàn đã trả</th><th>Chênh lệch</th><th>Ngân hàng</th><th>Trạng thái</th></tr></thead>
+                <tbody id="paymentTableBody"><tr><td colspan="7" class="empty-table">Chưa có dữ liệu thanh toán</td></tr></tbody></table></div>
+            </div>
+        </section>
 
-                    <div class="panel-header">
-
-                        <div>
-                            <h2>Quy trình đối soát</h2>
-                            <p>Kiểm tra dữ liệu từ đơn hàng đến tiền thực nhận</p>
-                        </div>
-
+        <!-- SAI LỆCH -->
+        <section id="view-issues" class="view">
+            <div class="panel">
+                <div class="panel-header table-toolbar">
+                    <div><h2>Danh sách cần kiểm tra</h2><p id="issueTableSummary">0 vấn đề</p></div>
+                    <div class="toolbar">
+                        <input type="text" id="issueSearch" class="search-input" placeholder="Tìm mã đơn...">
+                        <select id="issueTypeFilter" class="select-control">
+                            <option value="">Tất cả lỗi</option><option value="difference">Chênh lệch tiền</option><option value="missing_finance">Thiếu dữ liệu sàn</option><option value="missing_order">Thiếu đơn hàng</option><option value="unpaid">Chưa thanh toán</option><option value="return">Hoàn / Hủy</option>
+                        </select>
+                        <button id="btnExportIssues" class="btn btn-primary">Xuất Excel</button>
                     </div>
-
-
-                    <div class="process-grid">
-
-                        <div class="process-item">
-                            <div class="process-number">1</div>
-
-                            <div>
-                                <strong>Đơn hàng</strong>
-                                <span id="processOrders">0 đơn</span>
-                            </div>
-                        </div>
-
-
-                        <div class="process-arrow">→</div>
-
-
-                        <div class="process-item">
-                            <div class="process-number">2</div>
-
-                            <div>
-                                <strong>Giao hàng</strong>
-                                <span id="processDelivered">0 đơn</span>
-                            </div>
-                        </div>
-
-
-                        <div class="process-arrow">→</div>
-
-
-                        <div class="process-item">
-                            <div class="process-number">3</div>
-
-                            <div>
-                                <strong>Hoàn / Hủy</strong>
-                                <span id="processReturns">0 đơn</span>
-                            </div>
-                        </div>
-
-
-                        <div class="process-arrow">→</div>
-
-
-                        <div class="process-item">
-                            <div class="process-number">4</div>
-
-                            <div>
-                                <strong>Phí sàn</strong>
-                                <span id="processFees">0 ₫</span>
-                            </div>
-                        </div>
-
-
-                        <div class="process-arrow">→</div>
-
-
-                        <div class="process-item">
-                            <div class="process-number">5</div>
-
-                            <div>
-                                <strong>Thanh toán</strong>
-                                <span id="processPayment">0 ₫</span>
-                            </div>
-                        </div>
-
-
-                        <div class="process-arrow">→</div>
-
-
-                        <div class="process-item red-process">
-                            <div class="process-number">6</div>
-
-                            <div>
-                                <strong>Sai lệch</strong>
-                                <span id="processIssues">0 đơn</span>
-                            </div>
-                        </div>
-
-                    </div>
-
                 </div>
-
-
-                <!-- CẢNH BÁO -->
-
-                <div class="dashboard-two-column">
-
-                    <div class="panel">
-
-                        <div class="panel-header">
-
-                            <div>
-                                <h2>Cảnh báo cần xử lý</h2>
-                                <p>Tự động phát hiện các đơn có vấn đề</p>
-                            </div>
-
-                            <button class="text-button" data-open-view="issues">
-                                Xem tất cả →
-                            </button>
-
-                        </div>
-
-
-                        <div id="issueSummary" class="issue-summary">
-
-                            <div class="empty-box">
-                                Chưa có dữ liệu đối soát.
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="panel">
-
-                        <div class="panel-header">
-
-                            <div>
-                                <h2>Tổng hợp phí</h2>
-                                <p>Các khoản sàn đã khấu trừ</p>
-                            </div>
-
-                            <button class="text-button" data-open-view="fees">
-                                Chi tiết →
-                            </button>
-
-                        </div>
-
-
-                        <div id="feeSummary" class="fee-summary">
-
-                            <div class="empty-box">
-                                Chưa có dữ liệu phí.
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <!-- TOP SAI LỆCH -->
-
-                <div class="panel">
-
-                    <div class="panel-header">
-
-                        <div>
-                            <h2>Đơn cần kiểm tra gần nhất</h2>
-                            <p>Ưu tiên những đơn có chênh lệch tài chính</p>
-                        </div>
-
-                    </div>
-
-
-                    <div class="table-scroll">
-
-                        <table>
-
-                            <thead>
-                                <tr>
-                                    <th>Mã đơn</th>
-                                    <th>Trạng thái</th>
-                                    <th>Doanh thu</th>
-                                    <th>Phải nhận</th>
-                                    <th>Sàn đã trả</th>
-                                    <th>Chênh lệch</th>
-                                    <th>Vấn đề</th>
-                                </tr>
-                            </thead>
-
-                            <tbody id="dashboardIssueBody">
-
-                                <tr>
-                                    <td colspan="7" class="empty-table">
-                                        Chưa có dữ liệu
-                                    </td>
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- ===================================================== -->
-            <!-- VIEW: NHẬP DỮ LIỆU -->
-            <!-- ===================================================== -->
-
-            <section id="view-import" class="view">
-
-                <div class="import-intro">
-
-                    <h2>Nhập dữ liệu đối soát</h2>
-
-                    <p>
-                        Tải dữ liệu đơn hàng và báo cáo thu nhập từ sàn.
-                        Hệ thống sẽ tự ghép theo mã đơn hàng.
-                    </p>
-
-                </div>
-
-
-                <div class="import-grid">
-
-                    <!-- FILE 1 -->
-
-                    <div class="upload-card">
-
-                        <div class="upload-step">BƯỚC 1</div>
-
-                        <div class="upload-large-icon">📦</div>
-
-                        <h3>Danh sách đơn hàng</h3>
-
-                        <p>
-                            File xuất từ mục quản lý đơn hàng Shopee.
-                        </p>
-
-                        <label class="upload-button">
-                            Chọn file đơn hàng
-
-                            <input type="file"
-                                id="orderFile"
-                                accept=".xlsx,.xls,.csv">
-                        </label>
-
-                        <div class="upload-file-status" id="orderFileStatus">
-                            Chưa có file
-                        </div>
-
-                    </div>
-
-
-                    <!-- FILE 2 -->
-
-                    <div class="upload-card important">
-
-                        <div class="upload-step">BƯỚC 2</div>
-
-                        <div class="upload-large-icon">💰</div>
-
-                        <h3>Báo cáo thu nhập</h3>
-
-                        <p>
-                            File chứa các khoản phí và số tiền Shopee thanh toán.
-                        </p>
-
-                        <label class="upload-button primary">
-                            Chọn file thu nhập
-
-                            <input type="file"
-                                id="financeFile"
-                                accept=".xlsx,.xls,.csv">
-                        </label>
-
-                        <div class="upload-file-status" id="financeFileStatus">
-                            Chưa có file
-                        </div>
-
-                    </div>
-
-
-                    <!-- FILE 3 -->
-
-                    <div class="upload-card">
-
-                        <div class="upload-step">BƯỚC 3 - TÙY CHỌN</div>
-
-                        <div class="upload-large-icon">🏦</div>
-
-                        <h3>Sao kê ngân hàng</h3>
-
-                        <p>
-                            Dùng để kiểm tra tiền thực tế đã về tài khoản.
-                        </p>
-
-                        <label class="upload-button">
-                            Chọn file ngân hàng
-
-                            <input type="file"
-                                id="bankFile"
-                                accept=".xlsx,.xls,.csv">
-                        </label>
-
-                        <div class="upload-file-status" id="bankFileStatus">
-                            Chưa có file
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="panel import-result-panel">
-
-                    <div class="panel-header">
-
-                        <div>
-                            <h2>Trạng thái dữ liệu</h2>
-                            <p>Kiểm tra dữ liệu trước khi chạy đối soát</p>
-                        </div>
-
-                    </div>
-
-
-                    <div class="import-status-grid">
-
-                        <div class="import-status-box">
-                            <span>Đơn hàng đọc được</span>
-                            <strong id="importOrderCount">0</strong>
-                        </div>
-
-                        <div class="import-status-box">
-                            <span>Dòng tài chính</span>
-                            <strong id="importFinanceCount">0</strong>
-                        </div>
-
-                        <div class="import-status-box">
-                            <span>Giao dịch ngân hàng</span>
-                            <strong id="importBankCount">0</strong>
-                        </div>
-
-                    </div>
-
-
-                    <div class="reconcile-actions">
-
-                        <button id="btnReconcile"
-                            class="btn btn-primary btn-large">
-
-                            🔍 CHẠY KIỂM TRA ĐỐI SOÁT
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- ===================================================== -->
-            <!-- VIEW: ĐƠN HÀNG -->
-            <!-- ===================================================== -->
-
-            <section id="view-orders" class="view">
-
-                <div class="panel">
-
-                    <div class="panel-header table-toolbar">
-
-                        <div>
-                            <h2>Danh sách đơn hàng</h2>
-                            <p id="orderTableSummary">0 đơn</p>
-                        </div>
-
-
-                        <div class="toolbar">
-
-                            <input type="text"
-                                id="orderSearch"
-                                class="search-input"
-                                placeholder="Tìm mã đơn, SKU, sản phẩm...">
-
-                            <select id="orderStatusFilter"
-                                class="select-control">
-
-                                <option value="">
-                                    Tất cả trạng thái
-                                </option>
-
-                                <option value="delivered">
-                                    Giao thành công
-                                </option>
-
-                                <option value="return">
-                                    Hoàn / Trả
-                                </option>
-
-                                <option value="cancelled">
-                                    Đã hủy
-                                </option>
-
-                                <option value="other">
-                                    Khác
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="table-scroll large-table">
-
-                        <table>
-
-                            <thead>
-
-                                <tr>
-                                    <th>Mã đơn</th>
-                                    <th>Ngày</th>
-                                    <th>SKU</th>
-                                    <th>Sản phẩm</th>
-                                    <th>SL</th>
-                                    <th>Trạng thái</th>
-                                    <th>Doanh thu</th>
-                                    <th>Phải nhận</th>
-                                    <th>Đã trả</th>
-                                    <th>Chênh lệch</th>
-                                </tr>
-
-                            </thead>
-
-                            <tbody id="orderTableBody">
-
-                                <tr>
-                                    <td colspan="10" class="empty-table">
-                                        Chưa có dữ liệu đơn hàng
-                                    </td>
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- ===================================================== -->
-            <!-- VIEW: PHÍ -->
-            <!-- ===================================================== -->
-
-            <section id="view-fees" class="view">
-
-                <div class="fee-kpi-grid">
-
-                    <div class="mini-kpi">
-                        <span>Phí hoa hồng / cố định</span>
-                        <strong id="feeCommission">0 ₫</strong>
-                    </div>
-
-                    <div class="mini-kpi">
-                        <span>Phí dịch vụ</span>
-                        <strong id="feeService">0 ₫</strong>
-                    </div>
-
-                    <div class="mini-kpi">
-                        <span>Phí thanh toán</span>
-                        <strong id="feePayment">0 ₫</strong>
-                    </div>
-
-                    <div class="mini-kpi">
-                        <span>Phí vận chuyển</span>
-                        <strong id="feeShipping">0 ₫</strong>
-                    </div>
-
-                    <div class="mini-kpi">
-                        <span>Affiliate</span>
-                        <strong id="feeAffiliate">0 ₫</strong>
-                    </div>
-
-                    <div class="mini-kpi total">
-                        <span>Tổng phí</span>
-                        <strong id="feeTotal">0 ₫</strong>
-                    </div>
-
-                </div>
-
-
-                <div class="panel">
-
-                    <div class="panel-header">
-
-                        <div>
-                            <h2>Chi tiết phí theo đơn hàng</h2>
-                            <p>Kiểm tra các khoản sàn đã khấu trừ</p>
-                        </div>
-
-                    </div>
-
-
-                    <div class="table-scroll">
-
-                        <table>
-
-                            <thead>
-
-                                <tr>
-                                    <th>Mã đơn</th>
-                                    <th>Hoa hồng</th>
-                                    <th>Dịch vụ</th>
-                                    <th>Thanh toán</th>
-                                    <th>Vận chuyển</th>
-                                    <th>Affiliate</th>
-                                    <th>Phí khác</th>
-                                    <th>Tổng phí</th>
-                                </tr>
-
-                            </thead>
-
-                            <tbody id="feeTableBody">
-
-                                <tr>
-                                    <td colspan="8" class="empty-table">
-                                        Chưa có dữ liệu
-                                    </td>
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- ===================================================== -->
-            <!-- VIEW: HOÀN / HỦY -->
-            <!-- ===================================================== -->
-
-            <section id="view-returns" class="view">
-
-                <div class="panel">
-
-                    <div class="panel-header">
-
-                        <div>
-                            <h2>Đơn hoàn / hủy</h2>
-
-                            <p>
-                                Theo dõi hàng hoàn và khoản tiền bị thu hồi
-                            </p>
-                        </div>
-
-                    </div>
-
-
-                    <div class="table-scroll">
-
-                        <table>
-
-                            <thead>
-
-                                <tr>
-                                    <th>Mã đơn</th>
-                                    <th>Sản phẩm</th>
-                                    <th>SKU</th>
-                                    <th>Trạng thái</th>
-                                    <th>Giá trị đơn</th>
-                                    <th>Tiền hoàn</th>
-                                    <th>Kho hàng hoàn</th>
-                                    <th>Cảnh báo</th>
-                                </tr>
-
-                            </thead>
-
-                            <tbody id="returnTableBody">
-
-                                <tr>
-                                    <td colspan="8"
-                                        class="empty-table">
-
-                                        Không có đơn hoàn / hủy
-
-                                    </td>
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- ===================================================== -->
-            <!-- VIEW: THANH TOÁN -->
-            <!-- ===================================================== -->
-
-            <section id="view-payments" class="view">
-
-                <div class="panel">
-
-                    <div class="panel-header">
-
-                        <div>
-                            <h2>Kỳ thanh toán</h2>
-
-                            <p>
-                                Đối chiếu tiền sàn phải trả và số tiền đã thanh toán
-                            </p>
-                        </div>
-
-                    </div>
-
-
-                    <div class="table-scroll">
-
-                        <table>
-
-                            <thead>
-
-                                <tr>
-                                    <th>Mã kỳ</th>
-                                    <th>Số đơn</th>
-                                    <th>Phải nhận</th>
-                                    <th>Sàn đã trả</th>
-                                    <th>Chênh lệch</th>
-                                    <th>Ngân hàng</th>
-                                    <th>Trạng thái</th>
-                                </tr>
-
-                            </thead>
-
-                            <tbody id="paymentTableBody">
-
-                                <tr>
-                                    <td colspan="7"
-                                        class="empty-table">
-
-                                        Chưa có dữ liệu thanh toán
-
-                                    </td>
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- ===================================================== -->
-            <!-- VIEW: SAI LỆCH -->
-            <!-- ===================================================== -->
-
-            <section id="view-issues" class="view">
-
-                <div class="panel">
-
-                    <div class="panel-header table-toolbar">
-
-                        <div>
-
-                            <h2>
-                                Danh sách cần kiểm tra
-                            </h2>
-
-                            <p id="issueTableSummary">
-                                0 vấn đề
-                            </p>
-
-                        </div>
-
-
-                        <div class="toolbar">
-
-                            <input type="text"
-                                id="issueSearch"
-                                class="search-input"
-                                placeholder="Tìm mã đơn...">
-
-                            <select id="issueTypeFilter"
-                                class="select-control">
-
-                                <option value="">
-                                    Tất cả lỗi
-                                </option>
-
-                                <option value="difference">
-                                    Chênh lệch tiền
-                                </option>
-
-                                <option value="missing_finance">
-                                    Thiếu dữ liệu sàn
-                                </option>
-
-                                <option value="missing_order">
-                                    Thiếu đơn hàng
-                                </option>
-
-                                <option value="unpaid">
-                                    Chưa thanh toán
-                                </option>
-
-                                <option value="return">
-                                    Hoàn / Hủy
-                                </option>
-
-                            </select>
-
-
-                            <button id="btnExportIssues"
-                                class="btn btn-primary">
-
-                                Xuất Excel
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="table-scroll large-table">
-
-                        <table>
-
-                            <thead>
-
-                                <tr>
-                                    <th>Mức độ</th>
-                                    <th>Mã đơn</th>
-                                    <th>Trạng thái</th>
-                                    <th>Phải nhận</th>
-                                    <th>Sàn đã trả</th>
-                                    <th>Chênh lệch</th>
-                                    <th>Loại lỗi</th>
-                                    <th>Nội dung</th>
-                                </tr>
-
-                            </thead>
-
-                            <tbody id="issueTableBody">
-
-                                <tr>
-                                    <td colspan="8"
-                                        class="empty-table">
-
-                                        Chưa phát hiện sai lệch
-
-                                    </td>
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- ===================================================== -->
-            <!-- VIEW NHÂN SỰ -->
-            <!-- ===================================================== -->
-
-            <section id="view-nhansu" class="view">
-
-                <div class="placeholder-page">
-
-                    <div class="placeholder-icon">
-                        👥
-                    </div>
-
-                    <h2>
-                        Quản lý nhân sự
-                    </h2>
-
-                    <p>
-                        Module này sẽ triển khai sau.
-                    </p>
-
-                </div>
-
-            </section>
-
-
-            <!-- ===================================================== -->
-            <!-- VIEW AI -->
-            <!-- ===================================================== -->
-
-            <section id="view-ai" class="view">
-
-                <div class="placeholder-page">
-
-                    <div class="placeholder-icon">
-                        🤖
-                    </div>
-
-                    <h2>
-                        Trung tâm AI
-                    </h2>
-
-                    <p>
-                        Sau này AI có thể phân tích tự động nguyên nhân sai lệch,
-                        cảnh báo bất thường và đề xuất cách xử lý.
-                    </p>
-
-                </div>
-
-            </section>
-
-
-        </main>
-
-    </div>
-
-
-    <!-- ============================================================= -->
-    <!-- TOAST -->
-    <!-- ============================================================= -->
-
-    <div id="toast"
-        class="toast">
-
-    </div>
-
-
-   <script src="script.js?v=2"></script>
+                <div class="table-scroll large-table"><table><thead><tr><th>Mức độ</th><th>Mã đơn</th><th>Trạng thái</th><th>Phải nhận</th><th>Sàn đã trả</th><th>Chênh lệch</th><th>Loại lỗi</th><th>Nội dung</th></tr></thead>
+                <tbody id="issueTableBody"><tr><td colspan="8" class="empty-table">Chưa phát hiện sai lệch</td></tr></tbody></table></div>
+            </div>
+        </section>
+
+        <section id="view-nhansu" class="view"><div class="placeholder-page"><div class="placeholder-icon">👥</div><h2>Quản lý nhân sự</h2><p>Module này sẽ triển khai sau.</p></div></section>
+        <section id="view-ai" class="view"><div class="placeholder-page"><div class="placeholder-icon">🤖</div><h2>Trung tâm AI</h2><p>Sau này AI có thể phân tích nguyên nhân sai lệch và cảnh báo bất thường.</p></div></section>
+    </main>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="script.js?v=3"></script>
 </body>
-
 </html>
