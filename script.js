@@ -1,30 +1,17 @@
-// ==========================================
-// 1. TÍNH NĂNG CHUYỂN TAB KHÔNG GIAN LÀM VIỆC
-// ==========================================
+// --- 1. HÀM CHUYỂN TAB ---
 function switchTab(tabId, element) {
-    // Tắt màu xanh ở tất cả các nút menu
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    // Bật màu xanh cho nút vừa bấm
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     element.classList.add('active');
-
-    // Ẩn tất cả các khung nội dung
-    document.querySelectorAll('.workspace').forEach(ws => {
-        ws.classList.remove('active');
-    });
-    // Hiển thị khung nội dung tương ứng với ID truyền vào
+    
+    document.querySelectorAll('.workspace').forEach(ws => ws.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
 }
 
-// ==========================================
-// 2. TÍNH NĂNG ĐỌC EXCEL VÀ ĐỐI SOÁT
-// ==========================================
+// --- 2. HÀM ĐỌC EXCEL ---
 document.getElementById('fileUpload').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Đổi tên file hiển thị
     document.getElementById('fileName').textContent = "Đang xử lý: " + file.name;
 
     const reader = new FileReader();
@@ -39,44 +26,57 @@ document.getElementById('fileUpload').addEventListener('change', function(e) {
     reader.readAsArrayBuffer(file);
 });
 
+// --- 3. HÀM XỬ LÝ VÀ ĐỔ DỮ LIỆU RA BẢNG 10 CỘT ---
 function renderTable(data) {
     const tbody = document.getElementById('tableBody');
-    tbody.innerHTML = ''; // Xóa dữ liệu cũ
+    tbody.innerHTML = ''; 
+
+    // Định dạng số tiền VNĐ có dấu chấm
+    const formatMoney = (num) => {
+        if (num === 0) return '0';
+        return parseFloat(num).toLocaleString('vi-VN');
+    };
 
     data.forEach(row => {
-        const maDon = row['Mã đơn hàng'] || row['Mã Đơn Hàng'];
+        const maDon = row['Mã đơn hàng'] || row['Mã Đơn Hàng'] || row['Mã đơn'];
         if (!maDon || maDon === 0) return; 
 
-        // Rút gọn tên sản phẩm
-        let tenSp = row['Tên sản phẩm'] || 'Sản phẩm Mỹ phẩm';
-        if(tenSp.length > 35) tenSp = tenSp.substring(0, 35) + '...';
-
-        const khachTra = parseFloat(row['Tổng số tiền người mua thanh toán']) || 0;
+        const doanhThu = parseFloat(row['Tổng số tiền người mua thanh toán']) || parseFloat(row['Doanh thu']) || 0;
+        const voucher = parseFloat(row['Voucher từ Shopee']) || parseFloat(row['Voucher']) || 0;
         
         const phiCoDinh = parseFloat(row['Phí Cố Định']) || parseFloat(row['Phí cố định']) || 0;
         const phiDichVu = parseFloat(row['Phí Dịch Vụ']) || parseFloat(row['Phí dịch vụ']) || 0;
         const phiThanhToan = parseFloat(row['Phí thanh toán']) || parseFloat(row['Phí Thanh Toán']) || 0;
-        const tongPhiSan = phiCoDinh + phiDichVu + phiThanhToan;
-
-        const thucNhanShopee = parseFloat(row['Số tiền được chuyển cho Người bán']) || parseFloat(row['Doanh thu']) || 0;
+        const phiSan = parseFloat(row['Phí sàn']) || (phiCoDinh + phiDichVu + phiThanhToan);
         
-        const thucNhanCuaShopTinh = khachTra - tongPhiSan;
-        const chenhLech = thucNhanShopee - thucNhanCuaShopTinh;
+        const phiVC = parseFloat(row['Phí vận chuyển mà người mua trả']) || parseFloat(row['Phí vận chuyển']) || 0;
+        const hoanHuy = parseFloat(row['Hoàn/Hủy']) || 0; 
         
-        // Xét trạng thái HTML
-        let htmlTrangThai = `<span class="status-ok">Khớp</span>`;
-        if (Math.abs(chenhLech) > 1000) { 
-            htmlTrangThai = `<span class="status-err">Lệch ${chenhLech.toLocaleString('vi-VN')} đ</span>`;
+        const tienPhaiNhan = parseFloat(row['Tiền phải nhận']) || (doanhThu - phiSan - phiVC); 
+        const sanDaTra = parseFloat(row['Số tiền được chuyển cho Người bán']) || parseFloat(row['Sàn đã trả']) || 0;
+        
+        const chenhLech = sanDaTra - tienPhaiNhan;
+        
+        // CSS Trạng thái Chênh Lệch
+        let htmlChenhLech = `<strong>${formatMoney(chenhLech)}</strong>`;
+        if (chenhLech < -1000) { 
+            htmlChenhLech = `<span class="status-err">${formatMoney(chenhLech)}</span>`;
+        } else if (chenhLech > 1000) {
+            htmlChenhLech = `<span class="status-ok">+${formatMoney(chenhLech)}</span>`;
         }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><strong>${maDon}</strong></td>
-            <td>${tenSp}</td>
-            <td>${khachTra.toLocaleString('vi-VN')} đ</td>
-            <td>${tongPhiSan.toLocaleString('vi-VN')} đ</td>
-            <td><strong>${thucNhanShopee.toLocaleString('vi-VN')} đ</strong></td>
-            <td>${htmlTrangThai}</td>
+            <td>${formatMoney(doanhThu)}</td>
+            <td>${formatMoney(voucher)}</td>
+            <td>${formatMoney(phiSan)}</td>
+            <td>${formatMoney(phiVC)}</td>
+            <td>${formatMoney(hoanHuy)}</td>
+            <td><strong>${formatMoney(tienPhaiNhan)}</strong></td>
+            <td><strong>${formatMoney(sanDaTra)}</strong></td>
+            <td>${htmlChenhLech}</td>
+            <td><input type="text" class="note-input" placeholder="Ghi chú vào đây..."></td>
         `;
         tbody.appendChild(tr);
     });
