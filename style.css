@@ -1,54 +1,265 @@
+/* --- RESET & CHUNG --- */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
 body {
 	font-family: 'Inter', sans-serif;
-	background-color: #f4f6f9;
-	color: #333;
-	padding: 20px;
+	background-color: #f3f4f6;
+	color: #1f2937;
 }
 
-.container {
-	max-width: 1000px;
-	margin: 0 auto;
-	background: #fff;
-	padding: 20px;
-	border-radius: 8px;
-	box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+.app-container {
+	display: flex;
+	height: 100vh;
+	overflow: hidden;
 }
 
-h1 {
-	color: #2c3e50;
+/* --- SIDEBAR (MÀU ĐEN SANG TRỌNG) --- */
+.sidebar {
+	width: 270px;
+	background-color: #111827; /* Đen nhám cao cấp */
+	color: white;
+	display: flex;
+	flex-direction: column;
+	box-shadow: 4px 0 25px rgba(0,0,0,0.15);
+	z-index: 10;
+}
+
+.logo {
+	font-size: 21px;
+	font-weight: 800;
+	padding: 35px 25px;
+	border-bottom: 1px solid #1f2937;
+	letter-spacing: 1px;
+}
+
+.brand-text {
+	color: #10b981;
+}
+/* Màu xanh ngọc lục bảo */
+
+.nav-menu {
+	list-style: none;
+	padding: 25px 0;
+}
+
+.nav-item {
+	padding: 16px 25px;
+	color: #9ca3af;
+	font-weight: 600;
+	font-size: 13px; /* Thu nhỏ size một chút để in hoa đẹp hơn */
+	letter-spacing: 1px;
+	text-transform: uppercase; /* ÉP TOÀN BỘ THÀNH CHỮ IN HOA */
+	cursor: pointer;
+	border-left: 4px solid transparent;
+	transition: all 0.3s ease;
+	display: flex;
+	align-items: center;
+}
+
+.nav-icon {
+	font-size: 18px;
+	margin-right: 12px;
+}
+
+.nav-item:hover {
+	background-color: #1f2937;
+	color: #ffffff;
+	border-left-color: #10b981;
+	padding-left: 32px; /* Hiệu ứng đẩy chữ */
+}
+
+.nav-item.active {
+	background-color: #10b981;
+	color: white;
+	border-left-color: #059669;
+}
+
+	.nav-item.active:hover {
+		padding-left: 25px;
+	}
+
+/* --- NỘI DUNG CHÍNH --- */
+.main-content {
+	flex: 1;
+	padding: 40px;
+	overflow-y: auto;
+	background-color: #f3f4f6;
+}
+
+/* Logic Ẩn/Hiện Tab */
+.workspace {
+	display: none;
+	animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+	.workspace.active {
+		display: block;
+	}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(15px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* KHUNG CARD HIỆN ĐẠI */
+.card {
+	background: #ffffff;
+	border-radius: 16px;
+	padding: 40px;
+	box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05); /* Đổ bóng mềm mại 3D */
+	border: 1px solid #e5e7eb;
+}
+
+.card-header {
+	margin-bottom: 30px;
+	border-bottom: 2px solid #f3f4f6;
+	padding-bottom: 20px;
+}
+
+.card-title {
+	font-size: 24px;
+	font-weight: 700;
+	color: #111827;
+	margin-bottom: 8px;
+}
+
+.card-subtitle {
+	font-size: 14px;
+	color: #6b7280;
+}
+
+/* KHU VỰC UPLOAD CHUYÊN NGHIỆP */
+.upload-zone {
+	border: 2px dashed #d1d5db;
+	border-radius: 12px;
+	padding: 40px 20px;
 	text-align: center;
+	margin-bottom: 35px;
+	background-color: #f9fafb;
+	transition: all 0.3s ease;
 }
 
-.upload-box {
-	border: 2px dashed #04AA6D;
-	padding: 20px;
-	text-align: center;
-	border-radius: 8px;
+	.upload-zone:hover {
+		border-color: #10b981;
+		background-color: #ecfdf5;
+	}
+
+.upload-icon {
+	font-size: 40px;
+	margin-bottom: 15px;
+	opacity: 0.7;
+}
+
+.upload-desc {
 	margin-bottom: 20px;
-	background-color: #f9fdfa;
+	color: #4b5563;
+	font-size: 15px;
+	font-weight: 500;
 }
 
+.btn-upload {
+	background-color: #10b981;
+	color: white;
+	padding: 12px 28px;
+	border-radius: 8px;
+	font-weight: 700;
+	font-size: 14px;
+	letter-spacing: 0.5px;
+	cursor: pointer;
+	display: inline-block;
+	box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+	transition: all 0.2s;
+}
+
+	.btn-upload:hover {
+		background-color: #059669;
+		transform: translateY(-2px);
+		box-shadow: 0 6px 12px -2px rgba(16, 185, 129, 0.3);
+	}
+
+.file-name {
+	margin-top: 15px;
+	font-size: 14px;
+	color: #059669;
+	font-weight: 600;
+}
+
+/* BẢNG DỮ LIỆU SẠCH SẼ */
 table {
 	width: 100%;
-	border-collapse: collapse;
+	border-collapse: separate;
+	border-spacing: 0;
 	margin-top: 10px;
 }
 
 th, td {
-	border: 1px solid #ddd;
-	padding: 10px;
+	padding: 16px 20px;
 	text-align: left;
+	border-bottom: 1px solid #f3f4f6;
 }
 
 th {
-	background-color: #04AA6D;
-	color: white;
+	background-color: #f8fafc;
+	color: #475569;
+	font-weight: 700;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+}
+	/* Bo góc cho thanh tiêu đề bảng */
+	th:first-child {
+		border-top-left-radius: 8px;
+		border-bottom-left-radius: 8px;
+	}
+
+	th:last-child {
+		border-top-right-radius: 8px;
+		border-bottom-right-radius: 8px;
+	}
+
+td {
+	font-size: 14px;
+	color: #374151;
+	font-weight: 500;
 }
 
-.error {
-	background-color: #ffe6e6;
+tr:hover td {
+	background-color: #f9fafb;
 }
-/* Highlight dòng bị lệch tiền */
-.success {
-	background-color: #e6ffe6;
+
+.empty-state {
+	text-align: center;
+	color: #9ca3af;
+	padding: 40px;
+	font-style: italic;
+}
+
+/* TRẠNG THÁI HIỂN THỊ TRÒN TRỊA */
+.status-ok {
+	color: #047857;
+	background-color: #d1fae5;
+	padding: 6px 14px;
+	border-radius: 20px;
+	font-weight: 700;
+	font-size: 12px;
+}
+
+.status-err {
+	color: #b91c1c;
+	background-color: #fee2e2;
+	padding: 6px 14px;
+	border-radius: 20px;
+	font-weight: 700;
+	font-size: 12px;
 }
