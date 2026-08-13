@@ -1,156 +1,181 @@
 /* =========================================================
-   LÀM ĐẸP Ô NHẬP HỆ SỐ QUY ĐỔI SKU
+   TỐI ƯU BẢNG QUY ĐỔI SKU - GỌN, ĐẸP, CANH GIỮA
 ========================================================= */
 
-/* Canh giữa nội dung các cột quy đổi */
+.conversion-scroll {
+    max-height: 520px;
+}
+
+.conversion-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+/* Header */
 .conversion-table th {
     text-align: center !important;
     vertical-align: middle !important;
-}
-
-.conversion-table td {
-    vertical-align: middle !important;
-}
-
-/* Các ô hệ số nằm chính giữa cột */
-.conversion-table td:has(.conversion-input) {
-    text-align: center !important;
-    padding: 7px 5px !important;
-}
-
-
-/* Ô nhập hệ số */
-.conversion-table .conversion-input {
-    width: 46px !important;
-    min-width: 46px !important;
-    max-width: 46px !important;
-
-    height: 28px !important;
-
-    display: inline-block !important;
-
-    padding: 0 4px !important;
-    margin: 0 auto !important;
-
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 6px !important;
-
-    background: #ffffff !important;
-    color: #1f2937 !important;
-
-    font-family: "Inter", sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-
-    text-align: center !important;
-
-    outline: none !important;
-
-    box-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.04) !important;
-
-    transition:
-        border-color 0.15s ease,
-        box-shadow 0.15s ease,
-        background 0.15s ease !important;
-}
-
-
-/* Khi rê chuột */
-.conversion-table .conversion-input:hover {
-    border-color: #94a3b8 !important;
-    background: #f8fafc !important;
-}
-
-
-/* Khi click vào ô */
-.conversion-table .conversion-input:focus {
-    border-color: #0f9b81 !important;
-
-    background: #ffffff !important;
-
-    box-shadow:
-        0 0 0 3px rgba(15, 155, 129, 0.12) !important;
-}
-
-
-/* Bỏ nút tăng giảm mặc định của Chrome/Edge */
-.conversion-table .conversion-input::-webkit-inner-spin-button,
-.conversion-table .conversion-input::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-
-/* Firefox */
-.conversion-table .conversion-input[type="number"] {
-    -moz-appearance: textfield;
-}
-
-
-/* Header tên SKU quy đổi */
-.conversion-table .base-sku-header {
-    min-width: 82px !important;
-
-    text-align: center !important;
-
+    padding: 10px 6px !important;
     font-size: 10px !important;
     font-weight: 700 !important;
-
-    padding: 9px 5px !important;
+    white-space: nowrap !important;
 }
 
+/* Cell */
+.conversion-table td {
+    vertical-align: middle !important;
+    text-align: center !important;
+    padding: 6px 4px !important;
+}
 
-/* Nút X cạnh tên SKU */
+/* 2 cột đầu vẫn canh trái */
+.conversion-table th:nth-child(1),
+.conversion-table td:nth-child(1),
+.conversion-table th:nth-child(2),
+.conversion-table td:nth-child(2) {
+    text-align: left !important;
+}
+
+/* Cột đầu sticky */
+.conversion-table th:first-child,
+.conversion-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #fff;
+    min-width: 120px;
+}
+
+/* Cột tên sản phẩm sticky */
+.conversion-table th:nth-child(2),
+.conversion-table td:nth-child(2) {
+    position: sticky;
+    left: 120px;
+    z-index: 2;
+    background: #fff;
+    min-width: 410px;
+    max-width: 410px;
+    white-space: normal !important;
+    line-height: 1.4;
+}
+
+.conversion-table thead th:first-child,
+.conversion-table thead th:nth-child(2) {
+    z-index: 5;
+    background: #fafbfc;
+}
+
+/* Cột số lượng SKU */
+.conversion-table td:nth-child(3),
+.conversion-table th:nth-child(3) {
+    min-width: 95px;
+    text-align: center !important;
+}
+
+/* Các cột SKU quy đổi bóp nhỏ lại */
+.conversion-table .base-sku-header {
+    min-width: 74px !important;
+    width: 74px !important;
+    max-width: 74px !important;
+    text-align: center !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    padding: 8px 3px !important;
+}
+
+/* Nút x */
 .conversion-table .remove-base-sku {
-    width: 17px;
-    height: 17px;
-
-    margin-left: 4px !important;
+    width: 15px;
+    height: 15px;
+    margin-left: 3px !important;
     padding: 0 !important;
-
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     border: 1px solid #f1b7ba !important;
     border-radius: 4px !important;
-
     background: #fff5f5 !important;
-
     color: #d6454b !important;
-
-    font-size: 11px !important;
+    font-size: 10px !important;
     font-weight: 700 !important;
-
     cursor: pointer;
+    vertical-align: middle;
 }
 
-
-/* Hover nút xóa */
 .conversion-table .remove-base-sku:hover {
     background: #e5484d !important;
     color: white !important;
     border-color: #e5484d !important;
 }
 
+/* Ô input */
+.conversion-table .conversion-input {
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    height: 26px !important;
 
-/* Dòng tổng cuối bảng */
-.conversion-table tfoot td {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 0 !important;
+    margin: 0 auto !important;
+
+    border: 1px solid #cfd8e3 !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+
+    font-family: "Inter", sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 26px !important;
+
     text-align: center !important;
     vertical-align: middle !important;
 
-    padding-top: 11px !important;
-    padding-bottom: 11px !important;
+    outline: none !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
 }
 
+.conversion-table .conversion-input:hover {
+    border-color: #9fb2c8 !important;
+    background: #f8fafc !important;
+}
 
-/* Tổng quy đổi */
+.conversion-table .conversion-input:focus {
+    border-color: #0f9b81 !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(15, 155, 129, 0.12) !important;
+}
+
+/* Ẩn spin button */
+.conversion-table .conversion-input::-webkit-inner-spin-button,
+.conversion-table .conversion-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.conversion-table .conversion-input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Dòng tổng */
+.conversion-table tfoot td {
+    text-align: center !important;
+    vertical-align: middle !important;
+    padding: 10px 6px !important;
+    font-weight: 800 !important;
+    background: #eef9f6 !important;
+    border-top: 2px solid #9bd8cc !important;
+}
+
 .conversion-total-highlight {
     text-align: center !important;
-
     color: #087863 !important;
-
     font-size: 13px !important;
     font-weight: 800 !important;
 }
