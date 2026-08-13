@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đối soát Shopee - Mỹ Phẩm</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Thư viện SheetJS đọc file Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Hệ Thống Đối Soát Đơn Hàng</h1>
+        <div class="upload-box">
+            <p>Tải lên báo cáo thu nhập Shopee (.xlsx)</p>
+            <input type="file" id="fileUpload" accept=".xlsx, .xls, .csv">
+        </div>
+
+        <div class="table-container">
+            <table id="resultTable">
+                <thead>
+                    <tr>
+                        <th>Mã Đơn Hàng</th>
+                        <th>Sản Phẩm</th>
+                        <th>Khách Trả</th>
+                        <th>Phí Sàn</th>
+                        <th>Thực Nhận (Shopee tính)</th>
+                        <th>Trạng Thái</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Dữ liệu từ file excel sẽ xuất hiện ở đây -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
