@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V22: biểu đồ cột đôi Sáng/Chiều + bảng sau quy đổi 2/3 -->
+    <!-- ONE-FILE V23: thêm Thống kê hóa đơn từ file Excel -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2083,6 +2083,223 @@ button{cursor:pointer}
     }
 }
 
+
+/* =========================================================
+   V23 - THỐNG KÊ HÓA ĐƠN
+========================================================= */
+.invoice-upload-panel{
+    margin-bottom:12px;
+    overflow:hidden
+}
+.invoice-upload-layout{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:16px
+}
+.invoice-upload-copy{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    min-width:0
+}
+.invoice-upload-icon{
+    width:44px;height:44px;flex:0 0 44px;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:11px;background:#edf8f5;font-size:22px
+}
+.invoice-upload-copy h2{
+    margin:0 0 5px;color:#18323c;font-size:15px
+}
+.invoice-upload-copy p{
+    max-width:770px;margin:0;color:#7e909a;
+    font-size:8.7px;line-height:1.55
+}
+.invoice-upload-actions{
+    display:flex;align-items:center;gap:8px;flex:0 0 auto
+}
+.invoice-upload-button{
+    height:36px;display:inline-flex;align-items:center;justify-content:center;
+    padding:0 13px;border:1px solid #0d9c82;border-radius:7px;
+    background:#0d9c82;color:#fff;font-size:9px;font-weight:800;
+    cursor:pointer;white-space:nowrap
+}
+.invoice-upload-button:hover{background:#0a8d75}
+.invoice-upload-button input{display:none}
+.invoice-file-info{
+    margin:0 16px 15px;padding:9px 11px;
+    border:1px dashed #d5e1e5;border-radius:8px;
+    background:#fafcfd;color:#7d8f99;font-size:8.5px;line-height:1.45
+}
+.invoice-file-info.loaded{
+    border-style:solid;border-color:#bae0d8;
+    background:#f2faf8;color:#44766b
+}
+.invoice-file-info strong{color:#176b5b}
+
+/* KPI */
+.invoice-kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:10px;
+    margin-bottom:12px
+}
+.invoice-kpi{
+    min-height:86px;padding:13px 14px;
+    border:1px solid #dfe7eb;border-radius:10px;background:#fff
+}
+.invoice-kpi.accent{
+    border-color:#b7e0d7;background:#f1faf7
+}
+.invoice-kpi span{
+    display:block;color:#667b86;font-size:7.5px;font-weight:800
+}
+.invoice-kpi strong{
+    display:block;margin-top:7px;color:#142e38;font-size:17px
+}
+.invoice-kpi.accent strong{color:#087863}
+.invoice-kpi small{
+    display:block;margin-top:5px;color:#98a5ad;font-size:7px
+}
+
+/* Table toolbar */
+.invoice-summary-panel{
+    overflow:hidden
+}
+.invoice-table-toolbar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px
+}
+.invoice-toolbar-actions{
+    display:flex;align-items:center;gap:8px
+}
+.invoice-search-box{
+    width:230px;height:34px;
+    display:flex;align-items:center;gap:7px;
+    padding:0 9px;border:1px solid #d8e2e6;border-radius:7px;background:#fff
+}
+.invoice-search-box input{
+    width:100%;border:0;outline:0;background:transparent;
+    color:#304851;font-family:inherit;font-size:8.5px
+}
+
+/* Main invoice table */
+.invoice-table-wrap{
+    overflow:auto;
+    max-height:590px
+}
+.invoice-summary-table{
+    width:100%;
+    min-width:1000px;
+    border-collapse:collapse;
+    table-layout:fixed
+}
+.invoice-summary-table .invoice-col-stt{width:55px}
+.invoice-summary-table .invoice-col-name{width:auto}
+.invoice-summary-table .invoice-col-qty{width:125px}
+.invoice-summary-table .invoice-col-money{width:180px}
+
+.invoice-summary-table thead th{
+    position:sticky;top:0;z-index:3;
+    padding:10px 11px;border-bottom:1px solid #dfe7ea;
+    background:#f8fafb;color:#536b76;font-size:7.8px;font-weight:850;
+    text-align:right;white-space:nowrap
+}
+.invoice-summary-table thead th:first-child{
+    text-align:center
+}
+.invoice-summary-table thead th:nth-child(2){
+    text-align:left
+}
+
+.invoice-summary-table tbody td{
+    padding:10px 11px;border-bottom:1px solid #edf1f3;
+    color:#354e59;font-size:9px;text-align:right;vertical-align:middle
+}
+.invoice-summary-table tbody td:first-child{
+    text-align:center;color:#72858f
+}
+.invoice-summary-table tbody td:nth-child(2){
+    text-align:left
+}
+.invoice-summary-table tbody tr:hover td{
+    background:#f8fbfa
+}
+.invoice-summary-table tbody tr.invoice-promo-row td{
+    background:#fffaf0
+}
+.invoice-summary-table tbody tr.invoice-promo-row:hover td{
+    background:#fff6e3
+}
+.invoice-product-name{
+    display:flex;align-items:center;gap:7px;line-height:1.4
+}
+.invoice-promo-badge{
+    display:inline-flex;align-items:center;height:18px;padding:0 6px;
+    border-radius:999px;background:#fff0c9;color:#95650a;
+    font-size:6.8px;font-weight:800;white-space:nowrap
+}
+.invoice-qty-value{
+    color:#102e38;font-weight:850
+}
+.invoice-money-value{
+    font-variant-numeric:tabular-nums
+}
+.invoice-zero-money{
+    color:#b0bbc1
+}
+
+.invoice-summary-table tfoot td{
+    position:sticky;bottom:0;z-index:2;
+    padding:11px;border-top:2px solid #8ed2c4;
+    background:#eaf8f5;color:#075f50;
+    font-size:9px;font-weight:900;text-align:right
+}
+.invoice-summary-table tfoot td:first-child{
+    text-align:center
+}
+.invoice-summary-table tfoot td:nth-child(2){
+    text-align:left
+}
+
+.invoice-note{
+    padding:10px 14px;border-top:1px solid #edf1f3;
+    background:#fbfcfd;color:#84949d;font-size:7.8px;line-height:1.45
+}
+
+/* Loading state */
+.invoice-loading{
+    display:inline-flex;align-items:center;gap:6px;color:#0a856f;font-weight:750
+}
+.invoice-loading-dot{
+    width:7px;height:7px;border-radius:50%;background:#0d9c82;
+    animation:invoicePulse .8s infinite alternate
+}
+@keyframes invoicePulse{
+    from{opacity:.35;transform:scale(.8)}
+    to{opacity:1;transform:scale(1.1)}
+}
+
+@media(max-width:1200px){
+    .invoice-kpi-grid{
+        grid-template-columns:repeat(3,minmax(0,1fr))
+    }
+}
+@media(max-width:850px){
+    .invoice-upload-layout,
+    .invoice-table-toolbar{
+        flex-direction:column;align-items:flex-start
+    }
+    .invoice-upload-actions,
+    .invoice-toolbar-actions{
+        width:100%
+    }
+    .invoice-search-box{flex:1;width:auto}
+    .invoice-kpi-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr))
+    }
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2216,6 +2433,11 @@ button{cursor:pointer}
                 <span class="nav-icon">🧮</span>
                 <span>Thống kê SKU</span>
                 <span class="nav-badge" id="navSkuCount">0</span>
+            </button>
+            <button class="nav-item" data-view="invoice-stats">
+                <span class="nav-icon">🧾</span>
+                <span>Thống kê hóa đơn</span>
+                <span class="nav-badge" id="navInvoiceCount">0</span>
             </button>
             <button class="nav-item" data-view="history">
                 <span class="nav-icon">🗓️</span>
@@ -2785,7 +3007,142 @@ button{cursor:pointer}
         </section>
 
         <!-- ======================== LỊCH SỬ ======================== -->
-        <section id="view-history" class="view">
+        
+        <!-- ======================== THỐNG KÊ HÓA ĐƠN ======================== -->
+        <section id="view-invoice-stats" class="view">
+
+            <div class="panel invoice-upload-panel">
+                <div class="invoice-upload-layout">
+                    <div class="invoice-upload-copy">
+                        <div class="invoice-upload-icon">🧾</div>
+                        <div>
+                            <h2>Thống kê hóa đơn</h2>
+                            <p>
+                                Upload file <strong>Bảng kê chi tiết hóa đơn đã sử dụng</strong>.
+                                Hệ thống tự gom theo Tên hàng và cộng Số lượng / Thuế GTGT /
+                                Tổng tiền thanh toán / Tiền trước thuế.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="invoice-upload-actions">
+                        <label class="invoice-upload-button">
+                            📥 Chọn file hóa đơn
+                            <input id="invoiceFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv">
+                        </label>
+
+                        <button type="button" id="btnClearInvoiceStats" class="btn btn-danger-outline">
+                            Xóa bảng hiện tại
+                        </button>
+                    </div>
+                </div>
+
+                <div id="invoiceFileInfo" class="invoice-file-info">
+                    Chưa có file hóa đơn. Hãy chọn file Excel để bắt đầu.
+                </div>
+            </div>
+
+            <div class="invoice-kpi-grid">
+                <div class="invoice-kpi">
+                    <span>TỔNG SỐ LƯỢNG</span>
+                    <strong id="invoiceTotalQty">0</strong>
+                    <small>Tính cả hàng khuyến mại</small>
+                </div>
+
+                <div class="invoice-kpi">
+                    <span>NHÓM MẶT HÀNG</span>
+                    <strong id="invoiceProductCount">0</strong>
+                    <small>Số tên hàng sau khi gom</small>
+                </div>
+
+                <div class="invoice-kpi">
+                    <span>SỐ HÓA ĐƠN</span>
+                    <strong id="invoiceNumberCount">0</strong>
+                    <small>Số hóa đơn không trùng</small>
+                </div>
+
+                <div class="invoice-kpi">
+                    <span>TIỀN THUẾ GTGT</span>
+                    <strong id="invoiceVatTotal">0 đ</strong>
+                    <small>Không cộng hàng khuyến mại</small>
+                </div>
+
+                <div class="invoice-kpi accent">
+                    <span>TỔNG TIỀN TT</span>
+                    <strong id="invoicePaymentTotal">0 đ</strong>
+                    <small>Tổng thanh toán trong file</small>
+                </div>
+            </div>
+
+            <div class="panel invoice-summary-panel">
+                <div class="panel-header invoice-table-toolbar">
+                    <div>
+                        <h2>Bảng thống kê hóa đơn theo tên hàng</h2>
+                        <p id="invoiceSummarySubtitle">
+                            Chưa có dữ liệu.
+                        </p>
+                    </div>
+
+                    <div class="invoice-toolbar-actions">
+                        <div class="invoice-search-box">
+                            🔎
+                            <input
+                                id="invoiceSearchInput"
+                                type="text"
+                                placeholder="Tìm tên sản phẩm..."
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <button type="button" id="btnExportInvoiceStats" class="btn btn-primary">
+                            Xuất Excel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="invoice-table-wrap">
+                    <table class="invoice-summary-table">
+                        <colgroup>
+                            <col class="invoice-col-stt">
+                            <col class="invoice-col-name">
+                            <col class="invoice-col-qty">
+                            <col class="invoice-col-money">
+                            <col class="invoice-col-money">
+                            <col class="invoice-col-money">
+                        </colgroup>
+
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên hàng</th>
+                                <th>Số lượng</th>
+                                <th>Tiền thuế GTGT</th>
+                                <th>Tổng tiền TT</th>
+                                <th>Tiền trước thuế</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="invoiceStatsBody">
+                            <tr>
+                                <td colspan="6" class="empty-table">
+                                    Chưa có dữ liệu hóa đơn.
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <tfoot id="invoiceStatsFoot"></tfoot>
+                    </table>
+                </div>
+
+                <div class="invoice-note">
+                    <strong>Quy tắc:</strong>
+                    dòng có chữ “Hàng khuyến mại không thu tiền” vẫn cộng
+                    <strong>Số lượng</strong>, nhưng Thuế GTGT / Tổng tiền TT / Tiền trước thuế = 0.
+                </div>
+            </div>
+        </section>
+
+<section id="view-history" class="view">
             <div class="history-kpis">
                 <div class="history-kpi"><span>NGÀY ĐÃ LƯU</span><strong id="historyDayCount">0</strong></div>
                 <div class="history-kpi"><span>TỔNG LẦN UPLOAD</span><strong id="historyImportCount">0</strong></div>
@@ -3017,6 +3374,10 @@ const PAGE_INFO = {
     "sku-stats": {
         title: "Thống kê SKU theo ngày",
         subtitle: "Chọn năm → chọn ngày → upload file Sáng / Chiều → lọc và quy đổi"
+    },
+    "invoice-stats": {
+        title: "Thống kê hóa đơn",
+        subtitle: "Upload bảng kê hóa đơn → gom theo tên hàng → tổng hợp số lượng và giá trị"
     },
     history: {
         title: "Lịch sử thống kê",
@@ -3605,6 +3966,7 @@ async function enterAuthenticatedApp(session) {
     const allowedViews = [
         "overview",
         "sku-stats",
+        "invoice-stats",
         "history",
         "orders",
         "fees",
@@ -3886,6 +4248,7 @@ function openView(viewName) {
     if (viewName === "orders") renderOrdersTab();
     if (viewName === "returns") renderReturnsTab();
     if (viewName === "history") renderHistory();
+    if (viewName === "invoice-stats") renderInvoiceStats();
 
     if (viewName === "sku-stats") {
         // Chỉ cập nhật dữ liệu; sidebar sẽ quyết định hiện lịch hay chi tiết.
@@ -6400,6 +6763,691 @@ $("btnConfirmAdminDelete")?.addEventListener("click", async () => {
 });
 
 
+
+/* ======================== V23 - THỐNG KÊ HÓA ĐƠN ======================== */
+const INVOICE_STATS_STORAGE_KEY = "rucos_invoice_stats_v23";
+
+const invoiceState = {
+    loadedFromStorage: false,
+    fileName: "",
+    importedAt: "",
+    dateFrom: "",
+    dateTo: "",
+    sourceRowCount: 0,
+    invoiceCount: 0,
+    rows: []
+};
+
+function invoiceMoney(value) {
+    return `${formatNumber(Math.round(Number(value) || 0))} đ`;
+}
+
+function toInvoiceNumber(value) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return value;
+    }
+
+    const text = String(value ?? "").trim();
+
+    if (!text) return 0;
+
+    // File hóa đơn này chủ yếu là số nguyên tiền.
+    // Loại bỏ khoảng trắng, dấu phân tách nghìn và ký tự tiền tệ.
+    const cleaned = text
+        .replace(/\s/g, "")
+        .replace(/[^\d\-.,]/g, "");
+
+    if (!cleaned) return 0;
+
+    // Nếu có cả . và , thì coi dấu đứng cuối là dấu thập phân.
+    if (cleaned.includes(".") && cleaned.includes(",")) {
+        const lastDot = cleaned.lastIndexOf(".");
+        const lastComma = cleaned.lastIndexOf(",");
+
+        if (lastComma > lastDot) {
+            return Number(
+                cleaned.replace(/\./g, "").replace(",", ".")
+            ) || 0;
+        }
+
+        return Number(cleaned.replace(/,/g, "")) || 0;
+    }
+
+    // Dữ liệu tiền VN thường là số nguyên; nhiều dấu . hoặc , là phân tách nghìn.
+    const dotCount = (cleaned.match(/\./g) || []).length;
+    const commaCount = (cleaned.match(/,/g) || []).length;
+
+    if (dotCount > 1) return Number(cleaned.replace(/\./g, "")) || 0;
+    if (commaCount > 1) return Number(cleaned.replace(/,/g, "")) || 0;
+
+    // Với chuỗi 1,234 hoặc 1.234 coi là 1.234 nghìn.
+    if (/^-?\d{1,3}[.,]\d{3}$/.test(cleaned)) {
+        return Number(cleaned.replace(/[.,]/g, "")) || 0;
+    }
+
+    return Number(cleaned.replace(",", ".")) || 0;
+}
+
+function isInvoicePromotion(productName) {
+    const n = normalizeText(productName);
+
+    return (
+        n.includes("hangkhuyenmaikhongthutien") ||
+        n.includes("hangkhuyenmai") && n.includes("khongthutien")
+    );
+}
+
+function findInvoiceHeaderIndex(headers, candidates) {
+    const normalized = headers.map(header => normalizeText(header));
+
+    for (const candidate of candidates) {
+        const needle = normalizeText(candidate);
+        const exact = normalized.indexOf(needle);
+
+        if (exact >= 0) return exact;
+    }
+
+    for (const candidate of candidates) {
+        const needle = normalizeText(candidate);
+        const partial = normalized.findIndex(value =>
+            value.includes(needle) || needle.includes(value)
+        );
+
+        if (partial >= 0) return partial;
+    }
+
+    return -1;
+}
+
+async function readInvoiceExcelFile(file) {
+    if (typeof XLSX === "undefined") {
+        throw new Error(
+            "Không tải được thư viện đọc Excel. Hãy tải lại trang và kiểm tra Internet."
+        );
+    }
+
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = event => {
+            try {
+                const data = new Uint8Array(event.target.result);
+
+                const workbook = XLSX.read(data, {
+                    type: "array",
+                    cellDates: true
+                });
+
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+
+                const matrix = XLSX.utils.sheet_to_json(sheet, {
+                    header: 1,
+                    defval: "",
+                    raw: true
+                });
+
+                resolve({
+                    matrix,
+                    sheetName
+                });
+            } catch (error) {
+                reject(error);
+            }
+        };
+
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+function parseInvoiceMatrix(matrix, fileName) {
+    if (!Array.isArray(matrix) || !matrix.length) {
+        throw new Error("File hóa đơn không có dữ liệu.");
+    }
+
+    // Header thường nằm ở dòng 5, nhưng quét để không phụ thuộc vị trí cố định.
+    const headerRowIndex = matrix.findIndex(row => {
+        const normalized = (row || []).map(value => normalizeText(value));
+
+        return (
+            normalized.includes("tenhang") &&
+            normalized.includes("soluong")
+        );
+    });
+
+    if (headerRowIndex < 0) {
+        throw new Error(
+            "Không tìm thấy dòng tiêu đề có cột “Tên hàng” và “Số lượng”."
+        );
+    }
+
+    const headers = matrix[headerRowIndex] || [];
+
+    const col = {
+        stt: findInvoiceHeaderIndex(headers, ["STT"]),
+        invoiceNo: findInvoiceHeaderIndex(headers, ["Số hóa đơn", "Số HĐ"]),
+        invoiceDate: findInvoiceHeaderIndex(headers, ["Ngày hóa đơn", "Ngày HĐ"]),
+        productCode: findInvoiceHeaderIndex(headers, ["Mã hàng"]),
+        productName: findInvoiceHeaderIndex(headers, ["Tên hàng"]),
+        quantity: findInvoiceHeaderIndex(headers, ["Số lượng"]),
+        vat: findInvoiceHeaderIndex(headers, ["Tiền thuế GTGT", "Thuế GTGT"]),
+        payment: findInvoiceHeaderIndex(headers, ["Tổng tiền TT", "Tổng tiền thanh toán"])
+    };
+
+    const requiredMissing = [];
+
+    if (col.productName < 0) requiredMissing.push("Tên hàng");
+    if (col.quantity < 0) requiredMissing.push("Số lượng");
+    if (col.vat < 0) requiredMissing.push("Tiền thuế GTGT");
+    if (col.payment < 0) requiredMissing.push("Tổng tiền TT");
+
+    if (requiredMissing.length) {
+        throw new Error(
+            `File thiếu cột: ${requiredMissing.join(", ")}.`
+        );
+    }
+
+    const sourceRows = [];
+    const invoiceNumbers = new Set();
+    const dateKeys = [];
+
+    for (let i = headerRowIndex + 1; i < matrix.length; i++) {
+        const row = matrix[i] || [];
+
+        const sttValue = col.stt >= 0 ? row[col.stt] : "";
+        const productName = String(row[col.productName] ?? "").trim();
+
+        // Chỉ lấy dòng chi tiết thực tế; bỏ Tổng cộng, chữ ký, dòng trống...
+        const numericStt =
+            typeof sttValue === "number"
+                ? sttValue
+                : Number(String(sttValue).trim());
+
+        if (!Number.isFinite(numericStt) || !productName) {
+            continue;
+        }
+
+        const quantity = toInvoiceNumber(row[col.quantity]);
+        const promo = isInvoicePromotion(productName);
+
+        // Quan trọng:
+        // File nguồn dùng giá trị 25 ở vài ô tài chính của dòng KM.
+        // Hàng khuyến mại không thu tiền phải đưa về 0 tiền.
+        const vat = promo
+            ? 0
+            : toInvoiceNumber(row[col.vat]);
+
+        const payment = promo
+            ? 0
+            : toInvoiceNumber(row[col.payment]);
+
+        const preTax = payment - vat;
+
+        const invoiceNo =
+            col.invoiceNo >= 0
+                ? String(row[col.invoiceNo] ?? "").trim()
+                : "";
+
+        const dateKey =
+            col.invoiceDate >= 0
+                ? normalizeOrderDate(row[col.invoiceDate])
+                : "";
+
+        if (invoiceNo) invoiceNumbers.add(invoiceNo);
+        if (dateKey) dateKeys.push(dateKey);
+
+        sourceRows.push({
+            productName,
+            quantity,
+            vat,
+            payment,
+            preTax,
+            promo
+        });
+    }
+
+    if (!sourceRows.length) {
+        throw new Error(
+            "Không tìm thấy dòng hóa đơn hợp lệ sau dòng tiêu đề."
+        );
+    }
+
+    const grouped = new Map();
+
+    sourceRows.forEach(row => {
+        const key = row.productName;
+
+        if (!grouped.has(key)) {
+            grouped.set(key, {
+                productName: key,
+                quantity: 0,
+                vat: 0,
+                payment: 0,
+                preTax: 0,
+                promo: row.promo
+            });
+        }
+
+        const item = grouped.get(key);
+
+        item.quantity += Number(row.quantity || 0);
+        item.vat += Number(row.vat || 0);
+        item.payment += Number(row.payment || 0);
+        item.preTax += Number(row.preTax || 0);
+        item.promo = item.promo || row.promo;
+    });
+
+    const rows = [...grouped.values()]
+        .sort((a, b) =>
+            a.productName.localeCompare(
+                b.productName,
+                "vi",
+                { sensitivity: "base" }
+            )
+        );
+
+    const uniqueDates = [...new Set(dateKeys)].sort();
+
+    return {
+        fileName,
+        importedAt: new Date().toISOString(),
+        dateFrom: uniqueDates[0] || "",
+        dateTo: uniqueDates[uniqueDates.length - 1] || "",
+        sourceRowCount: sourceRows.length,
+        invoiceCount: invoiceNumbers.size,
+        rows
+    };
+}
+
+function saveInvoiceStatsLocal() {
+    try {
+        localStorage.setItem(
+            INVOICE_STATS_STORAGE_KEY,
+            JSON.stringify({
+                fileName: invoiceState.fileName,
+                importedAt: invoiceState.importedAt,
+                dateFrom: invoiceState.dateFrom,
+                dateTo: invoiceState.dateTo,
+                sourceRowCount: invoiceState.sourceRowCount,
+                invoiceCount: invoiceState.invoiceCount,
+                rows: invoiceState.rows
+            })
+        );
+    } catch (error) {
+        console.warn("Không lưu được thống kê hóa đơn trên trình duyệt.", error);
+    }
+}
+
+function ensureInvoiceStatsLoaded() {
+    if (invoiceState.loadedFromStorage) return;
+
+    invoiceState.loadedFromStorage = true;
+
+    try {
+        const saved = JSON.parse(
+            localStorage.getItem(INVOICE_STATS_STORAGE_KEY) || "null"
+        );
+
+        if (!saved || !Array.isArray(saved.rows)) return;
+
+        invoiceState.fileName = saved.fileName || "";
+        invoiceState.importedAt = saved.importedAt || "";
+        invoiceState.dateFrom = saved.dateFrom || "";
+        invoiceState.dateTo = saved.dateTo || "";
+        invoiceState.sourceRowCount = Number(saved.sourceRowCount || 0);
+        invoiceState.invoiceCount = Number(saved.invoiceCount || 0);
+        invoiceState.rows = saved.rows;
+    } catch (error) {
+        console.warn("Không đọc được thống kê hóa đơn đã lưu.", error);
+    }
+}
+
+function getInvoiceTotals() {
+    return invoiceState.rows.reduce(
+        (acc, item) => {
+            acc.quantity += Number(item.quantity || 0);
+            acc.vat += Number(item.vat || 0);
+            acc.payment += Number(item.payment || 0);
+            acc.preTax += Number(item.preTax || 0);
+            return acc;
+        },
+        {
+            quantity: 0,
+            vat: 0,
+            payment: 0,
+            preTax: 0
+        }
+    );
+}
+
+function renderInvoiceStats() {
+    ensureInvoiceStatsLoaded();
+
+    const body = $("invoiceStatsBody");
+    const foot = $("invoiceStatsFoot");
+
+    if (!body || !foot) return;
+
+    const search = normalizeText(
+        $("invoiceSearchInput")?.value || ""
+    );
+
+    const filtered = invoiceState.rows.filter(item =>
+        !search ||
+        normalizeText(item.productName).includes(search)
+    );
+
+    const totals = getInvoiceTotals();
+
+    if ($("invoiceTotalQty")) {
+        $("invoiceTotalQty").textContent =
+            formatNumber(totals.quantity);
+    }
+
+    if ($("invoiceProductCount")) {
+        $("invoiceProductCount").textContent =
+            formatNumber(invoiceState.rows.length);
+    }
+
+    if ($("invoiceNumberCount")) {
+        $("invoiceNumberCount").textContent =
+            formatNumber(invoiceState.invoiceCount);
+    }
+
+    if ($("invoiceVatTotal")) {
+        $("invoiceVatTotal").textContent =
+            invoiceMoney(totals.vat);
+    }
+
+    if ($("invoicePaymentTotal")) {
+        $("invoicePaymentTotal").textContent =
+            invoiceMoney(totals.payment);
+    }
+
+    if ($("navInvoiceCount")) {
+        $("navInvoiceCount").textContent =
+            invoiceState.rows.length
+                ? formatNumber(invoiceState.rows.length)
+                : "0";
+    }
+
+    const fileInfo = $("invoiceFileInfo");
+
+    if (fileInfo) {
+        if (!invoiceState.rows.length) {
+            fileInfo.className = "invoice-file-info";
+            fileInfo.innerHTML =
+                "Chưa có file hóa đơn. Hãy chọn file Excel để bắt đầu.";
+        } else {
+            const dateText =
+                invoiceState.dateFrom && invoiceState.dateTo
+                    ? (
+                        invoiceState.dateFrom === invoiceState.dateTo
+                            ? formatDateLabel(invoiceState.dateFrom)
+                            : `${formatDateLabel(invoiceState.dateFrom)} → ${formatDateLabel(invoiceState.dateTo)}`
+                    )
+                    : "Không xác định ngày";
+
+            fileInfo.className = "invoice-file-info loaded";
+            fileInfo.innerHTML = `
+                <strong>✓ ${escapeHTML(invoiceState.fileName)}</strong>
+                · ${formatNumber(invoiceState.sourceRowCount)} dòng chi tiết
+                · ${formatNumber(invoiceState.invoiceCount)} hóa đơn
+                · Ngày: <strong>${escapeHTML(dateText)}</strong>
+            `;
+        }
+    }
+
+    if ($("invoiceSummarySubtitle")) {
+        if (!invoiceState.rows.length) {
+            $("invoiceSummarySubtitle").textContent =
+                "Chưa có dữ liệu.";
+        } else {
+            $("invoiceSummarySubtitle").textContent =
+                `${formatNumber(invoiceState.rows.length)} nhóm mặt hàng · ` +
+                `Tổng số lượng ${formatNumber(totals.quantity)} · ` +
+                `Tiền trước thuế ${invoiceMoney(totals.preTax)}`;
+        }
+    }
+
+    if (!filtered.length) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty-table">
+                    ${invoiceState.rows.length
+                        ? "Không tìm thấy sản phẩm phù hợp."
+                        : "Chưa có dữ liệu hóa đơn."}
+                </td>
+            </tr>
+        `;
+
+        foot.innerHTML = invoiceState.rows.length
+            ? `
+                <tr>
+                    <td></td>
+                    <td>TỔNG CỘNG</td>
+                    <td>${formatNumber(totals.quantity)}</td>
+                    <td>${invoiceMoney(totals.vat)}</td>
+                    <td>${invoiceMoney(totals.payment)}</td>
+                    <td>${invoiceMoney(totals.preTax)}</td>
+                </tr>
+            `
+            : "";
+
+        return;
+    }
+
+    body.innerHTML = filtered.map((item, index) => {
+        const zeroMoney = Number(item.payment || 0) === 0;
+
+        return `
+            <tr class="${item.promo ? "invoice-promo-row" : ""}">
+                <td>${index + 1}</td>
+
+                <td>
+                    <div class="invoice-product-name">
+                        <span>${escapeHTML(item.productName)}</span>
+                        ${item.promo
+                            ? '<span class="invoice-promo-badge">KHUYẾN MẠI</span>'
+                            : ""}
+                    </div>
+                </td>
+
+                <td class="invoice-qty-value">
+                    ${formatNumber(item.quantity)}
+                </td>
+
+                <td class="invoice-money-value ${zeroMoney ? "invoice-zero-money" : ""}">
+                    ${zeroMoney ? "—" : invoiceMoney(item.vat)}
+                </td>
+
+                <td class="invoice-money-value ${zeroMoney ? "invoice-zero-money" : ""}">
+                    ${zeroMoney ? "—" : invoiceMoney(item.payment)}
+                </td>
+
+                <td class="invoice-money-value ${zeroMoney ? "invoice-zero-money" : ""}">
+                    ${zeroMoney ? "—" : invoiceMoney(item.preTax)}
+                </td>
+            </tr>
+        `;
+    }).join("");
+
+    foot.innerHTML = `
+        <tr>
+            <td></td>
+            <td>TỔNG CỘNG</td>
+            <td>${formatNumber(totals.quantity)}</td>
+            <td>${invoiceMoney(totals.vat)}</td>
+            <td>${invoiceMoney(totals.payment)}</td>
+            <td>${invoiceMoney(totals.preTax)}</td>
+        </tr>
+    `;
+}
+
+async function handleInvoiceUpload(file) {
+    if (!file) return;
+
+    const info = $("invoiceFileInfo");
+
+    if (info) {
+        info.className = "invoice-file-info loaded";
+        info.innerHTML = `
+            <span class="invoice-loading">
+                <i class="invoice-loading-dot"></i>
+                Đang đọc và tổng hợp file ${escapeHTML(file.name)}...
+            </span>
+        `;
+    }
+
+    try {
+        const { matrix } = await readInvoiceExcelFile(file);
+        const result = parseInvoiceMatrix(matrix, file.name);
+
+        invoiceState.loadedFromStorage = true;
+        invoiceState.fileName = result.fileName;
+        invoiceState.importedAt = result.importedAt;
+        invoiceState.dateFrom = result.dateFrom;
+        invoiceState.dateTo = result.dateTo;
+        invoiceState.sourceRowCount = result.sourceRowCount;
+        invoiceState.invoiceCount = result.invoiceCount;
+        invoiceState.rows = result.rows;
+
+        saveInvoiceStatsLocal();
+
+        if ($("invoiceSearchInput")) {
+            $("invoiceSearchInput").value = "";
+        }
+
+        renderInvoiceStats();
+
+        showToast(
+            `Đã thống kê ${formatNumber(result.rows.length)} nhóm hàng · ` +
+            `${formatNumber(getInvoiceTotals().quantity)} sản phẩm.`
+        );
+    } catch (error) {
+        console.error("Invoice upload error:", error);
+
+        if (info) {
+            info.className = "invoice-file-info";
+            info.textContent = "Không đọc được file hóa đơn.";
+        }
+
+        alert(
+            "Không đọc hoặc thống kê được file hóa đơn.\n\n" +
+            (error?.message || "")
+        );
+    } finally {
+        if ($("invoiceFileInput")) {
+            $("invoiceFileInput").value = "";
+        }
+    }
+}
+
+function clearInvoiceStats() {
+    invoiceState.loadedFromStorage = true;
+    invoiceState.fileName = "";
+    invoiceState.importedAt = "";
+    invoiceState.dateFrom = "";
+    invoiceState.dateTo = "";
+    invoiceState.sourceRowCount = 0;
+    invoiceState.invoiceCount = 0;
+    invoiceState.rows = [];
+
+    try {
+        localStorage.removeItem(INVOICE_STATS_STORAGE_KEY);
+    } catch (error) {}
+
+    if ($("invoiceSearchInput")) {
+        $("invoiceSearchInput").value = "";
+    }
+
+    renderInvoiceStats();
+}
+
+function exportInvoiceStatsExcel() {
+    ensureInvoiceStatsLoaded();
+
+    if (!invoiceState.rows.length) {
+        alert("Chưa có dữ liệu hóa đơn để xuất.");
+        return;
+    }
+
+    if (typeof XLSX === "undefined") {
+        alert("Không tải được thư viện Excel.");
+        return;
+    }
+
+    const totals = getInvoiceTotals();
+
+    const exportRows = invoiceState.rows.map((item, index) => ({
+        "STT": index + 1,
+        "Tên hàng": item.productName,
+        "Số lượng": item.quantity,
+        "Tiền thuế GTGT": item.vat,
+        "Tổng tiền TT": item.payment,
+        "Tiền trước thuế": item.preTax
+    }));
+
+    exportRows.push({
+        "STT": "",
+        "Tên hàng": "TỔNG CỘNG",
+        "Số lượng": totals.quantity,
+        "Tiền thuế GTGT": totals.vat,
+        "Tổng tiền TT": totals.payment,
+        "Tiền trước thuế": totals.preTax
+    });
+
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+
+    worksheet["!cols"] = [
+        { wch: 6 },
+        { wch: 68 },
+        { wch: 12 },
+        { wch: 20 },
+        { wch: 20 },
+        { wch: 20 }
+    ];
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "THONG KE HOA DON"
+    );
+
+    const suffix =
+        invoiceState.dateFrom
+            ? invoiceState.dateFrom.replaceAll("-", "")
+            : "HOA_DON";
+
+    XLSX.writeFile(
+        workbook,
+        `THONG_KE_HOA_DON_${suffix}.xlsx`
+    );
+}
+
+$("invoiceFileInput")?.addEventListener("change", event => {
+    const file = event.target.files?.[0];
+    if (file) handleInvoiceUpload(file);
+});
+
+$("invoiceSearchInput")?.addEventListener("input", renderInvoiceStats);
+
+$("btnExportInvoiceStats")?.addEventListener(
+    "click",
+    exportInvoiceStatsExcel
+);
+
+$("btnClearInvoiceStats")?.addEventListener("click", () => {
+    if (!invoiceState.rows.length) return;
+
+    if (confirm("Xóa bảng thống kê hóa đơn đang lưu trên trình duyệt này?")) {
+        clearInvoiceStats();
+    }
+});
+
+
 /* ======================== ACTIONS ======================== */
 if ($("btnOpenSkuStats")) {
     $("btnOpenSkuStats").addEventListener("click", () => {
@@ -6592,6 +7640,7 @@ function renderAll() {
     renderHistory();
     renderStatsCalendar();
     refreshNavCounts();
+    renderInvoiceStats();
 }
 
 async function initApp() {
