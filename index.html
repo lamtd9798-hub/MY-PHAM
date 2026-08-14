@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V31: kiểm kê & đối chiếu kho + nhập/xuất khác + tồn lý thuyết -->
+    <!-- ONE-FILE V32: upload MISA trực tiếp trong tồn kho + tự cập nhật đối chiếu hóa đơn -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3535,6 +3535,59 @@ button{cursor:pointer}
     .inventory-v31-header{align-items:flex-start;flex-direction:column}
 }
 
+
+/* =========================================================
+   V32 - UPLOAD MISA TRỰC TIẾP TRONG MODULE TỒN KHO
+========================================================= */
+.inventory-misa-upload-button{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-height:35px;padding:0 11px;border:1px solid #a9d8cd;border-radius:7px;
+    background:#edf9f6;color:#087863;font-size:8.5px;font-weight:850;
+    cursor:pointer;white-space:nowrap
+}
+.inventory-misa-upload-button:hover{background:#e0f5ef;border-color:#7bc8b7}
+.inventory-misa-upload-button input{display:none}
+.inventory-misa-tab-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+.inventory-misa-upload-card{
+    display:grid;grid-template-columns:42px minmax(0,1fr) 145px;align-items:center;
+    gap:11px;margin:12px;padding:11px 12px;border:1px solid #cfe4df;border-radius:9px;
+    background:#f4fbf9
+}
+.inventory-misa-upload-card.loaded{border-color:#81cdbb;background:#edf9f6}
+.inventory-misa-upload-icon{
+    width:38px;height:38px;display:grid;place-items:center;border-radius:9px;
+    background:#e1f4ef;font-size:18px
+}
+.inventory-misa-upload-copy{min-width:0}
+.inventory-misa-upload-copy strong{
+    display:block;color:#26444f;font-size:9.8px;line-height:1.35;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.inventory-misa-upload-copy span{
+    display:block;margin-top:4px;color:#758992;font-size:7.8px;line-height:1.5
+}
+.inventory-misa-upload-effect{
+    padding-left:12px;border-left:1px solid #d6e8e3;text-align:center
+}
+.inventory-misa-upload-effect span{display:block;color:#7a8d95;font-size:6.7px;font-weight:850}
+.inventory-misa-upload-effect strong{display:block;margin-top:3px;color:#087863;font-size:17px}
+.inventory-misa-upload-effect small{display:block;margin-top:2px;color:#86979e;font-size:6.7px}
+.inventory-misa-upload-progress{display:inline-flex;align-items:center;gap:5px;color:#087863!important;font-weight:800}
+.inventory-misa-upload-progress:before{
+    content:"";width:7px;height:7px;border:2px solid #b6dfd6;border-top-color:#0f9b81;
+    border-radius:50%;animation:inventoryMisaSpin .75s linear infinite
+}
+@keyframes inventoryMisaSpin{to{transform:rotate(360deg)}}
+.inventory-misa-logic-banner{
+    margin:0 12px 12px;padding:9px 11px;border:1px solid #eed9a6;border-radius:8px;
+    background:#fffaf0;color:#866518;font-size:8px;line-height:1.55
+}
+.inventory-misa-logic-banner strong{color:#6c4d09}
+@media(max-width:900px){
+    .inventory-misa-upload-card{grid-template-columns:38px 1fr}
+    .inventory-misa-upload-effect{grid-column:1/-1;border-left:0;border-top:1px solid #d6e8e3;padding:8px 0 0}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -4269,6 +4322,11 @@ button{cursor:pointer}
                         <input id="inventoryStockFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv">
                     </label>
 
+                    <label class="inventory-misa-upload-button">
+                        🧾 Upload MISA đã xuất HĐ
+                        <input id="inventoryMisaFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv">
+                    </label>
+
                     <button type="button" id="btnInventoryEdit" class="btn btn-primary">
                         ✏️ Cập nhật tồn thực tế
                     </button>
@@ -4727,12 +4785,44 @@ button{cursor:pointer}
                         <div>
                             <h2>🧾 Đối chiếu hóa đơn MISA</h2>
                             <p>
-                                Theo dõi lượng hàng đã phát hành hóa đơn. Dữ liệu MISA không được dùng để trừ tồn vật lý lần hai.
+                                Upload trực tiếp file <strong>Bảng kê chi tiết hóa đơn đã sử dụng</strong>.
+                                Chỉ dòng có <strong>Số hóa đơn hợp lệ</strong> mới được tính vào “Đã xuất HĐ”.
                             </p>
                         </div>
-                        <button type="button" id="btnInventoryOpenInvoiceV31" class="btn btn-light">
-                            Mở Thống kê hóa đơn →
-                        </button>
+
+                        <div class="inventory-misa-tab-actions">
+                            <button type="button" id="btnInventoryMisaChooseFile" class="btn btn-primary">
+                                📥 Upload file MISA
+                            </button>
+
+                            <button type="button" id="btnInventoryInvoiceHistoryV32" class="btn btn-light">
+                                🕘 Lịch sử hóa đơn
+                            </button>
+
+                            <button type="button" id="btnInventoryOpenInvoiceV31" class="btn btn-light">
+                                Mở Thống kê hóa đơn →
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="inventoryMisaUploadInfo" class="inventory-misa-upload-card">
+                        <div class="inventory-misa-upload-icon">🧾</div>
+                        <div class="inventory-misa-upload-copy">
+                            <strong>Chưa có file MISA đang xem</strong>
+                            <span>Upload file đã phát hành hóa đơn để hệ thống xác định số lượng đã xuất HĐ.</span>
+                        </div>
+                        <div class="inventory-misa-upload-effect">
+                            <span>ẢNH HƯỞNG TỒN VẬT LÝ</span>
+                            <strong>0</strong>
+                            <small>Không trừ lần 2</small>
+                        </div>
+                    </div>
+
+                    <div class="inventory-misa-logic-banner">
+                        <strong>Quy tắc tồn kho:</strong>
+                        hàng đã giảm khỏi kho khi rời kho giao cho đơn vị vận chuyển.
+                        File MISA chỉ xác nhận bước <strong>Đã phát hành hóa đơn</strong>.
+                        Vì vậy “Đã xuất HĐ” không được trừ Tồn thực tế thêm lần nữa.
                     </div>
 
                     <div id="inventoryMisaInfoV31" class="inventory-misa-info">
@@ -10078,8 +10168,61 @@ function clearInventoryReconcileCounts() {
     renderInventoryReconciliation();
 }
 
+
+function renderInventoryMisaUploadInfo() {
+    const box = $("inventoryMisaUploadInfo");
+    if (!box) return;
+
+    if (!invoiceState?.rows?.length) {
+        box.classList.remove("loaded");
+        box.innerHTML = `
+            <div class="inventory-misa-upload-icon">🧾</div>
+            <div class="inventory-misa-upload-copy">
+                <strong>Chưa có file MISA đang xem</strong>
+                <span>Upload file đã phát hành hóa đơn để hệ thống xác định số lượng đã xuất HĐ.</span>
+            </div>
+            <div class="inventory-misa-upload-effect">
+                <span>ẢNH HƯỞNG TỒN VẬT LÝ</span>
+                <strong>0</strong>
+                <small>Không trừ lần 2</small>
+            </div>
+        `;
+        return;
+    }
+
+    const assignment = inventoryState.misaAssignment || buildInventoryMisaAssignment();
+
+    const dateText = invoiceState.dateFrom
+        ? (
+            invoiceState.dateFrom === invoiceState.dateTo
+                ? formatDateLabel(invoiceState.dateFrom)
+                : `${formatDateLabel(invoiceState.dateFrom)} → ${formatDateLabel(invoiceState.dateTo)}`
+        )
+        : "Không xác định";
+
+    box.classList.add("loaded");
+    box.innerHTML = `
+        <div class="inventory-misa-upload-icon">✅</div>
+        <div class="inventory-misa-upload-copy">
+            <strong>${escapeHTML(invoiceState.fileName || "File MISA")}</strong>
+            <span>
+                Ngày HĐ: <b>${escapeHTML(dateText)}</b> ·
+                ${formatNumber(invoiceState.invoiceCount || 0)} số HĐ ·
+                ${formatNumber(invoiceState.issuedLineCount || assignment.issuedLines?.length || 0)} dòng đã phát hành ·
+                <b>${formatNumber(assignment.issuedQty || 0)} sản phẩm đã xuất HĐ</b>.
+            </span>
+        </div>
+        <div class="inventory-misa-upload-effect">
+            <span>ẢNH HƯỞNG TỒN VẬT LÝ</span>
+            <strong>0</strong>
+            <small>Chỉ đổi trạng thái HĐ</small>
+        </div>
+    `;
+}
+
 function renderInventoryMisaTab() {
     const summary = buildInventorySummary();
+    renderInventoryMisaUploadInfo();
 
     // Tái sử dụng nội dung đối chiếu chi tiết từ khối overview
     const temp = $("inventoryMisaInfoV31");
@@ -10318,6 +10461,7 @@ function renderInventoryModule() {
     }
 
     renderInventoryTransactionItemOptions();
+    renderInventoryMisaUploadInfo();
     setInventoryTab(inventoryState.activeTab || "overview");
 }
 
@@ -10599,6 +10743,42 @@ $("btnInventoryRefresh")?.addEventListener("click", async () => {
 $("inventoryStockFileInput")?.addEventListener("change", e => {
     const file = e.target.files?.[0];
     if (file) importInventoryExcel(file);
+});
+
+$("inventoryMisaFileInput")?.addEventListener("change", e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const info = $("inventoryMisaUploadInfo");
+    if (info) {
+        info.classList.add("loaded");
+        info.innerHTML = `
+            <div class="inventory-misa-upload-icon">🧾</div>
+            <div class="inventory-misa-upload-copy">
+                <strong>Đang đọc ${escapeHTML(file.name)}</strong>
+                <span class="inventory-misa-upload-progress">Đang kiểm tra Số hóa đơn và tổng hợp số lượng đã phát hành...</span>
+            </div>
+            <div class="inventory-misa-upload-effect">
+                <span>ẢNH HƯỞNG TỒN VẬT LÝ</span>
+                <strong>0</strong>
+                <small>Không trừ lần 2</small>
+            </div>
+        `;
+    }
+
+    handleInvoiceUpload(file);
+});
+
+$("btnInventoryMisaChooseFile")?.addEventListener("click", () => {
+    $("inventoryMisaFileInput")?.click();
+});
+
+$("btnInventoryInvoiceHistoryV32")?.addEventListener("click", () => {
+    if (typeof openInvoiceHistoryModal === "function") {
+        openInvoiceHistoryModal();
+    } else {
+        openView("invoice-stats");
+    }
 });
 
 /* ======================== V23 - THỐNG KÊ HÓA ĐƠN ======================== */
@@ -11692,9 +11872,16 @@ async function handleInvoiceUpload(file) {
 
         renderInvoiceStats();
 
+        // V32: upload MISA ở bất kỳ đâu cũng cập nhật module tồn kho ngay.
+        if (inventoryState?.loaded) {
+            inventoryState.misaAssignment = null;
+            renderInventoryModule();
+            renderInventoryMisaUploadInfo();
+        }
+
         showToast(
-            `Đã thống kê ${formatNumber(result.rows.length)} nhóm hàng · ` +
-            `${formatNumber(getInvoiceTotals().quantity)} sản phẩm.`
+            `Đã đọc ${formatNumber(result.invoiceCount)} số hóa đơn · ` +
+            `${formatNumber(getInvoiceTotals().quantity)} sản phẩm đã phát hành.`
         );
     } catch (error) {
         console.error("Invoice upload error:", error);
@@ -11711,6 +11898,9 @@ async function handleInvoiceUpload(file) {
     } finally {
         if ($("invoiceFileInput")) {
             $("invoiceFileInput").value = "";
+        }
+        if ($("inventoryMisaFileInput")) {
+            $("inventoryMisaFileInput").value = "";
         }
     }
 }
@@ -11739,6 +11929,11 @@ function clearInvoiceStats() {
 
     renderInvoiceStats();
     renderInventoryModule();
+    if (inventoryState?.loaded) {
+        inventoryState.misaAssignment = null;
+        renderInventoryModule();
+        renderInventoryMisaUploadInfo();
+    }
 }
 
 function exportInvoiceStatsExcel() {
