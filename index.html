@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V28: thêm module Tồn kho & luân chuyển + kiểm kê + Shopee + MISA -->
+    <!-- ONE-FILE V29: thêm module Tồn kho & luân chuyển + kiểm kê + Shopee + MISA -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2928,6 +2928,158 @@ button{cursor:pointer}
 .inventory-editor-overlay{position:fixed;inset:0;z-index:12600;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(10,29,37,.64);backdrop-filter:blur(4px)}.inventory-editor-overlay.hidden{display:none!important}.inventory-editor-modal{width:min(1500px,97vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;border:1px solid #dae4e7;border-radius:14px;background:#fff;box-shadow:0 30px 100px rgba(0,0,0,.3)}.inventory-editor-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px 13px;border-bottom:1px solid #e9eef0}.inventory-editor-header h2{font-size:15px;margin:0 0 4px;color:#18323c}.inventory-editor-header p{margin:0;color:#8797a0;font-size:8px}.inventory-editor-close{width:31px;height:31px;border:1px solid #dbe4e7;border-radius:7px;background:#fff;color:#6f818a;font-size:20px;cursor:pointer}.inventory-editor-topbar{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:11px 18px;border-bottom:1px solid #edf1f3;background:#fbfcfd}.inventory-editor-topbar label{display:flex;flex-direction:column;gap:5px;color:#637984;font-size:7.5px;font-weight:850}.inventory-editor-topbar input[type=date]{height:34px;border:1px solid #d6e1e5;border-radius:7px;padding:0 9px;font-family:inherit;font-size:9px}.inventory-editor-table-wrap{flex:1;overflow:auto}.inventory-editor-table{width:100%;min-width:1280px;border-collapse:collapse}.inventory-editor-table th{position:sticky;top:0;z-index:2;padding:9px;background:#f8fafb;border-bottom:1px solid #dfe7ea;color:#5d727c;font-size:7.5px;white-space:nowrap}.inventory-editor-table td{padding:7px;border-bottom:1px solid #edf1f3}.inventory-editor-table td:first-child{text-align:center;color:#71838c;font-size:8px}.inventory-editor-input{width:100%;height:32px;border:1px solid #d8e2e6;border-radius:6px;padding:0 8px;font-family:inherit;font-size:8.5px;color:#314952;outline:0}.inventory-editor-input:focus{border-color:#75c5b4;box-shadow:0 0 0 2px rgba(13,156,130,.07)}.inventory-editor-input.number{text-align:right}.inventory-editor-help{padding:9px 18px;border-top:1px solid #edf1f3;background:#fbfcfd;color:#82939c;font-size:7.5px;line-height:1.45}.inventory-editor-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid #e9eef0}
 @media(max-width:1350px){.inventory-kpi-grid{grid-template-columns:repeat(3,1fr)}.inventory-two-column-grid{grid-template-columns:1fr}.inventory-hero-panel{align-items:flex-start;flex-direction:column}.inventory-hero-actions{justify-content:flex-start}}
 @media(max-width:800px){.inventory-kpi-grid{grid-template-columns:repeat(2,1fr)}.inventory-summary-toolbar,.inventory-movement-toolbar{align-items:flex-start;flex-direction:column}.inventory-search-box{width:100%}}
+
+
+/* =========================================================
+   V29 - TĂNG CỠ CHỮ MODULE TỒN KHO & LUÂN CHUYỂN
+========================================================= */
+
+/* Tiêu đề bảng và mô tả */
+.inventory-summary-toolbar h2{
+    font-size:14px!important;
+    line-height:1.3!important;
+}
+.inventory-summary-toolbar p{
+    font-size:9px!important;
+    line-height:1.45!important;
+}
+
+/* Ô tìm kiếm */
+.inventory-search-box{
+    height:36px!important;
+}
+.inventory-search-box input{
+    font-size:9.5px!important;
+}
+
+/* Header cột của bảng tồn kho */
+.inventory-summary-table th{
+    padding:11px 9px!important;
+    font-size:8.8px!important;
+    line-height:1.25!important;
+    font-weight:850!important;
+}
+
+/* Toàn bộ dữ liệu */
+.inventory-summary-table td{
+    padding:12px 9px!important;
+    font-size:10.5px!important;
+    line-height:1.4!important;
+}
+
+/* STT */
+.inventory-summary-table td:nth-child(1){
+    font-size:9.8px!important;
+}
+
+/* SKU kho */
+.inventory-summary-table td:nth-child(2){
+    font-size:10.8px!important;
+    font-weight:900!important;
+}
+
+/* Tên sản phẩm */
+.inventory-summary-table td:nth-child(3){
+    min-width:220px!important;
+    font-size:10.8px!important;
+    line-height:1.35!important;
+}
+
+/* Dòng Shopee: XXX dưới tên sản phẩm */
+.inventory-summary-table td:nth-child(3) small,
+.inventory-summary-table td:nth-child(3) .muted,
+.inventory-summary-table .inventory-unmapped{
+    font-size:8px!important;
+}
+
+/* Các số tồn / luân chuyển / hóa đơn */
+.inventory-summary-table .inventory-num{
+    font-size:10.7px!important;
+    font-weight:850!important;
+}
+
+/* Ba cột quan trọng */
+.inventory-summary-table .inventory-col-physical,
+.inventory-summary-table td.inventory-col-physical,
+.inventory-summary-table .inventory-col-transit,
+.inventory-summary-table td.inventory-col-transit,
+.inventory-summary-table .inventory-col-available,
+.inventory-summary-table td.inventory-col-available{
+    font-size:11.2px!important;
+    font-weight:950!important;
+}
+
+/* Đơn giá và giá trị tồn */
+.inventory-summary-table td.right{
+    font-size:10.3px!important;
+}
+.inventory-summary-table td:nth-last-child(2){
+    font-weight:850!important;
+}
+
+/* Badge cảnh báo */
+.inventory-alert-pill{
+    height:25px!important;
+    padding:0 9px!important;
+    font-size:8px!important;
+}
+
+/* Hàng tổng */
+.inventory-summary-table tfoot td{
+    padding:12px 9px!important;
+    font-size:10.8px!important;
+    line-height:1.3!important;
+    font-weight:950!important;
+}
+
+/* Ghi chú dưới bảng */
+.inventory-table-note{
+    padding:10px 13px!important;
+    font-size:8.3px!important;
+    line-height:1.5!important;
+}
+
+/* KPI phía trên: tăng nhẹ nhãn/mô tả */
+.inventory-kpi-card span{
+    font-size:8px!important;
+}
+.inventory-kpi-card strong{
+    font-size:19px!important;
+}
+.inventory-kpi-card small{
+    font-size:7.4px!important;
+}
+
+/* Phần luân chuyển chi tiết bên dưới */
+.inventory-movement-toolbar h2{
+    font-size:13px!important;
+}
+.inventory-movement-toolbar p{
+    font-size:8.5px!important;
+}
+.inventory-movement-table th{
+    font-size:8.5px!important;
+    padding-top:10px!important;
+    padding-bottom:10px!important;
+}
+.inventory-movement-table td{
+    font-size:9.6px!important;
+    padding-top:10px!important;
+    padding-bottom:10px!important;
+}
+.inventory-bucket-pill{
+    height:23px!important;
+    padding:0 8px!important;
+    font-size:7.6px!important;
+}
+
+/* Thanh trạng thái luân chuyển */
+.inventory-flow-label{
+    font-size:9px!important;
+}
+.inventory-flow-value{
+    font-size:10px!important;
+}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
