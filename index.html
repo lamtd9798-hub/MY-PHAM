@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V7: CSS + JS nằm trực tiếp trong index.html -->
+    <!-- ONE-FILE V8: cập nhật bảng quy đổi SKU mới -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -584,7 +584,8 @@ const DEFAULT_BASE_SKUS = [
     "REWGS",
     "RKN",
     "REWS",
-    "RCS"
+    "RCS",
+    "RHBS"
 ];
 
 const DEFAULT_CONVERSION_RULES = {
@@ -597,7 +598,13 @@ const DEFAULT_CONVERSION_RULES = {
     RKN: { RKN: 1 },
     REWS: { REWS: 1 },
     REWD: { REWD: 1 },
-    RCS: { RCS: 1 }
+    RCS: { RCS: 1 },
+
+    // [Combo 6] Body Oil + Confidence Stick
+    "R-CB06": { ROE: 1, RCS: 1 },
+
+    // Honey Black Sugar Body Scrub
+    RHBS: { RHBS: 1 }
 };
 
 const STORAGE_BASE_SKUS = "rucos_v4_base_skus";
@@ -991,6 +998,35 @@ function loadConversionConfig() {
         state.baseSkus = [...DEFAULT_BASE_SKUS];
         state.conversionRules = deepClone(DEFAULT_CONVERSION_RULES);
     }
+}
+
+function applyOfficialConversionUpdateV8() {
+    DEFAULT_BASE_SKUS.forEach(baseSku => {
+        if (!state.baseSkus.includes(baseSku)) {
+            state.baseSkus.push(baseSku);
+        }
+    });
+
+    const officialRules = {
+        RTB: { RTB: 1, REWD: 1 },
+        "2REWD": { REWD: 3 },
+        "2RCS": { RCS: 3 },
+        ROE: { ROE: 1 },
+        CROE: { ROE: 1, "OBM-100326-2": 1 },
+        REWGS: { REWGS: 1 },
+        RKN: { RKN: 1 },
+        REWS: { REWS: 1 },
+        REWD: { REWD: 1 },
+        RCS: { RCS: 1 },
+        "R-CB06": { ROE: 1, RCS: 1 },
+        RHBS: { RHBS: 1 }
+    };
+
+    Object.entries(officialRules).forEach(([sourceSku, rule]) => {
+        state.conversionRules[sourceSku] = { ...rule };
+    });
+
+    saveConversionConfig();
 }
 
 function saveConversionConfig() {
@@ -1473,6 +1509,7 @@ function renderAll() {
 }
 
 loadConversionConfig();
+applyOfficialConversionUpdateV8();
 renderAll();
 openView("overview");
 
