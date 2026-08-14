@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V11: Supabase Cloud + đăng nhập + nhiều máy dùng chung dữ liệu -->
+    <!-- ONE-FILE V12: chọn ngày lưu + upload BUỔI SÁNG/BUỔI CHIỀU + bảng tổng nhiều ngày -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -400,6 +400,85 @@ button{cursor:pointer}
     .cloud-user{display:none}
 }
 
+
+/* =========================================================
+   V12 - CHỌN NGÀY + 2 CA UPLOAD
+========================================================= */
+.report-date-panel{margin-bottom:16px;overflow:visible}
+.report-date-content{
+    display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:16px 18px
+}
+.report-date-left h3{font-size:14px;margin-bottom:4px}
+.report-date-left p{font-size:9px;color:#81929e;line-height:1.5}
+.report-date-control{
+    display:flex;align-items:center;gap:9px;padding:8px 10px;
+    border:1px solid #b8ded6;border-radius:9px;background:#f3fbf9
+}
+.report-date-control label{
+    color:#457267;font-size:9px;font-weight:750;white-space:nowrap
+}
+.report-date-control input{
+    height:35px;padding:0 10px;border:1px solid #cddbd7;border-radius:7px;
+    background:#fff;color:#20343d;font-family:inherit;font-size:11px;font-weight:650;outline:none
+}
+.report-date-control input:focus{
+    border-color:#0f9b81;box-shadow:0 0 0 3px rgba(15,155,129,.09)
+}
+.report-date-selected{
+    min-width:105px;color:#087863;font-size:10px;font-weight:750;text-align:center
+}
+.upload-shift-grid{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-bottom:16px
+}
+.shift-upload-card{
+    position:relative;background:#fff;border:1px solid var(--border);
+    border-radius:11px;padding:22px;text-align:center;min-height:265px
+}
+.shift-upload-card.morning{border-top:3px solid #f4b544}
+.shift-upload-card.afternoon{border-top:3px solid #5ca7e8}
+.shift-tag{
+    position:absolute;top:12px;left:13px;padding:4px 7px;border-radius:999px;
+    font-size:8px;font-weight:800;letter-spacing:.3px
+}
+.shift-upload-card.morning .shift-tag{background:#fff6df;color:#9a670f}
+.shift-upload-card.afternoon .shift-tag{background:#edf6ff;color:#24699f}
+.shift-upload-icon{font-size:31px;margin:14px 0 8px}
+.shift-upload-card h3{font-size:14px;margin-bottom:5px}
+.shift-upload-card p{
+    max-width:480px;margin:0 auto 14px;color:#83949f;font-size:9px;line-height:1.55
+}
+.shift-status{
+    margin-top:12px;min-height:36px;padding:8px 9px;border:1px dashed #dbe4e8;
+    border-radius:7px;background:#fafcfd;color:#80919c;font-size:8.5px;line-height:1.45
+}
+.shift-status.loaded{
+    border-style:solid;border-color:#b9e0d7;background:#f1faf8;color:#307064
+}
+.shift-status strong{display:block;color:#20343d;font-size:9px;margin-bottom:2px}
+.saved-slot{
+    display:inline-flex;align-items:center;justify-content:center;min-width:82px;
+    min-height:25px;padding:4px 7px;border-radius:6px;font-size:8px;line-height:1.35
+}
+.saved-slot.yes{background:#edf9f6;color:#087863;border:1px solid #c4e7df}
+.saved-slot.no{background:#f7f9fa;color:#9aa8b1;border:1px solid #e5eaed}
+.saved-slot.old{background:#fff8e8;color:#95630d;border:1px solid #f4dba8}
+.saved-slot strong{display:block;font-size:8px}
+.saved-actions{display:flex;justify-content:center;gap:5px;flex-wrap:wrap}
+.btn-select-day{
+    height:26px;padding:0 8px;border:1px solid #b9ddd5;border-radius:6px;
+    background:#f1faf8;color:#087863;font-family:inherit;font-size:8px;font-weight:700;cursor:pointer
+}
+.btn-select-day:hover{background:#e6f7f3}
+.manual-date-note{
+    margin:0 18px 14px;padding:9px 11px;border-left:3px solid #0f9b81;
+    border-radius:6px;background:#f5fbf9;color:#54736b;font-size:9px;line-height:1.55
+}
+@media(max-width:900px){
+    .report-date-content{align-items:flex-start;flex-direction:column}
+    .upload-shift-grid{grid-template-columns:1fr}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -603,32 +682,69 @@ button{cursor:pointer}
                     <p>Giai đoạn này chỉ cần file đơn hàng gốc xuất từ Shopee. Không cần báo cáo thu nhập hoặc sao kê ngân hàng.</p>
                 </div>
 
-                <div class="single-upload-layout">
-                    <div class="upload-card important large-upload-card">
-                        <div class="upload-step">DỮ LIỆU ĐẦU VÀO</div>
-                        <div class="upload-large-icon">🛍️</div>
-                        <h3>Nhập thêm file đơn hàng Shopee</h3>
-                        <p>Chọn file dạng <strong>Order.all....xlsx</strong>. Mỗi lần upload, dữ liệu mới sẽ được <strong>cộng vào kho dữ liệu đã lưu</strong> và tự loại các dòng đơn trùng.</p>
+                <div class="panel report-date-panel">
+                    <div class="report-date-content">
+                        <div class="report-date-left">
+                            <h3>📅 1. Chọn ngày muốn lưu dữ liệu</h3>
+                            <p>Ngày bạn chọn ở đây là ngày thống kê của kho dữ liệu. Sau đó mới chọn file buổi sáng hoặc buổi chiều.</p>
+                        </div>
 
-                        <label class="upload-button primary">
-                            Chọn file Shopee
-                            <input type="file" id="orderFile" accept=".xlsx,.xls,.csv">
-                        </label>
-
-                        <div class="upload-file-status" id="orderFileStatus">Chưa có file</div>
+                        <div class="report-date-control">
+                            <label>NGÀY THỐNG KÊ</label>
+                            <input id="reportDateInput" type="date">
+                            <div class="report-date-selected" id="reportDateLabel">-</div>
+                        </div>
                     </div>
 
-                    <div class="panel import-help-panel">
-                        <div class="panel-header">
-                            <div><h2>Sau khi nhập file</h2><p>Hệ thống tự thực hiện các bước sau</p></div>
+                    <div class="manual-date-note">
+                        Ví dụ: chọn <strong>14/08/2026</strong> → file sáng và file chiều đều được gộp vào dữ liệu ngày 14.
+                        Dữ liệu ngày khác vẫn được giữ riêng trên Supabase Cloud.
+                    </div>
+                </div>
+
+                <div class="upload-shift-grid">
+                    <div class="shift-upload-card morning">
+                        <div class="shift-tag">BUỔI SÁNG</div>
+                        <div class="shift-upload-icon">🌤️</div>
+                        <h3>2A. Upload file buổi sáng</h3>
+                        <p>Thường dùng cho file lấy đầu ngày / số đơn phát sinh từ chiều hôm trước đến sáng nay.</p>
+
+                        <label class="upload-button primary">
+                            Chọn file buổi sáng
+                            <input type="file" id="morningFile" accept=".xlsx,.xls,.csv">
+                        </label>
+
+                        <div class="shift-status" id="morningFileStatus">
+                            Chọn ngày trước, sau đó upload file.
                         </div>
-                        <div class="check-list">
-                            <div class="check-item"><span>✓</span><div><strong>Đọc cột SKU sản phẩm</strong><small>Không cần sửa file Excel.</small></div></div>
-                            <div class="check-item"><span>✓</span><div><strong>Lọc 3 trạng thái mặc định</strong><small>Đang giao, Đã giao, Người mua xác nhận đã nhận hàng.</small></div></div>
-                            <div class="check-item"><span>✓</span><div><strong>Thống kê số lượng SKU</strong><small>Mặc định đếm số lần SKU xuất hiện.</small></div></div>
-                            <div class="check-item"><span>✓</span><div><strong>Quy đổi combo / quà tặng</strong><small>Hệ số quy đổi được lưu trên trình duyệt.</small></div></div>
-                            <div class="check-item"><span>✓</span><div><strong>Lưu nhiều lần upload</strong><small>File sáng + file chiều được gộp, cập nhật dòng trùng và lưu lại theo ngày.</small></div></div>
+                    </div>
+
+                    <div class="shift-upload-card afternoon">
+                        <div class="shift-tag">BUỔI CHIỀU</div>
+                        <div class="shift-upload-icon">🌇</div>
+                        <h3>2B. Upload file buổi chiều</h3>
+                        <p>Upload thêm file trong ngày. Các đơn đã có từ file sáng sẽ được cập nhật, đơn mới sẽ được cộng thêm.</p>
+
+                        <label class="upload-button primary">
+                            Chọn file buổi chiều
+                            <input type="file" id="afternoonFile" accept=".xlsx,.xls,.csv">
+                        </label>
+
+                        <div class="shift-status" id="afternoonFileStatus">
+                            Chọn ngày trước, sau đó upload file.
                         </div>
+                    </div>
+                </div>
+
+                <div class="panel import-help-panel">
+                    <div class="panel-header">
+                        <div><h2>Cách hệ thống gộp dữ liệu</h2><p>Không cộng trùng đơn giữa file sáng và file chiều</p></div>
+                    </div>
+                    <div class="check-list">
+                        <div class="check-item"><span>1</span><div><strong>Chọn ngày thống kê</strong><small>Ngày này quyết định dữ liệu được lưu vào ngày nào.</small></div></div>
+                        <div class="check-item"><span>2</span><div><strong>Upload file sáng</strong><small>Lưu lần dữ liệu thứ nhất của ngày.</small></div></div>
+                        <div class="check-item"><span>3</span><div><strong>Upload file chiều</strong><small>Đơn cũ được cập nhật, đơn mới được thêm vào cùng ngày.</small></div></div>
+                        <div class="check-item"><span>4</span><div><strong>Chọn nhiều ngày ở Thống kê SKU</strong><small>Hệ thống cộng các ngày đang tích thành một BẢNG TỔNG.</small></div></div>
                     </div>
                 </div>
 
@@ -678,16 +794,17 @@ button{cursor:pointer}
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Ngày đặt hàng</th>
+                                    <th>Ngày thống kê</th>
+                                    <th class="center">Buổi sáng</th>
+                                    <th class="center">Buổi chiều</th>
                                     <th class="center">Dòng SKU</th>
                                     <th class="center">Mã đơn</th>
-                                    <th class="center">SKU khác nhau</th>
                                     <th>Cập nhật gần nhất</th>
                                     <th class="center">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="savedDaysBody">
-                                <tr><td colspan="6" class="empty-table">Chưa có dữ liệu được lưu.</td></tr>
+                                <tr><td colspan="7" class="empty-table">Chưa có dữ liệu được lưu.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -721,7 +838,7 @@ button{cursor:pointer}
                 <div class="filter-section">
                     <div class="filter-section-title">
                         <div>
-                            <strong>📅 Ngày đặt hàng</strong>
+                            <strong>📅 Ngày thống kê đã lưu</strong>
                             <span>Chọn 1 ngày để xem riêng; chọn nhiều ngày để hệ thống tự cộng thành một bảng tổng.</span>
                         </div>
                     </div>
@@ -1076,8 +1193,16 @@ async function cloudSelectAll(tableName, orderColumn = null) {
 function cloudRowToState(row) {
     return {
         rowKey: row.row_key,
-        orderDate: row.order_date || "",
+
+        // orderDate trong giao diện = NGÀY THỐNG KÊ do người dùng chọn.
+        orderDate: row.report_date || row.order_date || "",
+        reportDate: row.report_date || row.order_date || "",
+
+        // Ngày thực tế đọc từ file Shopee vẫn được giữ riêng.
+        sourceOrderDate: row.order_date || "",
         orderDateRaw: row.order_date || "",
+
+        importSlot: row.import_slot || "",
         orderId: row.order_id || "",
         status: row.status || "",
         sku: row.sku || "",
@@ -1098,13 +1223,15 @@ function cloudImportToState(info) {
         added: Number(info.added || 0),
         updated: Number(info.updated || 0),
         unchanged: Number(info.unchanged || 0),
-        dates: Array.isArray(info.dates) ? info.dates : []
+        dates: Array.isArray(info.dates) ? info.dates : [],
+        reportDate: info.report_date || (Array.isArray(info.dates) && info.dates.length === 1 ? info.dates[0] : ""),
+        importSlot: info.import_slot || ""
     };
 }
 
 async function dbGetAll(storeName) {
     if (storeName === DB_ROWS) {
-        return (await cloudSelectAll(DB_ROWS, "order_date")).map(cloudRowToState);
+        return (await cloudSelectAll(DB_ROWS, "report_date")).map(cloudRowToState);
     }
 
     if (storeName === DB_IMPORTS) {
@@ -1147,7 +1274,14 @@ async function dbPutManyRows(rows) {
     for (let i = 0; i < rows.length; i += chunkSize) {
         const chunk = rows.slice(i, i + chunkSize).map(row => ({
             row_key: row.rowKey,
-            order_date: row.orderDate || null,
+
+            // Ngày có trong file Shopee.
+            order_date: row.sourceOrderDate || null,
+
+            // Ngày người dùng chọn trước khi upload.
+            report_date: row.reportDate || row.orderDate || null,
+            import_slot: row.importSlot || null,
+
             order_id: row.orderId || null,
             status: row.status || null,
             sku: row.sku,
@@ -1177,7 +1311,9 @@ async function dbPutImport(importInfo) {
         added: importInfo.added,
         updated: importInfo.updated,
         unchanged: importInfo.unchanged,
-        dates: importInfo.dates || []
+        dates: importInfo.dates || [],
+        report_date: importInfo.reportDate || null,
+        import_slot: importInfo.importSlot || null
     };
 
     const { error } = await client
@@ -1211,7 +1347,7 @@ async function dbDeleteSavedDate(dateKey) {
     const { error: rowError } = await client
         .from(DB_ROWS)
         .delete()
-        .eq("order_date", dateKey);
+        .eq("report_date", dateKey);
 
     if (rowError) throw rowError;
 
@@ -1225,12 +1361,17 @@ async function dbDeleteSavedDate(dateKey) {
 }
 
 function createPersistentRowKey(row) {
+    const reportDate = row.reportDate || row.orderDate || "";
     const order = normalizeText(row.orderId || "");
     const sku = normalizeText(row.sku || "");
     const product = normalizeText(row.product || "");
 
-    if (order) return `${order}|${sku}|${product}`;
-    return `noorder|${row.orderDate || ""}|${sku}|${product}|${row.quantity || 0}`;
+    // Cùng đơn + SKU trong CÙNG NGÀY thống kê sẽ được update,
+    // nên file sáng và chiều không cộng trùng.
+    if (order) return `${reportDate}|${order}|${sku}|${product}`;
+
+    // Trường hợp thiếu mã đơn.
+    return `${reportDate}|noorder|${row.sourceOrderDate || ""}|${sku}|${product}|${row.quantity || 0}`;
 }
 
 async function createFileFingerprint(file) {
@@ -1255,6 +1396,7 @@ function rowsAreDifferent(oldRow, newRow) {
 
     return (
         oldRow.orderDate !== newRow.orderDate ||
+        oldRow.sourceOrderDate !== newRow.sourceOrderDate ||
         oldRow.status !== newRow.status ||
         oldRow.sku !== newRow.sku ||
         oldRow.product !== newRow.product ||
@@ -1608,51 +1750,148 @@ function validateShopeeFile(rows, parsedRows, fileName) {
     return "";
 }
 
-$("orderFile").addEventListener("change", async event => {
-    const file = event.target.files[0];
+function getLocalTodayKey() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+function getSelectedReportDate() {
+    return $("reportDateInput")?.value || "";
+}
+
+function slotLabel(slot) {
+    return slot === "morning" ? "Buổi sáng" : "Buổi chiều";
+}
+
+function renderReportDateUi() {
+    const input = $("reportDateInput");
+    const label = $("reportDateLabel");
+
+    if (!input) return;
+
+    if (!input.value) {
+        input.value = getLocalTodayKey();
+    }
+
+    if (label) {
+        label.textContent = formatDateLabel(input.value);
+    }
+
+    renderUploadSlotStatuses();
+}
+
+function getLatestImportForSlot(reportDate, slot) {
+    return state.imports
+        .filter(info =>
+            info.reportDate === reportDate &&
+            info.importSlot === slot
+        )
+        .sort((a, b) =>
+            String(b.importedAt || "").localeCompare(String(a.importedAt || ""))
+        )[0] || null;
+}
+
+function renderUploadSlotStatuses() {
+    const reportDate = getSelectedReportDate();
+
+    const configs = [
+        { slot: "morning", element: $("morningFileStatus") },
+        { slot: "afternoon", element: $("afternoonFileStatus") }
+    ];
+
+    configs.forEach(({ slot, element }) => {
+        if (!element) return;
+
+        if (!reportDate) {
+            element.className = "shift-status";
+            element.textContent = "Hãy chọn ngày thống kê trước.";
+            return;
+        }
+
+        const latest = getLatestImportForSlot(reportDate, slot);
+
+        if (!latest) {
+            element.className = "shift-status";
+            element.innerHTML =
+                `<strong>${formatDateLabel(reportDate)}</strong>` +
+                `Chưa có file ${slotLabel(slot).toLowerCase()} cho ngày này.`;
+            return;
+        }
+
+        element.className = "shift-status loaded";
+        element.innerHTML =
+            `<strong>✓ ${escapeHTML(latest.fileName)}</strong>` +
+            `${formatDateLabel(reportDate)} · ${slotLabel(slot)} · ` +
+            `${formatNumber(latest.rowCount)} dòng · ${formatDateTimeVi(latest.importedAt)}`;
+    });
+}
+
+async function processShopeeUpload(file, slot, inputElement) {
     if (!file) return;
 
-    try {
-        showToast("Đang đọc và lưu file Shopee...");
+    const reportDate = getSelectedReportDate();
 
-        const fingerprint = await createFileFingerprint(file);
-        const existingImport = await dbGet(DB_IMPORTS, fingerprint);
+    if (!reportDate) {
+        alert("Hãy chọn NGÀY THỐNG KÊ trước khi upload file.");
+        inputElement.value = "";
+        return;
+    }
+
+    try {
+        showToast(`Đang đọc ${slotLabel(slot).toLowerCase()} ngày ${formatDateLabel(reportDate)}...`);
+        setCloudStatus("☁️ Đang đồng bộ...", "syncing");
+
+        const baseFingerprint = await createFileFingerprint(file);
+
+        // Cùng một file chỉ bị xem là trùng khi upload đúng cùng ngày + cùng ca.
+        const importKey = `${reportDate}|${slot}|${baseFingerprint}`;
+        const existingImport = await dbGet(DB_IMPORTS, importKey);
 
         if (existingImport) {
-            const importedTime = existingImport.importedAt
-                ? new Date(existingImport.importedAt).toLocaleString("vi-VN")
-                : "";
-
-            $("orderFileStatus").textContent = "ℹ File này đã được nhập trước đó.";
-            $("orderFileStatus").className = "upload-file-status";
-            event.target.value = "";
+            inputElement.value = "";
 
             alert(
-                `File này đã được lưu trước đó${importedTime ? " lúc " + importedTime : ""}. ` +
-                "Hệ thống không nhập lại để tránh cộng trùng dữ liệu."
+                `${slotLabel(slot)} ngày ${formatDateLabel(reportDate)} đã nhập file này trước đó. ` +
+                "Hệ thống không nhập lại để tránh cộng trùng."
             );
+
+            setCloudStatus("☁️ Supabase Cloud");
             return;
         }
 
         const rows = await readExcelFile(file);
-        const parsedRows = parseShopeeRows(rows);
-        const validationError = validateShopeeFile(rows, parsedRows, file.name);
+        const parsedRawRows = parseShopeeRows(rows);
+        const validationError = validateShopeeFile(rows, parsedRawRows, file.name);
 
         if (validationError) {
-            $("orderFileStatus").textContent = "✕ " + validationError;
-            $("orderFileStatus").className = "upload-file-status error";
-            event.target.value = "";
+            inputElement.value = "";
+            setCloudStatus("☁️ Supabase Cloud");
             alert(validationError);
             return;
         }
 
-        // Lấy bản cloud mới nhất trước khi so sánh để tránh cộng trùng
-        // khi nhiều máy cùng thao tác.
+        // Ngày trong file được giữ ở sourceOrderDate.
+        // Ngày thống kê được ép theo ngày người dùng đã chọn.
+        const parsedRows = parsedRawRows.map(row => ({
+            ...row,
+            sourceOrderDate: row.orderDate || "",
+            orderDate: reportDate,
+            reportDate,
+            importSlot: slot
+        }));
+
+        // Luôn lấy cloud mới nhất để nhiều máy không cộng trùng nhau.
         await loadSavedDataFromDb({ resetFilters: false });
 
         const nowIso = new Date().toISOString();
         const currentMap = new Map(
-            state.skuRows.map(row => [row.rowKey || createPersistentRowKey(row), row])
+            state.skuRows.map(row => [
+                row.rowKey || createPersistentRowKey(row),
+                row
+            ])
         );
 
         let added = 0;
@@ -1677,12 +1916,8 @@ $("orderFile").addEventListener("change", async event => {
 
         await dbPutManyRows(rowsToSave);
 
-        const dates = [...new Set(
-            parsedRows.map(row => row.orderDate).filter(Boolean)
-        )].sort();
-
         await dbPutImport({
-            hash: fingerprint,
+            hash: importKey,
             fileName: file.name,
             fileSize: file.size,
             importedAt: nowIso,
@@ -1690,28 +1925,51 @@ $("orderFile").addEventListener("change", async event => {
             added,
             updated,
             unchanged,
-            dates
+            dates: [reportDate],
+            reportDate,
+            importSlot: slot
         });
 
         await loadSavedDataFromDb({ resetFilters: true });
 
-        $("orderFileStatus").textContent =
-            `✓ Đã lưu ${file.name} · +${formatNumber(added)} mới · ${formatNumber(updated)} cập nhật`;
-        $("orderFileStatus").className = "upload-file-status success";
-        event.target.value = "";
+        // Sau upload chỉ chọn ngày vừa nhập để xem ngay bảng ngày đó.
+        state.selectedDates = new Set([reportDate]);
+        state.dateFilterInitialized = true;
+
+        inputElement.value = "";
 
         renderAll();
+        renderReportDateUi();
         openView("sku-stats");
 
+        setCloudStatus("☁️ Supabase Cloud");
+
         showToast(
-            `Đã lưu file: ${formatNumber(added)} dòng mới, ${formatNumber(updated)} dòng cập nhật.`
+            `${slotLabel(slot)} ${formatDateLabel(reportDate)}: ` +
+            `+${formatNumber(added)} mới, ${formatNumber(updated)} cập nhật.`
         );
     } catch (error) {
         console.error(error);
-        $("orderFileStatus").textContent = "✕ Không đọc/lưu được file.";
-        $("orderFileStatus").className = "upload-file-status error";
-        alert("Không đọc hoặc lưu được file Excel. Hãy kiểm tra lại file Shopee.");
+        inputElement.value = "";
+        setCloudStatus("☁️ Lỗi đồng bộ", "error");
+
+        alert(
+            "Không đọc hoặc lưu được file lên Supabase. " +
+            (error?.message ? "\\n\\n" + error.message : "")
+        );
     }
+}
+
+$("morningFile")?.addEventListener("change", event => {
+    processShopeeUpload(event.target.files[0], "morning", event.target);
+});
+
+$("afternoonFile")?.addEventListener("change", event => {
+    processShopeeUpload(event.target.files[0], "afternoon", event.target);
+});
+
+$("reportDateInput")?.addEventListener("change", () => {
+    renderReportDateUi();
 });
 
 /* ======================== LỌC THEO NGÀY ĐẶT HÀNG ======================== */
@@ -2462,6 +2720,7 @@ function renderSavedDays() {
 
         const group = groups.get(key);
         group.rows++;
+
         if (row.orderId) group.orders.add(row.orderId);
         if (row.sku) group.skus.add(row.sku);
 
@@ -2487,8 +2746,35 @@ function renderSavedDays() {
 
     if (!days.length) {
         body.innerHTML =
-            '<tr><td colspan="6" class="empty-table">Chưa có dữ liệu được lưu.</td></tr>';
+            '<tr><td colspan="7" class="empty-table">Chưa có dữ liệu được lưu.</td></tr>';
         return;
+    }
+
+    function renderSlotCell(dateKey, slot) {
+        const latest = getLatestImportForSlot(dateKey, slot);
+
+        if (latest) {
+            return `
+                <span class="saved-slot yes" title="${escapeHTML(latest.fileName)}">
+                    <strong>✓ ${slot === "morning" ? "Sáng" : "Chiều"}</strong>
+                </span>
+            `;
+        }
+
+        // Dữ liệu V11 cũ chưa có thông tin sáng/chiều.
+        const hasOldImport = state.imports.some(info =>
+            !info.importSlot &&
+            (
+                info.reportDate === dateKey ||
+                (Array.isArray(info.dates) && info.dates.includes(dateKey))
+            )
+        );
+
+        if (hasOldImport) {
+            return `<span class="saved-slot old">Dữ liệu cũ</span>`;
+        }
+
+        return `<span class="saved-slot no">Chưa up</span>`;
     }
 
     body.innerHTML = days.map(group => `
@@ -2497,17 +2783,47 @@ function renderSavedDays() {
                 <span class="saved-day-date">${group.dateKey ? formatDateLabel(group.dateKey) : "(Không có ngày)"}</span>
                 <span class="saved-day-sub">${escapeHTML(group.dateKey || "")}</span>
             </td>
+
+            <td class="center">${renderSlotCell(group.dateKey, "morning")}</td>
+            <td class="center">${renderSlotCell(group.dateKey, "afternoon")}</td>
+
             <td class="center"><strong>${formatNumber(group.rows)}</strong></td>
             <td class="center">${formatNumber(group.orders.size)}</td>
-            <td class="center">${formatNumber(group.skus.size)}</td>
             <td>${formatDateTimeVi(group.lastUpdated)}</td>
+
             <td class="center">
-                ${group.dateKey
-                    ? `<button class="btn-delete-day" data-delete-date="${escapeHTML(group.dateKey)}">Xóa ngày</button>`
-                    : ""}
+                <div class="saved-actions">
+                    ${group.dateKey
+                        ? `<button class="btn-select-day" data-select-date="${escapeHTML(group.dateKey)}">Chọn ngày</button>`
+                        : ""}
+                    ${group.dateKey
+                        ? `<button class="btn-delete-day" data-delete-date="${escapeHTML(group.dateKey)}">Xóa ngày</button>`
+                        : ""}
+                </div>
             </td>
         </tr>
     `).join("");
+
+    document.querySelectorAll("[data-select-date]").forEach(button => {
+        button.addEventListener("click", () => {
+            const dateKey = button.dataset.selectDate;
+            if (!dateKey) return;
+
+            if ($("reportDateInput")) {
+                $("reportDateInput").value = dateKey;
+            }
+
+            state.selectedDates = new Set([dateKey]);
+            state.dateFilterInitialized = true;
+
+            renderReportDateUi();
+            renderDateFilters();
+            rebuildSkuStatistics();
+
+            openView("import");
+            showToast(`Đã chọn ngày ${formatDateLabel(dateKey)} để upload thêm file.`);
+        });
+    });
 
     document.querySelectorAll("[data-delete-date]").forEach(button => {
         button.addEventListener("click", async () => {
@@ -2516,16 +2832,23 @@ function renderSavedDays() {
 
             if (!confirm(
                 `Xóa toàn bộ dữ liệu ngày ${formatDateLabel(dateKey)} khỏi SUPABASE CLOUD? ` +
-                "Bảng hệ số quy đổi vẫn được giữ nguyên."
+                "Cả dữ liệu sáng và chiều của ngày này sẽ bị xóa."
             )) return;
 
             try {
+                setCloudStatus("☁️ Đang xóa...", "syncing");
+
                 await dbDeleteSavedDate(dateKey);
                 await loadSavedDataFromDb({ resetFilters: true });
+
                 renderAll();
+                renderReportDateUi();
+
+                setCloudStatus("☁️ Supabase Cloud");
                 showToast(`Đã xóa dữ liệu ngày ${formatDateLabel(dateKey)}.`);
             } catch (error) {
                 console.error(error);
+                setCloudStatus("☁️ Lỗi đồng bộ", "error");
                 alert("Không xóa được dữ liệu ngày này.");
             }
         });
@@ -2738,9 +3061,9 @@ $("btnReset").addEventListener("click", async () => {
         state.selectedDates.clear();
         state.dateFilterInitialized = false;
 
-        $("orderFile").value = "";
-        $("orderFileStatus").textContent = "Chưa có file";
-        $("orderFileStatus").className = "upload-file-status";
+        if ($("morningFile")) $("morningFile").value = "";
+        if ($("afternoonFile")) $("afternoonFile").value = "";
+        renderUploadSlotStatuses();
 
         renderAll();
         openView("overview");
@@ -2766,6 +3089,7 @@ function renderAll() {
     renderTopFileState();
     renderImportSummary();
     renderSavedDays();
+    renderReportDateUi();
     renderDateFilters();
     renderStatusFilters();
     rebuildSkuStatistics();
