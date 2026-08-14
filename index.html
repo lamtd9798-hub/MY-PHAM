@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V26: tăng cỡ chữ bảng thống kê SKU -->
+    <!-- ONE-FILE V27: thêm lịch sử thống kê hóa đơn + xem chi tiết + xóa từng bản -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2648,6 +2648,272 @@ button{cursor:pointer}
     width:430px!important;
 }
 
+
+/* =========================================================
+   V27 - LỊCH SỬ THỐNG KÊ HÓA ĐƠN
+========================================================= */
+
+.invoice-history-button{
+    height:36px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:0 12px;
+    border:1px solid #b9d8d2;
+    border-radius:7px;
+    background:#f3faf8;
+    color:#176d5e;
+    font-family:inherit;
+    font-size:9px;
+    font-weight:800;
+    cursor:pointer;
+    white-space:nowrap
+}
+.invoice-history-button:hover{
+    background:#e9f7f3;
+    border-color:#91c9be
+}
+.invoice-history-count{
+    min-width:20px;
+    height:20px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 5px;
+    border-radius:999px;
+    background:#0d9c82;
+    color:#fff;
+    font-size:7.5px;
+    font-weight:900
+}
+
+/* Overlay */
+.invoice-history-overlay{
+    position:fixed;
+    inset:0;
+    z-index:12500;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(10,29,37,.62);
+    backdrop-filter:blur(4px)
+}
+.invoice-history-overlay.hidden{
+    display:none!important
+}
+.invoice-history-modal{
+    width:min(1450px,96vw);
+    max-height:88vh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    border:1px solid #dce6e9;
+    border-radius:14px;
+    background:#fff;
+    box-shadow:0 30px 100px rgba(0,0,0,.3)
+}
+.invoice-history-modal-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    padding:16px 18px 13px;
+    border-bottom:1px solid #e9eef0
+}
+.invoice-history-modal-header h2{
+    margin:0 0 4px;
+    color:#18323c;
+    font-size:16px
+}
+.invoice-history-modal-header p{
+    margin:0;
+    color:#8797a0;
+    font-size:8.5px
+}
+.invoice-history-close{
+    width:31px;
+    height:31px;
+    border:1px solid #dde5e8;
+    border-radius:7px;
+    background:#fff;
+    color:#6f818a;
+    font-size:20px;
+    cursor:pointer
+}
+.invoice-history-close:hover{
+    background:#f4f7f8
+}
+
+/* Toolbar */
+.invoice-history-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:11px 18px;
+    border-bottom:1px solid #edf1f3;
+    background:#fbfcfd
+}
+.invoice-history-search{
+    width:min(430px,100%);
+    height:36px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:0 10px;
+    border:1px solid #d8e2e6;
+    border-radius:7px;
+    background:#fff
+}
+.invoice-history-search input{
+    width:100%;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#314952;
+    font-family:inherit;
+    font-size:9px
+}
+.invoice-history-summary{
+    color:#687d87;
+    font-size:8.5px;
+    font-weight:750
+}
+
+/* Table */
+.invoice-history-table-wrap{
+    flex:1;
+    overflow:auto
+}
+.invoice-history-table{
+    width:100%;
+    min-width:1200px;
+    border-collapse:collapse;
+    table-layout:fixed
+}
+.invoice-history-table thead th{
+    position:sticky;
+    top:0;
+    z-index:3;
+    padding:11px 10px;
+    border-bottom:1px solid #dfe7ea;
+    background:#f7fafb;
+    color:#546b75;
+    font-size:8.3px;
+    font-weight:850;
+    text-align:center;
+    white-space:nowrap
+}
+.invoice-history-table thead th:nth-child(5){
+    text-align:left
+}
+.invoice-history-table tbody td{
+    padding:11px 10px;
+    border-bottom:1px solid #edf1f3;
+    color:#405862;
+    font-size:9.5px;
+    text-align:center;
+    vertical-align:middle
+}
+.invoice-history-table tbody td:nth-child(5){
+    text-align:left;
+    font-weight:650;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap
+}
+.invoice-history-table tbody tr:hover td{
+    background:#f7fbfa
+}
+.invoice-history-current td{
+    background:#f1faf7!important
+}
+.invoice-history-current-badge{
+    display:inline-flex;
+    align-items:center;
+    height:18px;
+    margin-left:6px;
+    padding:0 6px;
+    border-radius:999px;
+    background:#dff5ee;
+    color:#087863;
+    font-size:6.8px;
+    font-weight:850;
+    vertical-align:middle
+}
+.invoice-history-money{
+    color:#087863!important;
+    font-weight:850
+}
+.invoice-history-actions{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px
+}
+.invoice-history-view-btn,
+.invoice-history-delete-btn{
+    height:30px;
+    padding:0 9px;
+    border-radius:6px;
+    font-family:inherit;
+    font-size:8px;
+    font-weight:800;
+    cursor:pointer;
+    white-space:nowrap
+}
+.invoice-history-view-btn{
+    border:1px solid #a9d6cd;
+    background:#edf9f6;
+    color:#087863
+}
+.invoice-history-view-btn:hover{
+    background:#def3ee
+}
+.invoice-history-delete-btn{
+    border:1px solid #f1b9b9;
+    background:#fff6f6;
+    color:#c63f3f
+}
+.invoice-history-delete-btn:hover{
+    background:#ffeded
+}
+
+/* Footer */
+.invoice-history-modal-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:11px 18px;
+    border-top:1px solid #e9eef0;
+    background:#fbfcfd
+}
+.invoice-history-note{
+    color:#8797a0;
+    font-size:7.8px
+}
+
+/* File info when viewing a historical snapshot */
+.invoice-file-info.history-viewing{
+    border-style:solid;
+    border-color:#c9dfee;
+    background:#f3f8fc;
+    color:#4b7188
+}
+
+@media(max-width:900px){
+    .invoice-history-toolbar{
+        align-items:flex-start;
+        flex-direction:column
+    }
+    .invoice-history-search{
+        width:100%
+    }
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3356,6 +3622,83 @@ button{cursor:pointer}
 
         <!-- ======================== LỊCH SỬ ======================== -->
         
+
+        <!-- ======================== V27 - LỊCH SỬ THỐNG KÊ HÓA ĐƠN ======================== -->
+        <div id="invoiceHistoryModal" class="invoice-history-overlay hidden">
+            <div class="invoice-history-modal">
+                <div class="invoice-history-modal-header">
+                    <div>
+                        <h2>🕘 Lịch sử thống kê hóa đơn</h2>
+                        <p>Mỗi lần upload file sẽ được lưu thành một bản lịch sử riêng.</p>
+                    </div>
+
+                    <button type="button" id="btnCloseInvoiceHistory" class="invoice-history-close">×</button>
+                </div>
+
+                <div class="invoice-history-toolbar">
+                    <div class="invoice-history-search">
+                        🔎
+                        <input
+                            id="invoiceHistorySearch"
+                            type="text"
+                            placeholder="Tìm theo tên file hoặc ngày..."
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <span id="invoiceHistorySummary" class="invoice-history-summary">
+                        0 bản lịch sử
+                    </span>
+                </div>
+
+                <div class="invoice-history-table-wrap">
+                    <table class="invoice-history-table">
+                        <colgroup>
+                            <col style="width:55px">
+                            <col style="width:105px">
+                            <col style="width:90px">
+                            <col style="width:120px">
+                            <col>
+                            <col style="width:100px">
+                            <col style="width:110px">
+                            <col style="width:150px">
+                            <col style="width:190px">
+                        </colgroup>
+
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Ngày upload</th>
+                                <th>Giờ (24H)</th>
+                                <th>Ngày hóa đơn</th>
+                                <th>Tên file</th>
+                                <th>Số hóa đơn</th>
+                                <th>Tổng SL</th>
+                                <th>Tổng tiền TT</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="invoiceHistoryBody">
+                            <tr>
+                                <td colspan="9" class="empty-table">Chưa có lịch sử thống kê.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="invoice-history-modal-footer">
+                    <div class="invoice-history-note">
+                        Lịch sử đang lưu trên trình duyệt của máy này.
+                    </div>
+
+                    <button type="button" id="btnCloseInvoiceHistoryFooter" class="btn btn-light">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- ======================== THỐNG KÊ HÓA ĐƠN ======================== -->
         <section id="view-invoice-stats" class="view">
 
@@ -3374,6 +3717,11 @@ button{cursor:pointer}
                     </div>
 
                     <div class="invoice-upload-actions">
+                        <button type="button" id="btnInvoiceHistory" class="invoice-history-button">
+                            🕘 Lịch sử thống kê
+                            <span id="invoiceHistoryCount" class="invoice-history-count">0</span>
+                        </button>
+
                         <label class="invoice-upload-button">
                             📥 Chọn file hóa đơn
                             <input id="invoiceFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv">
@@ -7114,6 +7462,8 @@ $("btnConfirmAdminDelete")?.addEventListener("click", async () => {
 
 /* ======================== V23 - THỐNG KÊ HÓA ĐƠN ======================== */
 const INVOICE_STATS_STORAGE_KEY = "rucos_invoice_stats_v23";
+const INVOICE_HISTORY_STORAGE_KEY = "rucos_invoice_history_v27";
+const INVOICE_HISTORY_MAX_ITEMS = 200;
 
 const invoiceState = {
     loadedFromStorage: false,
@@ -7123,7 +7473,13 @@ const invoiceState = {
     dateTo: "",
     sourceRowCount: 0,
     invoiceCount: 0,
+    currentHistoryId: "",
     rows: []
+};
+
+const invoiceHistoryState = {
+    loaded: false,
+    items: []
 };
 
 function invoiceMoney(value) {
@@ -7429,6 +7785,7 @@ function saveInvoiceStatsLocal() {
                 dateTo: invoiceState.dateTo,
                 sourceRowCount: invoiceState.sourceRowCount,
                 invoiceCount: invoiceState.invoiceCount,
+                currentHistoryId: invoiceState.currentHistoryId,
                 rows: invoiceState.rows
             })
         );
@@ -7455,6 +7812,7 @@ function ensureInvoiceStatsLoaded() {
         invoiceState.dateTo = saved.dateTo || "";
         invoiceState.sourceRowCount = Number(saved.sourceRowCount || 0);
         invoiceState.invoiceCount = Number(saved.invoiceCount || 0);
+        invoiceState.currentHistoryId = saved.currentHistoryId || "";
         invoiceState.rows = saved.rows.filter(item =>
             Number(item?.quantity || 0) > 0
         );
@@ -7466,6 +7824,395 @@ function ensureInvoiceStatsLoaded() {
     } catch (error) {
         console.warn("Không đọc được thống kê hóa đơn đã lưu.", error);
     }
+}
+
+
+function createInvoiceHistoryId(importedAt = "") {
+    const safeTime = importedAt || new Date().toISOString();
+
+    return (
+        "inv_" +
+        safeTime.replace(/[^\d]/g, "") +
+        "_" +
+        Math.random().toString(36).slice(2, 8)
+    );
+}
+
+function cloneInvoiceRows(rows) {
+    return JSON.parse(JSON.stringify(Array.isArray(rows) ? rows : []));
+}
+
+function getInvoiceSnapshotTotals(rows) {
+    return (Array.isArray(rows) ? rows : []).reduce(
+        (acc, item) => {
+            acc.quantity += Number(item.quantity || 0);
+            acc.vat += Number(item.vat || 0);
+            acc.payment += Number(item.payment || 0);
+            acc.preTax += Number(item.preTax || 0);
+            return acc;
+        },
+        { quantity: 0, vat: 0, payment: 0, preTax: 0 }
+    );
+}
+
+function buildInvoiceHistoryItem(source = invoiceState) {
+    const importedAt = source.importedAt || new Date().toISOString();
+    const rows = cloneInvoiceRows(source.rows);
+    const totals = getInvoiceSnapshotTotals(rows);
+
+    return {
+        id: source.currentHistoryId || createInvoiceHistoryId(importedAt),
+        fileName: source.fileName || "",
+        importedAt,
+        dateFrom: source.dateFrom || "",
+        dateTo: source.dateTo || "",
+        sourceRowCount: Number(source.sourceRowCount || 0),
+        invoiceCount: Number(source.invoiceCount || 0),
+        productCount: rows.length,
+        totalQuantity: totals.quantity,
+        vatTotal: totals.vat,
+        paymentTotal: totals.payment,
+        preTaxTotal: totals.preTax,
+        rows
+    };
+}
+
+function saveInvoiceHistoryLocal() {
+    try {
+        localStorage.setItem(
+            INVOICE_HISTORY_STORAGE_KEY,
+            JSON.stringify(invoiceHistoryState.items.slice(0, INVOICE_HISTORY_MAX_ITEMS))
+        );
+    } catch (error) {
+        console.warn("Không lưu được lịch sử thống kê hóa đơn.", error);
+    }
+}
+
+function ensureInvoiceHistoryLoaded() {
+    if (invoiceHistoryState.loaded) return;
+
+    invoiceHistoryState.loaded = true;
+
+    try {
+        const saved = JSON.parse(
+            localStorage.getItem(INVOICE_HISTORY_STORAGE_KEY) || "[]"
+        );
+
+        invoiceHistoryState.items = Array.isArray(saved)
+            ? saved.filter(item => item && item.id && Array.isArray(item.rows))
+            : [];
+    } catch (error) {
+        console.warn("Không đọc được lịch sử hóa đơn.", error);
+        invoiceHistoryState.items = [];
+    }
+
+    // Tự đưa dữ liệu V23-V26 đang có vào lịch sử lần đầu.
+    ensureInvoiceStatsLoaded();
+
+    if (invoiceState.rows.length && invoiceState.fileName) {
+        const existing = invoiceHistoryState.items.find(item =>
+            item.fileName === invoiceState.fileName &&
+            item.importedAt === invoiceState.importedAt
+        );
+
+        if (existing) {
+            invoiceState.currentHistoryId = existing.id;
+        } else {
+            const seeded = buildInvoiceHistoryItem(invoiceState);
+            invoiceHistoryState.items.unshift(seeded);
+            invoiceState.currentHistoryId = seeded.id;
+            saveInvoiceHistoryLocal();
+            saveInvoiceStatsLocal();
+        }
+    }
+
+    updateInvoiceHistoryCount();
+}
+
+function addCurrentInvoiceToHistory() {
+    ensureInvoiceHistoryLoaded();
+
+    if (!invoiceState.rows.length) return null;
+
+    invoiceState.currentHistoryId = createInvoiceHistoryId(invoiceState.importedAt);
+
+    const item = buildInvoiceHistoryItem(invoiceState);
+
+    invoiceHistoryState.items.unshift(item);
+    invoiceHistoryState.items = invoiceHistoryState.items.slice(
+        0,
+        INVOICE_HISTORY_MAX_ITEMS
+    );
+
+    saveInvoiceHistoryLocal();
+    saveInvoiceStatsLocal();
+    updateInvoiceHistoryCount();
+
+    return item;
+}
+
+function updateInvoiceHistoryCount() {
+    const count = invoiceHistoryState.items.length;
+
+    if ($("invoiceHistoryCount")) {
+        $("invoiceHistoryCount").textContent = formatNumber(count);
+    }
+}
+
+function formatInvoiceHistoryDateTime(isoValue) {
+    const date = new Date(isoValue || "");
+
+    if (Number.isNaN(date.getTime())) {
+        return {
+            date: "-",
+            time: "-"
+        };
+    }
+
+    return {
+        date: date.toLocaleDateString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        }),
+        time: date.toLocaleTimeString("vi-VN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false
+        })
+    };
+}
+
+function formatInvoiceSourceDateRange(item) {
+    if (!item?.dateFrom && !item?.dateTo) return "-";
+
+    if (item.dateFrom && item.dateTo && item.dateFrom !== item.dateTo) {
+        return `${formatDateLabel(item.dateFrom)} → ${formatDateLabel(item.dateTo)}`;
+    }
+
+    return formatDateLabel(item.dateFrom || item.dateTo);
+}
+
+function renderInvoiceHistory() {
+    ensureInvoiceHistoryLoaded();
+
+    const body = $("invoiceHistoryBody");
+    const search = normalizeText($("invoiceHistorySearch")?.value || "");
+
+    if (!body) return;
+
+    const filtered = invoiceHistoryState.items.filter(item => {
+        if (!search) return true;
+
+        const dateTime = formatInvoiceHistoryDateTime(item.importedAt);
+        const haystack = normalizeText([
+            item.fileName,
+            dateTime.date,
+            dateTime.time,
+            formatInvoiceSourceDateRange(item)
+        ].join(" "));
+
+        return haystack.includes(search);
+    });
+
+    if ($("invoiceHistorySummary")) {
+        $("invoiceHistorySummary").textContent =
+            `${formatNumber(filtered.length)} / ${formatNumber(invoiceHistoryState.items.length)} bản lịch sử`;
+    }
+
+    updateInvoiceHistoryCount();
+
+    if (!filtered.length) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="9" class="empty-table">
+                    ${invoiceHistoryState.items.length
+                        ? "Không tìm thấy lịch sử phù hợp."
+                        : "Chưa có lịch sử thống kê hóa đơn."}
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    body.innerHTML = filtered.map((item, index) => {
+        const dt = formatInvoiceHistoryDateTime(item.importedAt);
+        const isCurrent = item.id === invoiceState.currentHistoryId;
+
+        return `
+            <tr class="${isCurrent ? "invoice-history-current" : ""}">
+                <td>${index + 1}</td>
+
+                <td>${escapeHTML(dt.date)}</td>
+
+                <td><strong>${escapeHTML(dt.time)}</strong></td>
+
+                <td>${escapeHTML(formatInvoiceSourceDateRange(item))}</td>
+
+                <td title="${escapeHTML(item.fileName)}">
+                    ${escapeHTML(item.fileName)}
+                    ${isCurrent
+                        ? '<span class="invoice-history-current-badge">ĐANG XEM</span>'
+                        : ""}
+                </td>
+
+                <td>${formatNumber(item.invoiceCount || 0)}</td>
+
+                <td><strong>${formatNumber(item.totalQuantity || 0)}</strong></td>
+
+                <td class="invoice-history-money">
+                    ${invoiceMoney(item.paymentTotal || 0)}
+                </td>
+
+                <td>
+                    <div class="invoice-history-actions">
+                        <button
+                            type="button"
+                            class="invoice-history-view-btn"
+                            data-invoice-history-view="${escapeHTML(item.id)}"
+                        >
+                            👁 Xem chi tiết
+                        </button>
+
+                        <button
+                            type="button"
+                            class="invoice-history-delete-btn"
+                            data-invoice-history-delete="${escapeHTML(item.id)}"
+                        >
+                            🗑 Xóa
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join("");
+
+    document.querySelectorAll("[data-invoice-history-view]").forEach(button => {
+        button.addEventListener("click", () => {
+            loadInvoiceHistoryItem(button.dataset.invoiceHistoryView);
+        });
+    });
+
+    document.querySelectorAll("[data-invoice-history-delete]").forEach(button => {
+        button.addEventListener("click", () => {
+            deleteInvoiceHistoryItem(button.dataset.invoiceHistoryDelete);
+        });
+    });
+}
+
+function openInvoiceHistoryModal() {
+    ensureInvoiceHistoryLoaded();
+
+    if ($("invoiceHistorySearch")) {
+        $("invoiceHistorySearch").value = "";
+    }
+
+    renderInvoiceHistory();
+    $("invoiceHistoryModal")?.classList.remove("hidden");
+}
+
+function closeInvoiceHistoryModal() {
+    $("invoiceHistoryModal")?.classList.add("hidden");
+}
+
+function loadInvoiceHistoryItem(historyId) {
+    ensureInvoiceHistoryLoaded();
+
+    const item = invoiceHistoryState.items.find(row => row.id === historyId);
+
+    if (!item) {
+        alert("Không tìm thấy bản lịch sử này.");
+        return;
+    }
+
+    invoiceState.loadedFromStorage = true;
+    invoiceState.currentHistoryId = item.id;
+    invoiceState.fileName = item.fileName || "";
+    invoiceState.importedAt = item.importedAt || "";
+    invoiceState.dateFrom = item.dateFrom || "";
+    invoiceState.dateTo = item.dateTo || "";
+    invoiceState.sourceRowCount = Number(item.sourceRowCount || 0);
+    invoiceState.invoiceCount = Number(item.invoiceCount || 0);
+    invoiceState.rows = cloneInvoiceRows(item.rows);
+
+    if ($("invoiceSearchInput")) {
+        $("invoiceSearchInput").value = "";
+    }
+
+    saveInvoiceStatsLocal();
+    renderInvoiceStats();
+    renderInvoiceHistory();
+
+    closeInvoiceHistoryModal();
+
+    const info = $("invoiceFileInfo");
+    const dt = formatInvoiceHistoryDateTime(item.importedAt);
+
+    if (info) {
+        info.classList.add("history-viewing");
+        info.innerHTML +=
+            ` · <strong>Đang xem lịch sử upload ${escapeHTML(dt.date)} ${escapeHTML(dt.time)}</strong>`;
+    }
+
+    showToast(`Đang xem lịch sử ${dt.date} ${dt.time}.`);
+}
+
+function deleteInvoiceHistoryItem(historyId) {
+    ensureInvoiceHistoryLoaded();
+
+    const item = invoiceHistoryState.items.find(row => row.id === historyId);
+
+    if (!item) return;
+
+    const dt = formatInvoiceHistoryDateTime(item.importedAt);
+
+    const ok = confirm(
+        `Xóa bản lịch sử này?\n\n` +
+        `Ngày upload: ${dt.date}\n` +
+        `Giờ: ${dt.time}\n` +
+        `File: ${item.fileName}\n\n` +
+        `Thao tác này chỉ xóa bản lịch sử hóa đơn trên trình duyệt hiện tại.`
+    );
+
+    if (!ok) return;
+
+    invoiceHistoryState.items = invoiceHistoryState.items.filter(
+        row => row.id !== historyId
+    );
+
+    saveInvoiceHistoryLocal();
+
+    if (invoiceState.currentHistoryId === historyId) {
+        const next = invoiceHistoryState.items[0];
+
+        if (next) {
+            invoiceState.currentHistoryId = next.id;
+            invoiceState.fileName = next.fileName || "";
+            invoiceState.importedAt = next.importedAt || "";
+            invoiceState.dateFrom = next.dateFrom || "";
+            invoiceState.dateTo = next.dateTo || "";
+            invoiceState.sourceRowCount = Number(next.sourceRowCount || 0);
+            invoiceState.invoiceCount = Number(next.invoiceCount || 0);
+            invoiceState.rows = cloneInvoiceRows(next.rows);
+        } else {
+            invoiceState.currentHistoryId = "";
+            invoiceState.fileName = "";
+            invoiceState.importedAt = "";
+            invoiceState.dateFrom = "";
+            invoiceState.dateTo = "";
+            invoiceState.sourceRowCount = 0;
+            invoiceState.invoiceCount = 0;
+            invoiceState.rows = [];
+        }
+
+        saveInvoiceStatsLocal();
+        renderInvoiceStats();
+    }
+
+    renderInvoiceHistory();
+    updateInvoiceHistoryCount();
+    showToast(`Đã xóa lịch sử ${dt.date} ${dt.time}.`);
 }
 
 function getInvoiceTotals() {
@@ -7488,6 +8235,13 @@ function getInvoiceTotals() {
 
 function renderInvoiceStats() {
     ensureInvoiceStatsLoaded();
+
+    // Chỉ nạp history sau khi current stats đã nạp để migration V26 -> V27 đúng.
+    if (!invoiceHistoryState.loaded) {
+        ensureInvoiceHistoryLoaded();
+    }
+
+    updateInvoiceHistoryCount();
 
     const body = $("invoiceStatsBody");
     const foot = $("invoiceStatsFoot");
@@ -7686,9 +8440,11 @@ async function handleInvoiceUpload(file) {
         invoiceState.dateTo = result.dateTo;
         invoiceState.sourceRowCount = result.sourceRowCount;
         invoiceState.invoiceCount = result.invoiceCount;
+        invoiceState.currentHistoryId = "";
         invoiceState.rows = result.rows;
 
-        saveInvoiceStatsLocal();
+        // V27: mỗi lần upload tạo một bản lịch sử riêng.
+        addCurrentInvoiceToHistory();
 
         if ($("invoiceSearchInput")) {
             $("invoiceSearchInput").value = "";
@@ -7727,6 +8483,7 @@ function clearInvoiceStats() {
     invoiceState.dateTo = "";
     invoiceState.sourceRowCount = 0;
     invoiceState.invoiceCount = 0;
+    invoiceState.currentHistoryId = "";
     invoiceState.rows = [];
 
     try {
@@ -7808,6 +8565,28 @@ $("invoiceFileInput")?.addEventListener("change", event => {
 });
 
 $("invoiceSearchInput")?.addEventListener("input", renderInvoiceStats);
+
+$("btnInvoiceHistory")?.addEventListener("click", openInvoiceHistoryModal);
+
+$("btnCloseInvoiceHistory")?.addEventListener("click", closeInvoiceHistoryModal);
+$("btnCloseInvoiceHistoryFooter")?.addEventListener("click", closeInvoiceHistoryModal);
+
+$("invoiceHistorySearch")?.addEventListener("input", renderInvoiceHistory);
+
+$("invoiceHistoryModal")?.addEventListener("click", event => {
+    if (event.target === $("invoiceHistoryModal")) {
+        closeInvoiceHistoryModal();
+    }
+});
+
+document.addEventListener("keydown", event => {
+    if (
+        event.key === "Escape" &&
+        !$("invoiceHistoryModal")?.classList.contains("hidden")
+    ) {
+        closeInvoiceHistoryModal();
+    }
+});
 
 $("btnExportInvoiceStats")?.addEventListener(
     "click",
