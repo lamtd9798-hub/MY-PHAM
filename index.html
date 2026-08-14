@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css?v=4.0.0">
+    <link rel="stylesheet" href="style.css?v=5.0.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -40,12 +40,25 @@
             </button>
         </nav>
 
-        <div class="sidebar-section-title second-section">ĐỐI SOÁT - LÀM SAU</div>
+        <div class="sidebar-section-title second-section">ĐỐI SOÁT</div>
         <nav class="sidebar-menu future-menu">
-            <div class="nav-item disabled"><span class="nav-icon">📦</span><span>Đơn hàng</span></div>
-            <div class="nav-item disabled"><span class="nav-icon">💳</span><span>Phí sàn</span></div>
-            <div class="nav-item disabled"><span class="nav-icon">↩️</span><span>Hoàn / Hủy</span></div>
-            <div class="nav-item disabled"><span class="nav-icon">💰</span><span>Thanh toán</span></div>
+            <button class="nav-item" data-view="orders">
+                <span class="nav-icon">📦</span><span>Đơn hàng</span>
+                <span class="nav-badge" id="navOrderCount">0</span>
+            </button>
+            <button class="nav-item" data-view="fees">
+                <span class="nav-icon">💳</span><span>Phí sàn</span>
+            </button>
+            <button class="nav-item" data-view="returns">
+                <span class="nav-icon">↩️</span><span>Hoàn / Hủy</span>
+                <span class="nav-badge warning" id="navReturnCount">0</span>
+            </button>
+            <button class="nav-item" data-view="payments">
+                <span class="nav-icon">💰</span><span>Thanh toán</span>
+            </button>
+            <button class="nav-item" data-view="issues">
+                <span class="nav-icon">⚠️</span><span>Sai lệch</span>
+            </button>
         </nav>
 
         <div class="sidebar-footer">
@@ -266,10 +279,99 @@
                 </div>
             </div>
         </section>
+
+        <!-- ======================== ĐƠN HÀNG ======================== -->
+        <section id="view-orders" class="view">
+            <div class="panel">
+                <div class="panel-header table-toolbar">
+                    <div>
+                        <h2>Danh sách đơn hàng từ file Shopee</h2>
+                        <p id="orderTableSummary">0 dòng sản phẩm</p>
+                    </div>
+                    <div class="toolbar">
+                        <input id="orderSearch" class="search-input" type="text" placeholder="Tìm mã đơn, SKU, sản phẩm...">
+                    </div>
+                </div>
+                <div class="table-scroll large-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Trạng thái</th>
+                                <th>SKU sản phẩm</th>
+                                <th>Tên sản phẩm</th>
+                                <th class="center">Số lượng</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody">
+                            <tr><td colspan="5" class="empty-table">Hãy nhập file Shopee trước.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================== PHÍ SÀN ======================== -->
+        <section id="view-fees" class="view">
+            <div class="panel placeholder-panel">
+                <div class="placeholder-icon">💳</div>
+                <h2>Phí sàn</h2>
+                <p>Tab đã hoạt động. Hiện chưa nhập file tài chính nên chưa có dữ liệu phí để đối soát.</p>
+                <div class="placeholder-note">Khi có file báo cáo thu nhập/đối soát Shopee, chúng ta sẽ nối dữ liệu vào đây.</div>
+            </div>
+        </section>
+
+        <!-- ======================== HOÀN / HỦY ======================== -->
+        <section id="view-returns" class="view">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Đơn hoàn / hủy trong file Shopee</h2>
+                        <p id="returnTableSummary">0 dòng</p>
+                    </div>
+                </div>
+                <div class="table-scroll large-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Trạng thái</th>
+                                <th>SKU</th>
+                                <th>Tên sản phẩm</th>
+                                <th class="center">Số lượng</th>
+                            </tr>
+                        </thead>
+                        <tbody id="returnTableBody">
+                            <tr><td colspan="5" class="empty-table">Chưa có dữ liệu hoàn / hủy.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================== THANH TOÁN ======================== -->
+        <section id="view-payments" class="view">
+            <div class="panel placeholder-panel">
+                <div class="placeholder-icon">💰</div>
+                <h2>Thanh toán</h2>
+                <p>Tab đã hoạt động. Hiện chưa có file thanh toán/thu nhập nên chưa hiển thị kỳ thanh toán.</p>
+                <div class="placeholder-note">Phần này sẽ làm tiếp khi bạn có file thực tế từ Shopee.</div>
+            </div>
+        </section>
+
+        <!-- ======================== SAI LỆCH ======================== -->
+        <section id="view-issues" class="view">
+            <div class="panel placeholder-panel">
+                <div class="placeholder-icon">⚠️</div>
+                <h2>Sai lệch đối soát</h2>
+                <p>Tab đã hoạt động. Muốn phát hiện sai lệch tiền cần thêm dữ liệu tài chính của Shopee.</p>
+                <div class="placeholder-note">Thống kê SKU hiện tại vẫn chạy độc lập chỉ bằng file Order.all...xlsx.</div>
+            </div>
+        </section>
     </main>
 </div>
 
 <div id="toast" class="toast"></div>
-<script src="script.js?v=4.0.0"></script>
+<script src="script.js?v=5.0.0"></script>
 </body>
 </html>
