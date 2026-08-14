@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V13: mỗi ca chọn ngày + trạng thái, bảng SÁNG/CHIỀU/TỔNG, lịch sử theo ngày -->
+    <!-- ONE-FILE V14: lưu TOÀN BỘ file, lọc động SÁNG/CHIỀU, bảng quy đổi SÁNG/CHIỀU/TỔNG -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -619,6 +619,39 @@ button{cursor:pointer}
     .history-kpis{grid-template-columns:1fr}
 }
 
+
+/* =========================================================
+   V14 - ĐỌC HẾT FILE + LỌC ĐỘNG
+========================================================= */
+.available-date-list{
+    display:flex;flex-wrap:wrap;gap:5px;margin-top:8px
+}
+.available-date-btn{
+    min-height:25px;padding:4px 7px;border:1px solid #dce5e9;border-radius:6px;
+    background:#fff;color:#647681;font-family:inherit;font-size:8px;cursor:pointer
+}
+.available-date-btn:hover{border-color:#94d4c7;background:#f5fbf9}
+.available-date-btn.active{
+    border-color:#69c8b6;background:#eaf8f5;color:#087863;font-weight:750
+}
+.available-date-btn small{
+    display:block;margin-top:1px;color:#98a5ad;font-size:7px
+}
+.shift-filter-preview{
+    display:inline-flex;align-items:center;margin-left:5px;padding:2px 5px;
+    border-radius:999px;background:#edf9f6;color:#087863;font-size:7px;font-weight:700
+}
+.full-import-badge{
+    display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;
+    background:#eaf8f5;color:#087863;font-size:7.5px;font-weight:750
+}
+.legacy-import-badge{
+    display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;
+    background:#fff5df;color:#95630d;font-size:7.5px;font-weight:750
+}
+.converted-shift-value{font-weight:750;color:#334b55}
+.converted-total-value{font-weight:850;color:#087863;font-size:11px}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -846,7 +879,7 @@ button{cursor:pointer}
                     <div class="panel-header">
                         <div>
                             <h2>2. Nhập file theo ca</h2>
-                            <p>Mỗi ca tự chọn ngày đơn hàng và trạng thái cần lấy trước khi upload Excel.</p>
+                            <p>Mỗi file được đọc và lưu TOÀN BỘ. Ngày + trạng thái bên dưới chỉ dùng để lọc thống kê và có thể đổi bất kỳ lúc nào.</p>
                         </div>
                     </div>
 
@@ -860,6 +893,7 @@ button{cursor:pointer}
                             <div class="shift-config-box">
                                 <label>📅 NGÀY ĐƠN HÀNG CẦN LẤY</label>
                                 <input id="morningSourceDate" type="date">
+                                <div class="available-date-list" id="morningAvailableDates"></div>
                             </div>
 
                             <div class="shift-config-box">
@@ -877,7 +911,7 @@ button{cursor:pointer}
                         <div class="shift-upload-zone">
                             <div class="shift-upload-zone-left">
                                 <strong>Upload file Excel buổi sáng</strong>
-                                <small>Chỉ những dòng đúng ngày + đúng trạng thái đã chọn ở trên mới được lưu vào ca sáng.</small>
+                                <small>Hệ thống đọc TOÀN BỘ file vào ca sáng. Ngày + trạng thái ở trên chỉ quyết định phần nào được đưa vào bảng thống kê.</small>
                             </div>
 
                             <label class="upload-button primary">
@@ -896,6 +930,7 @@ button{cursor:pointer}
                             <div class="shift-config-box">
                                 <label>📅 NGÀY ĐƠN HÀNG CẦN LẤY</label>
                                 <input id="afternoonSourceDate" type="date">
+                                <div class="available-date-list" id="afternoonAvailableDates"></div>
                             </div>
 
                             <div class="shift-config-box">
@@ -913,7 +948,7 @@ button{cursor:pointer}
                         <div class="shift-upload-zone">
                             <div class="shift-upload-zone-left">
                                 <strong>Upload file Excel buổi chiều</strong>
-                                <small>Chỉ những dòng đúng ngày + đúng trạng thái đã chọn ở trên mới được lưu vào ca chiều.</small>
+                                <small>Hệ thống đọc TOÀN BỘ file vào ca chiều. Ngày + trạng thái ở trên chỉ quyết định phần nào được đưa vào bảng thống kê.</small>
                             </div>
 
                             <label class="upload-button primary">
@@ -1078,8 +1113,15 @@ button{cursor:pointer}
                 </div>
                 <div class="table-scroll">
                     <table>
-                        <thead><tr><th>SKU kho / SKU quy đổi</th><th class="center">Tổng số lượng cần chuẩn bị</th></tr></thead>
-                        <tbody id="convertedTotalsBody"><tr><td colspan="2" class="empty-table">Chưa có dữ liệu</td></tr></tbody>
+                        <thead>
+                            <tr>
+                                <th>SKU kho / SKU quy đổi</th>
+                                <th class="center">Buổi sáng</th>
+                                <th class="center">Buổi chiều</th>
+                                <th class="center">TỔNG</th>
+                            </tr>
+                        </thead>
+                        <tbody id="convertedTotalsBody"><tr><td colspan="4" class="empty-table">Chưa có dữ liệu</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -1487,7 +1529,8 @@ function cloudImportToState(info) {
         reportDate: info.report_date || (Array.isArray(info.dates) && info.dates.length === 1 ? info.dates[0] : ""),
         importSlot: info.import_slot || "",
         sourceDate: info.source_date || "",
-        selectedStatuses: Array.isArray(info.selected_statuses) ? info.selected_statuses : []
+        selectedStatuses: Array.isArray(info.selected_statuses) ? info.selected_statuses : [],
+        savedAllRows: Boolean(info.saved_all_rows)
     };
 }
 
@@ -1577,7 +1620,8 @@ async function dbPutImport(importInfo) {
         report_date: importInfo.reportDate || null,
         import_slot: importInfo.importSlot || null,
         source_date: importInfo.sourceDate || null,
-        selected_statuses: importInfo.selectedStatuses || []
+        selected_statuses: importInfo.selectedStatuses || [],
+        saved_all_rows: Boolean(importInfo.savedAllRows)
     };
 
     const { error } = await client
@@ -1649,17 +1693,61 @@ async function dbReplaceShiftData(reportDate, slot, rows, importInfo) {
     await dbPutImport(importInfo);
 }
 
+async function saveShiftFilterConfigToCloud(reportDate, slot) {
+    if (!reportDate) return;
+
+    const latest = getLatestImportForSlot(reportDate, slot);
+    if (!latest) return;
+
+    const filter = getShiftFilter(slot);
+    const client = initSupabaseClient();
+
+    const { error } = await client
+        .from(DB_IMPORTS)
+        .update({
+            source_date: filter.sourceDate || null,
+            selected_statuses: [...filter.statuses]
+        })
+        .eq("file_hash", latest.hash);
+
+    if (error) throw error;
+
+    latest.sourceDate = filter.sourceDate || "";
+    latest.selectedStatuses = [...filter.statuses];
+}
+
+let shiftFilterSaveTimer = null;
+
+function queueSaveShiftFilterConfig(slot) {
+    clearTimeout(shiftFilterSaveTimer);
+
+    shiftFilterSaveTimer = setTimeout(() => {
+        const reportDate = getSelectedReportDate();
+
+        saveShiftFilterConfigToCloud(reportDate, slot)
+            .then(() => {
+                renderStatsShiftSummaries(reportDate);
+                renderHistory();
+            })
+            .catch(error => {
+                console.error("Không lưu được bộ lọc ca:", error);
+            });
+    }, 350);
+}
+
+
 function createPersistentRowKey(row) {
     const reportDate = row.reportDate || row.orderDate || "";
     const slot = row.importSlot || "morning";
     const order = normalizeText(row.orderId || "");
     const sku = normalizeText(row.sku || "");
     const product = normalizeText(row.product || "");
+    const sourceDate = row.sourceOrderDate || "";
+    const rowNumber = Number(row.rowNumber || 0);
 
-    // Tách SÁNG / CHIỀU thành 2 nhóm độc lập.
-    if (order) return `${reportDate}|${slot}|${order}|${sku}|${product}`;
-
-    return `${reportDate}|${slot}|noorder|${row.sourceOrderDate || ""}|${sku}|${product}|${row.quantity || 0}`;
+    // V14 thay toàn bộ dữ liệu của một ca khi upload lại,
+    // nên dùng cả số dòng Excel để bảo toàn mọi dòng, kể cả SKU trùng.
+    return `${reportDate}|${slot}|${sourceDate}|${rowNumber}|${order}|${sku}|${product}`;
 }
 
 async function createFileFingerprint(file) {
@@ -2106,6 +2194,82 @@ function getLatestImportForSlot(reportDate, slot) {
         )[0] || null;
 }
 
+function normalizeRowSlot(row) {
+    return row.importSlot === "afternoon" ? "afternoon" : "morning";
+}
+
+function getRawRowsForReportSlot(reportDate, slot) {
+    return state.skuRows.filter(row =>
+        row.orderDate === reportDate &&
+        normalizeRowSlot(row) === slot
+    );
+}
+
+function getFilteredRowsForReportSlot(reportDate, slot, customFilter = null) {
+    const filter = customFilter || getShiftFilter(slot);
+    const rows = getRawRowsForReportSlot(reportDate, slot);
+
+    return rows.filter(row => {
+        const dateOk = !filter.sourceDate || row.sourceOrderDate === filter.sourceDate;
+        const statusOk = filter.statuses instanceof Set
+            ? filter.statuses.has(row.status)
+            : false;
+        return dateOk && statusOk;
+    });
+}
+
+function getAvailableDateCounts(reportDate, slot) {
+    const counts = new Map();
+
+    getRawRowsForReportSlot(reportDate, slot).forEach(row => {
+        const key = row.sourceOrderDate || "";
+        if (!key) return;
+        counts.set(key, (counts.get(key) || 0) + 1);
+    });
+
+    return counts;
+}
+
+function getAvailableStatusCounts(reportDate, slot) {
+    const filter = getShiftFilter(slot);
+    const counts = new Map();
+
+    getRawRowsForReportSlot(reportDate, slot)
+        .filter(row => !filter.sourceDate || row.sourceOrderDate === filter.sourceDate)
+        .forEach(row => {
+            const key = row.status || "";
+            if (!key) return;
+            counts.set(key, (counts.get(key) || 0) + 1);
+        });
+
+    return counts;
+}
+
+function getObservedStatuses(reportDate, slot) {
+    const observed = [...new Set(
+        getRawRowsForReportSlot(reportDate, slot)
+            .map(row => row.status)
+            .filter(Boolean)
+    )];
+
+    const merged = [...SHOPEE_STATUS_OPTIONS];
+
+    observed.forEach(status => {
+        if (!merged.includes(status)) merged.push(status);
+    });
+
+    return merged;
+}
+
+function countShiftResult(reportDate, slot) {
+    return getFilteredRowsForReportSlot(reportDate, slot).length;
+}
+
+function uniqueSkuCountForRows(rows) {
+    return new Set(rows.map(row => row.sku).filter(Boolean)).size;
+}
+
+
 function loadShiftConfigurationForReportDate(reportDate) {
     ["morning", "afternoon"].forEach(slot => {
         const latest = getLatestImportForSlot(reportDate, slot);
@@ -2131,6 +2295,49 @@ function loadShiftConfigurationForReportDate(reportDate) {
     syncShiftInputsFromState();
 }
 
+function renderAvailableDates(slot) {
+    const reportDate = getSelectedReportDate();
+    const container = $(slot === "morning" ? "morningAvailableDates" : "afternoonAvailableDates");
+    if (!container) return;
+
+    const filter = getShiftFilter(slot);
+    const counts = getAvailableDateCounts(reportDate, slot);
+    const dates = [...counts.keys()].sort();
+
+    if (!dates.length) {
+        container.innerHTML = '<span style="font-size:8px;color:#9aa7af">Chưa có file để đọc danh sách ngày.</span>';
+        return;
+    }
+
+    container.innerHTML = dates.map(dateKey => `
+        <button
+            type="button"
+            class="available-date-btn ${filter.sourceDate === dateKey ? "active" : ""}"
+            data-available-date-slot="${slot}"
+            data-available-date="${escapeHTML(dateKey)}"
+        >
+            ${formatDateLabel(dateKey)}
+            <small>${formatNumber(counts.get(dateKey))} dòng</small>
+        </button>
+    `).join("");
+
+    document.querySelectorAll(`[data-available-date-slot="${slot}"]`).forEach(button => {
+        button.addEventListener("click", () => {
+            const dateKey = button.dataset.availableDate;
+            filter.sourceDate = dateKey;
+
+            const input = $(slot === "morning" ? "morningSourceDate" : "afternoonSourceDate");
+            if (input) input.value = dateKey;
+
+            renderAvailableDates(slot);
+            renderShiftStatusFilters(slot);
+            renderUploadSlotStatuses();
+            rebuildSkuStatistics();
+            queueSaveShiftFilterConfig(slot);
+        });
+    });
+}
+
 function syncShiftInputsFromState() {
     const morning = getShiftFilter("morning");
     const afternoon = getShiftFilter("afternoon");
@@ -2138,6 +2345,8 @@ function syncShiftInputsFromState() {
     if ($("morningSourceDate")) $("morningSourceDate").value = morning.sourceDate || "";
     if ($("afternoonSourceDate")) $("afternoonSourceDate").value = afternoon.sourceDate || "";
 
+    renderAvailableDates("morning");
+    renderAvailableDates("afternoon");
     renderShiftStatusFilters("morning");
     renderShiftStatusFilters("afternoon");
     renderUploadSlotStatuses();
@@ -2147,10 +2356,14 @@ function renderShiftStatusFilters(slot) {
     const container = $(slot === "morning" ? "morningStatusFilters" : "afternoonStatusFilters");
     if (!container) return;
 
+    const reportDate = getSelectedReportDate();
     const filter = getShiftFilter(slot);
+    const statusCounts = getAvailableStatusCounts(reportDate, slot);
+    const statuses = getObservedStatuses(reportDate, slot);
 
-    container.innerHTML = SHOPEE_STATUS_OPTIONS.map((status, index) => {
+    container.innerHTML = statuses.map((status, index) => {
         const checked = filter.statuses.has(status);
+        const count = statusCounts.get(status) || 0;
 
         const shortText = status.length > 72
             ? status.slice(0, 72) + "..."
@@ -2164,19 +2377,25 @@ function renderShiftStatusFilters(slot) {
                     data-shift-status-index="${index}"
                     ${checked ? "checked" : ""}
                 >
-                <span>${escapeHTML(shortText)}</span>
+                <span>
+                    ${escapeHTML(shortText)}
+                    ${count ? `<span class="shift-filter-preview">${formatNumber(count)}</span>` : ""}
+                </span>
             </label>
         `;
     }).join("");
 
     document.querySelectorAll(`[data-shift-status="${slot}"]`).forEach((checkbox, index) => {
         checkbox.addEventListener("change", () => {
-            const status = SHOPEE_STATUS_OPTIONS[index];
+            const status = statuses[index];
 
             if (checkbox.checked) filter.statuses.add(status);
             else filter.statuses.delete(status);
 
             renderShiftStatusFilters(slot);
+            renderUploadSlotStatuses();
+            rebuildSkuStatistics();
+            queueSaveShiftFilterConfig(slot);
         });
     });
 }
@@ -2230,22 +2449,30 @@ function renderUploadSlotStatuses() {
         if (!element) return;
 
         const latest = getLatestImportForSlot(reportDate, slot);
+        const rawRows = getRawRowsForReportSlot(reportDate, slot);
+        const filteredRows = getFilteredRowsForReportSlot(reportDate, slot);
 
         if (!latest) {
             element.className = "shift-import-result";
             element.innerHTML = `
                 <strong>${slotLabel(slot)} · ${formatDateLabel(reportDate)}</strong><br>
-                Chưa lưu dữ liệu cho ca này.
+                Chưa upload file cho ca này.
             `;
             return;
         }
 
+        const badge = latest.savedAllRows
+            ? '<span class="full-import-badge">✓ Đã lưu toàn bộ file</span>'
+            : '<span class="legacy-import-badge">⚠ Dữ liệu V13 cũ - nên upload lại file</span>';
+
         element.className = "shift-import-result loaded";
         element.innerHTML = `
-            <strong>✓ ${escapeHTML(latest.fileName)}</strong><br>
-            Ngày đơn hàng: ${formatDateLabel(latest.sourceDate || reportDate)}
-            · ${formatStatusList(latest.selectedStatuses)}
-            · ${formatNumber(latest.rowCount)} dòng
+            <strong>✓ ${escapeHTML(latest.fileName)}</strong> ${badge}<br>
+            Đã đọc: <strong>${formatNumber(rawRows.length)}</strong> dòng toàn file ·
+            Bộ lọc hiện tại: <strong>${formatNumber(filteredRows.length)}</strong> dòng /
+            <strong>${formatNumber(uniqueSkuCountForRows(filteredRows))}</strong> SKU<br>
+            Ngày lọc: ${formatDateLabel(getShiftFilter(slot).sourceDate || reportDate)}
+            · ${formatStatusList([...getShiftFilter(slot).statuses])}
         `;
     });
 }
@@ -2255,8 +2482,6 @@ async function processShopeeUpload(file, slot, inputElement) {
 
     const reportDate = getSelectedReportDate();
     const filter = getShiftFilter(slot);
-    const sourceDate = filter.sourceDate;
-    const selectedStatuses = [...filter.statuses];
 
     if (!reportDate) {
         alert("Hãy chọn NGÀY BÁO CÁO trước.");
@@ -2264,20 +2489,8 @@ async function processShopeeUpload(file, slot, inputElement) {
         return;
     }
 
-    if (!sourceDate) {
-        alert(`Hãy chọn NGÀY ĐƠN HÀNG cho ${slotLabel(slot)} trước.`);
-        inputElement.value = "";
-        return;
-    }
-
-    if (!selectedStatuses.length) {
-        alert(`Hãy chọn ít nhất 1 TRẠNG THÁI cho ${slotLabel(slot)}.`);
-        inputElement.value = "";
-        return;
-    }
-
     try {
-        showToast(`Đang đọc ${slotLabel(slot).toLowerCase()}...`);
+        showToast(`Đang đọc TOÀN BỘ file ${slotLabel(slot).toLowerCase()}...`);
         setCloudStatus("☁️ Đang đồng bộ...", "syncing");
 
         const rows = await readExcelFile(file);
@@ -2291,28 +2504,19 @@ async function processShopeeUpload(file, slot, inputElement) {
             return;
         }
 
-        const filteredRows = parsedAll.filter(row =>
-            row.orderDate === sourceDate &&
-            filter.statuses.has(row.status)
-        );
-
-        if (!filteredRows.length) {
+        if (!parsedAll.length) {
             inputElement.value = "";
             setCloudStatus("☁️ Supabase Cloud");
-
-            alert(
-                `Không tìm thấy dòng nào phù hợp.\n\n` +
-                `Ngày đơn hàng: ${formatDateLabel(sourceDate)}\n` +
-                `Trạng thái: ${formatStatusList(selectedStatuses)}`
-            );
+            alert("File không có dòng SKU hợp lệ.");
             return;
         }
 
         const nowIso = new Date().toISOString();
         const baseFingerprint = await createFileFingerprint(file);
-        const importKey = `${reportDate}|${slot}|${sourceDate}|${baseFingerprint}`;
+        const importKey = `${reportDate}|${slot}|${baseFingerprint}`;
 
-        const rowsToSave = filteredRows.map(row => {
+        // V14: LƯU TOÀN BỘ DÒNG CỦA FILE.
+        const rowsToSave = parsedAll.map(row => {
             const savedRow = {
                 ...row,
                 sourceOrderDate: row.orderDate || "",
@@ -2327,8 +2531,23 @@ async function processShopeeUpload(file, slot, inputElement) {
             return savedRow;
         });
 
-        // Thay toàn bộ dữ liệu của đúng ca trong ngày báo cáo.
-        // Nếu upload lại file sáng, dữ liệu sáng cũ được thay bằng bản mới.
+        // Nếu ngày đang chọn không có trong file, tự chọn ngày phù hợp đầu tiên.
+        const availableDates = [...new Set(
+            parsedAll.map(row => row.orderDate).filter(Boolean)
+        )].sort();
+
+        if (!filter.sourceDate || !availableDates.includes(filter.sourceDate)) {
+            filter.sourceDate =
+                slot === "morning"
+                    ? (availableDates[0] || "")
+                    : (availableDates[availableDates.length - 1] || "");
+        }
+
+        // Nếu chưa có trạng thái được chọn thì dùng mặc định.
+        if (!filter.statuses?.size) {
+            filter.statuses = createDefaultShiftStatusSet();
+        }
+
         await dbReplaceShiftData(
             reportDate,
             slot,
@@ -2345,8 +2564,9 @@ async function processShopeeUpload(file, slot, inputElement) {
                 dates: [reportDate],
                 reportDate,
                 importSlot: slot,
-                sourceDate,
-                selectedStatuses
+                sourceDate: filter.sourceDate,
+                selectedStatuses: [...filter.statuses],
+                savedAllRows: true
             }
         );
 
@@ -2357,15 +2577,20 @@ async function processShopeeUpload(file, slot, inputElement) {
 
         inputElement.value = "";
 
-        renderAll();
+        // Nạp lại config vừa lưu nhưng không lọc mất dữ liệu.
         loadShiftConfigurationForReportDate(reportDate);
+
+        renderAll();
         setShiftTab(slot);
-        openView("sku-stats");
+        openView("import");
 
         setCloudStatus("☁️ Supabase Cloud");
 
+        const filteredRows = getFilteredRowsForReportSlot(reportDate, slot);
+
         showToast(
-            `${slotLabel(slot)}: đã lưu ${formatNumber(rowsToSave.length)} dòng cho ngày báo cáo ${formatDateLabel(reportDate)}.`
+            `${slotLabel(slot)}: đã đọc toàn bộ ${formatNumber(rowsToSave.length)} dòng; ` +
+            `bộ lọc hiện tại lấy ${formatNumber(filteredRows.length)} dòng.`
         );
     } catch (error) {
         console.error(error);
@@ -2389,10 +2614,20 @@ $("afternoonFile")?.addEventListener("change", event => {
 
 $("morningSourceDate")?.addEventListener("change", event => {
     getShiftFilter("morning").sourceDate = event.target.value;
+    renderAvailableDates("morning");
+    renderShiftStatusFilters("morning");
+    renderUploadSlotStatuses();
+    rebuildSkuStatistics();
+    queueSaveShiftFilterConfig("morning");
 });
 
 $("afternoonSourceDate")?.addEventListener("change", event => {
     getShiftFilter("afternoon").sourceDate = event.target.value;
+    renderAvailableDates("afternoon");
+    renderShiftStatusFilters("afternoon");
+    renderUploadSlotStatuses();
+    rebuildSkuStatistics();
+    queueSaveShiftFilterConfig("afternoon");
 });
 
 $("reportDateInput")?.addEventListener("change", event => {
@@ -2412,8 +2647,11 @@ document.querySelectorAll("[data-shift-tab]").forEach(button => {
 document.querySelectorAll("[data-status-all]").forEach(button => {
     button.addEventListener("click", () => {
         const slot = button.dataset.statusAll;
-        getShiftFilter(slot).statuses = new Set(SHOPEE_STATUS_OPTIONS);
+        getShiftFilter(slot).statuses = new Set(getObservedStatuses(getSelectedReportDate(), slot));
         renderShiftStatusFilters(slot);
+        renderUploadSlotStatuses();
+        rebuildSkuStatistics();
+        queueSaveShiftFilterConfig(slot);
     });
 });
 
@@ -2422,6 +2660,9 @@ document.querySelectorAll("[data-status-clear]").forEach(button => {
         const slot = button.dataset.statusClear;
         getShiftFilter(slot).statuses.clear();
         renderShiftStatusFilters(slot);
+        renderUploadSlotStatuses();
+        rebuildSkuStatistics();
+        queueSaveShiftFilterConfig(slot);
     });
 });
 
@@ -2482,18 +2723,30 @@ function renderStatsShiftSummaries(reportDate) {
     const morning = getLatestImportForSlot(reportDate, "morning");
     const afternoon = getLatestImportForSlot(reportDate, "afternoon");
 
+    const morningRows = reportDate
+        ? getFilteredRowsForReportSlot(reportDate, "morning")
+        : [];
+
+    const afternoonRows = reportDate
+        ? getFilteredRowsForReportSlot(reportDate, "afternoon")
+        : [];
+
     const morningEl = $("morningConfigSummary");
     const afternoonEl = $("afternoonConfigSummary");
 
     if (morningEl) {
         morningEl.textContent = morning
-            ? `Ngày đơn: ${formatDateLabel(morning.sourceDate || reportDate)} · ${formatStatusList(morning.selectedStatuses)} · ${formatNumber(morning.rowCount)} dòng`
+            ? `Ngày lọc: ${formatDateLabel(getShiftFilter("morning").sourceDate || reportDate)} · ` +
+              `${formatStatusList([...getShiftFilter("morning").statuses])} · ` +
+              `${formatNumber(morningRows.length)} dòng / ${formatNumber(uniqueSkuCountForRows(morningRows))} SKU`
             : "Chưa có dữ liệu buổi sáng.";
     }
 
     if (afternoonEl) {
         afternoonEl.textContent = afternoon
-            ? `Ngày đơn: ${formatDateLabel(afternoon.sourceDate || reportDate)} · ${formatStatusList(afternoon.selectedStatuses)} · ${formatNumber(afternoon.rowCount)} dòng`
+            ? `Ngày lọc: ${formatDateLabel(getShiftFilter("afternoon").sourceDate || reportDate)} · ` +
+              `${formatStatusList([...getShiftFilter("afternoon").statuses])} · ` +
+              `${formatNumber(afternoonRows.length)} dòng / ${formatNumber(uniqueSkuCountForRows(afternoonRows))} SKU`
             : "Chưa có dữ liệu buổi chiều.";
     }
 }
@@ -2505,6 +2758,9 @@ $("statsReportDateSelect")?.addEventListener("change", event => {
     state.selectedDates = new Set([dateKey]);
     state.dateFilterInitialized = true;
 
+    if ($("reportDateInput")) $("reportDateInput").value = dateKey;
+
+    loadShiftConfigurationForReportDate(dateKey);
     rebuildSkuStatistics();
     renderStatsShiftSummaries(dateKey);
 });
@@ -2518,43 +2774,54 @@ function rebuildSkuStatistics() {
     const reportDate = [...state.selectedDates][0] || "";
 
     const statsMap = new Map();
+
+    const morningRows = reportDate
+        ? getFilteredRowsForReportSlot(reportDate, "morning")
+        : [];
+
+    const afternoonRows = reportDate
+        ? getFilteredRowsForReportSlot(reportDate, "afternoon")
+        : [];
+
     let morningTotal = 0;
     let afternoonTotal = 0;
 
-    state.skuRows.forEach(row => {
-        if (!reportDate || row.orderDate !== reportDate) return;
+    function addRows(rows, slot) {
+        rows.forEach(row => {
+            const add = state.countMode === "quantity"
+                ? (row.quantity || 0)
+                : 1;
 
-        const add = state.countMode === "quantity"
-            ? (row.quantity || 0)
-            : 1;
+            if (!statsMap.has(row.sku)) {
+                statsMap.set(row.sku, {
+                    sku: row.sku,
+                    product: row.product,
+                    morning: 0,
+                    afternoon: 0,
+                    count: 0
+                });
+            }
 
-        if (!statsMap.has(row.sku)) {
-            statsMap.set(row.sku, {
-                sku: row.sku,
-                product: row.product,
-                morning: 0,
-                afternoon: 0,
-                count: 0
-            });
-        }
+            const item = statsMap.get(row.sku);
 
-        const item = statsMap.get(row.sku);
+            if (slot === "morning") {
+                item.morning += add;
+                morningTotal += add;
+            } else {
+                item.afternoon += add;
+                afternoonTotal += add;
+            }
 
-        if (row.importSlot === "afternoon") {
-            item.afternoon += add;
-            afternoonTotal += add;
-        } else {
-            // Dữ liệu cũ không có ca được xem như BUỔI SÁNG.
-            item.morning += add;
-            morningTotal += add;
-        }
+            item.count = item.morning + item.afternoon;
 
-        item.count = item.morning + item.afternoon;
+            if (!item.product && row.product) {
+                item.product = row.product;
+            }
+        });
+    }
 
-        if (!item.product && row.product) {
-            item.product = row.product;
-        }
-    });
+    addRows(morningRows, "morning");
+    addRows(afternoonRows, "afternoon");
 
     state.skuStats = [...statsMap.values()]
         .sort((a, b) =>
@@ -2571,23 +2838,27 @@ function rebuildSkuStatistics() {
     if ($("skuTotalCount")) $("skuTotalCount").textContent = formatNumber(totalCount);
     if ($("skuConvertedTotal")) $("skuConvertedTotal").textContent = formatNumber(convertedGrandTotal);
 
-    // Tổng quan vẫn dùng tổng 2 ca.
     if ($("overviewFilteredRows")) $("overviewFilteredRows").textContent = formatNumber(totalCount);
     if ($("overviewUniqueSku")) $("overviewUniqueSku").textContent = formatNumber(state.skuStats.length);
     if ($("overviewSkuCount")) $("overviewSkuCount").textContent = formatNumber(totalCount);
     if ($("overviewConvertedTotal")) $("overviewConvertedTotal").textContent = formatNumber(convertedGrandTotal);
+
     if ($("overviewCountModeText")) {
         $("overviewCountModeText").textContent = state.countMode === "rows"
-            ? "Sáng + Chiều"
+            ? "Theo bộ lọc Sáng + Chiều"
             : "Cộng theo cột Số lượng";
     }
 
     if ($("navSkuCount")) $("navSkuCount").textContent = state.skuStats.length;
 
     const scopeText = $("skuTableScopeText");
+
     if (scopeText) {
         scopeText.textContent = reportDate
-            ? `NGÀY BÁO CÁO ${formatDateLabel(reportDate)} · Sáng ${formatNumber(morningTotal)} · Chiều ${formatNumber(afternoonTotal)} · Tổng ${formatNumber(totalCount)}`
+            ? `NGÀY BÁO CÁO ${formatDateLabel(reportDate)} · ` +
+              `Sáng ${formatNumber(morningTotal)} · ` +
+              `Chiều ${formatNumber(afternoonTotal)} · ` +
+              `Tổng ${formatNumber(totalCount)}`
             : "Chưa chọn ngày báo cáo.";
     }
 
@@ -2596,6 +2867,8 @@ function rebuildSkuStatistics() {
     renderOverviewSkuTable();
     renderOverviewFileSummary();
     renderImportSummary();
+    renderUploadSlotStatuses();
+    renderStatsShiftSummaries(reportDate);
     renderHistory();
 }
 
@@ -2812,17 +3085,25 @@ function hasAnyConversion(sourceSku) {
     return state.baseSkus.some(baseSku => getConversionFactor(sourceSku, baseSku) > 0);
 }
 
-function calculateConvertedTotals() {
+function calculateConvertedTotalsForField(fieldName) {
     const totals = {};
     state.baseSkus.forEach(baseSku => totals[baseSku] = 0);
 
     state.skuStats.forEach(item => {
+        const sourceCount = Number(item[fieldName] || 0);
+
         state.baseSkus.forEach(baseSku => {
-            totals[baseSku] += item.count * getConversionFactor(item.sku, baseSku);
+            totals[baseSku] +=
+                sourceCount *
+                getConversionFactor(item.sku, baseSku);
         });
     });
 
     return totals;
+}
+
+function calculateConvertedTotals() {
+    return calculateConvertedTotalsForField("count");
 }
 
 function renderConversionTable() {
@@ -3051,22 +3332,42 @@ $("btnResetConversions").addEventListener("click", async () => {
 
 function renderConvertedTotals() {
     const body = $("convertedTotalsBody");
-    const totals = calculateConvertedTotals();
+
+    const morningTotals = calculateConvertedTotalsForField("morning");
+    const afternoonTotals = calculateConvertedTotalsForField("afternoon");
+    const totalTotals = calculateConvertedTotalsForField("count");
 
     const rows = state.baseSkus
-        .map(sku => ({ sku, total: totals[sku] || 0 }))
+        .map(sku => ({
+            sku,
+            morning: morningTotals[sku] || 0,
+            afternoon: afternoonTotals[sku] || 0,
+            total: totalTotals[sku] || 0
+        }))
         .filter(item => item.total > 0)
         .sort((a, b) => b.total - a.total);
 
     if (!rows.length) {
-        body.innerHTML = '<tr><td colspan="2" class="empty-table">Chưa có dữ liệu quy đổi.</td></tr>';
+        body.innerHTML =
+            '<tr><td colspan="4" class="empty-table">Chưa có dữ liệu quy đổi.</td></tr>';
         return;
     }
 
     body.innerHTML = rows.map(item => `
         <tr class="total-converted-table">
             <td><strong>${escapeHTML(item.sku)}</strong></td>
-            <td class="center">${formatNumber(item.total)}</td>
+
+            <td class="center converted-shift-value">
+                ${item.morning ? formatNumber(item.morning) : ""}
+            </td>
+
+            <td class="center converted-shift-value">
+                ${item.afternoon ? formatNumber(item.afternoon) : ""}
+            </td>
+
+            <td class="center converted-total-value">
+                ${formatNumber(item.total)}
+            </td>
         </tr>
     `).join("");
 }
@@ -3426,41 +3727,54 @@ function showToast(message) {
 /* ======================== RENDER ALL ======================== */
 
 function getReportDateGroups() {
-    const groups = new Map();
+    const reportDates = [...new Set(
+        state.skuRows.map(row => row.orderDate).filter(Boolean)
+    )];
 
-    state.skuRows.forEach(row => {
-        const dateKey = row.orderDate || "";
-        if (!dateKey) return;
+    return reportDates
+        .map(dateKey => {
+            const morningInfo = getLatestImportForSlot(dateKey, "morning");
+            const afternoonInfo = getLatestImportForSlot(dateKey, "afternoon");
 
-        if (!groups.has(dateKey)) {
-            groups.set(dateKey, {
+            function rowsBySavedFilter(slot, info) {
+                const rawRows = getRawRowsForReportSlot(dateKey, slot);
+                if (!info) return [];
+
+                const statuses = new Set(info.selectedStatuses || []);
+                const sourceDate = info.sourceDate || "";
+
+                return rawRows.filter(row =>
+                    (!sourceDate || row.sourceOrderDate === sourceDate) &&
+                    statuses.has(row.status)
+                );
+            }
+
+            const morningRows = rowsBySavedFilter("morning", morningInfo);
+            const afternoonRows = rowsBySavedFilter("afternoon", afternoonInfo);
+
+            const countRows = rows => {
+                if (state.countMode === "quantity") {
+                    return sum(rows.map(row => row.quantity || 0));
+                }
+                return rows.length;
+            };
+
+            const allFiltered = [...morningRows, ...afternoonRows];
+
+            const updatedAt = [...getRawRowsForReportSlot(dateKey, "morning"),
+                               ...getRawRowsForReportSlot(dateKey, "afternoon")]
+                .map(row => row.updatedAt || "")
+                .sort()
+                .pop() || "";
+
+            return {
                 dateKey,
-                morning: 0,
-                afternoon: 0,
-                orders: new Set(),
-                updatedAt: ""
-            });
-        }
-
-        const group = groups.get(dateKey);
-        const add = state.countMode === "quantity"
-            ? (row.quantity || 0)
-            : 1;
-
-        if (row.importSlot === "afternoon") {
-            group.afternoon += add;
-        } else {
-            group.morning += add;
-        }
-
-        if (row.orderId) group.orders.add(row.orderId);
-
-        if (String(row.updatedAt || "") > String(group.updatedAt || "")) {
-            group.updatedAt = row.updatedAt || "";
-        }
-    });
-
-    return [...groups.values()]
+                morning: countRows(morningRows),
+                afternoon: countRows(afternoonRows),
+                orders: new Set(allFiltered.map(row => row.orderId).filter(Boolean)),
+                updatedAt
+            };
+        })
         .sort((a, b) =>
             String(b.dateKey).localeCompare(String(a.dateKey))
         );
@@ -3565,6 +3879,9 @@ function renderHistory() {
 
             state.selectedDates = new Set([dateKey]);
             state.dateFilterInitialized = true;
+
+            if ($("reportDateInput")) $("reportDateInput").value = dateKey;
+            loadShiftConfigurationForReportDate(dateKey);
 
             renderDateFilters();
             rebuildSkuStatistics();
