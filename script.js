@@ -1,5 +1,5 @@
-* =========================================================
-   RUCOS - SHOPEE SKU STATISTICS V4
+/* =========================================================
+   RUCOS - SHOPEE SKU STATISTICS + TABS V5
    Chỉ tập trung: nhập file Shopee -> lọc trạng thái -> thống kê -> quy đổi
 ========================================================= */
 
@@ -53,6 +53,26 @@ const PAGE_INFO = {
     "sku-stats": {
         title: "Thống kê & quy đổi SKU",
         subtitle: "Đếm SKU theo trạng thái và quy đổi combo / quà tặng"
+    },
+    orders: {
+        title: "Đơn hàng Shopee",
+        subtitle: "Danh sách dòng sản phẩm đọc trực tiếp từ file đơn hàng Shopee"
+    },
+    fees: {
+        title: "Phí sàn",
+        subtitle: "Module đối soát phí - sẽ nối file tài chính khi có dữ liệu"
+    },
+    returns: {
+        title: "Hoàn / Hủy",
+        subtitle: "Theo dõi các đơn hoàn, trả hoặc hủy có trong file Shopee"
+    },
+    payments: {
+        title: "Thanh toán",
+        subtitle: "Module thanh toán - sẽ nối file thu nhập/settlement khi có dữ liệu"
+    },
+    issues: {
+        title: "Sai lệch",
+        subtitle: "Module phát hiện sai lệch tài chính - sẽ triển khai khi có dữ liệu đối soát"
     }
 };
 
@@ -127,7 +147,7 @@ document.querySelectorAll("[data-open-view]").forEach(button => {
     button.addEventListener("click", () => openView(button.dataset.openView));
 });
 
-$("btnGoImport").addEventListener("click", () => openView("import"));
+if ($("btnGoImport")) $("btnGoImport").addEventListener("click", () => openView("import"));
 
 function openView(viewName) {
     document.querySelectorAll(".view").forEach(view => view.classList.remove("active"));
@@ -143,6 +163,9 @@ function openView(viewName) {
         $("pageTitle").textContent = info.title;
         $("pageSubtitle").textContent = info.subtitle;
     }
+
+    if (viewName === "orders") renderOrdersTab();
+    if (viewName === "returns") renderReturnsTab();
 }
 
 /* ======================== EXCEL ======================== */
@@ -673,6 +696,111 @@ function renderTopFileState() {
     }
 }
 
+
+/* ======================== ĐƠN HÀNG + HOÀN/HỦY ======================== */
+function buildUniqueOrderCount() {
+    const ids = new Set(
+        state.skuRows
+            .map(row => String(row.orderId || "").trim())
+            .filter(Boolean)
+    );
+    return ids.size;
+}
+
+function isReturnOrCancelStatus(status) {
+    const text = normalizeText(status);
+    return (
+        text.includes("trahang") ||
+        text.includes("hoantra") ||
+        text.includes("refund") ||
+        text.includes("returned") ||
+        text.includes("dahuy") ||
+        text.includes("huy") ||
+        text.includes("cancel")
+    );
+}
+
+function renderOrdersTab() {
+    const body = $("orderTableBody");
+    const summary = $("orderTableSummary");
+    if (!body || !summary) return;
+
+    let data = [...state.skuRows];
+    const search = normalizeText($("orderSearch")?.value || "");
+
+    if (search) {
+        data = data.filter(row =>
+            normalizeText(
+                `${row.orderId} ${row.sku} ${row.product} ${row.status}`
+            ).includes(search)
+        );
+    }
+
+    summary.textContent = `${formatNumber(data.length)} dòng sản phẩm · ${formatNumber(buildUniqueOrderCount())} mã đơn`;
+
+    if (!data.length) {
+        body.innerHTML = `<tr><td colspan="5" class="empty-table">${state.skuRows.length ? "Không tìm thấy dữ liệu phù hợp." : "Hãy nhập file Shopee trước."}</td></tr>`;
+        return;
+    }
+
+    body.innerHTML = data.map(row => `
+        <tr>
+            <td><strong>${escapeHTML(row.orderId || "-")}</strong></td>
+            <td>${escapeHTML(row.status || "-")}</td>
+            <td><strong>${escapeHTML(row.sku)}</strong></td>
+            <td>${escapeHTML(row.product || "")}</td>
+            <td class="center">${formatNumber(row.quantity || 0)}</td>
+        </tr>
+    `).join("");
+}
+
+function renderReturnsTab() {
+    const body = $("returnTableBody");
+    const summary = $("returnTableSummary");
+    if (!body || !summary) return;
+
+    const data = state.skuRows.filter(row => isReturnOrCancelStatus(row.status));
+    const uniqueOrders = new Set(data.map(row => row.orderId).filter(Boolean)).size;
+
+    summary.textContent = `${formatNumber(data.length)} dòng · ${formatNumber(uniqueOrders)} mã đơn`;
+
+    if (!data.length) {
+        body.innerHTML = `<tr><td colspan="5" class="empty-table">${state.skuRows.length ? "Không có đơn hoàn / hủy trong file đang nhập." : "Hãy nhập file Shopee trước."}</td></tr>`;
+        return;
+    }
+
+    body.innerHTML = data.map(row => `
+        <tr>
+            <td><strong>${escapeHTML(row.orderId || "-")}</strong></td>
+            <td>${escapeHTML(row.status || "-")}</td>
+            <td><strong>${escapeHTML(row.sku)}</strong></td>
+            <td>${escapeHTML(row.product || "")}</td>
+            <td class="center">${formatNumber(row.quantity || 0)}</td>
+        </tr>
+    `).join("");
+}
+
+function refreshNavCounts() {
+    const navOrder = $("navOrderCount");
+    const navReturn = $("navReturnCount");
+
+    if (navOrder) navOrder.textContent = formatNumber(buildUniqueOrderCount());
+
+    if (navReturn) {
+        const returnOrders = new Set(
+            state.skuRows
+                .filter(row => isReturnOrCancelStatus(row.status))
+                .map(row => row.orderId)
+                .filter(Boolean)
+        );
+        navReturn.textContent = formatNumber(returnOrders.size);
+    }
+}
+
+if ($("orderSearch")) {
+    $("orderSearch").addEventListener("input", renderOrdersTab);
+}
+
 /* ======================== EXPORT ======================== */
 $("btnExportSku").addEventListener("click", () => {
     if (!state.skuStats.length) {
@@ -762,6 +890,9 @@ function renderAll() {
     renderStatusFilters();
     rebuildSkuStatistics();
     renderOverviewFileSummary();
+    renderOrdersTab();
+    renderReturnsTab();
+    refreshNavCounts();
 }
 
 loadConversionConfig();
