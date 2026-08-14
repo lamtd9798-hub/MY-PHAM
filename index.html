@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V17: chữ dễ đọc hơn + nhớ trang/ngày + STT 2 bảng + cân lại độ rộng cột -->
+    <!-- ONE-FILE V18: sửa độ rộng bảng - STT/SKU nhỏ, Tên sản phẩm rộng nhất -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1188,6 +1188,123 @@ button{cursor:pointer}
     background:#f8fbfa;
 }
 
+
+/* =========================================================
+   V18 - SỬA ĐỘ RỘNG CỘT BẢNG SKU
+========================================================= */
+
+/* Bảng chính: giữ tổng chiều ngang hợp lý và cho Tên sản phẩm rộng nhất */
+.conversion-scroll{
+    overflow-x:auto!important;
+}
+.conversion-table{
+    width:100%!important;
+    min-width:1320px!important;
+    table-layout:fixed!important;
+}
+
+/* STT nhỏ */
+.conversion-table .stt-col{
+    width:42px!important;
+    min-width:42px!important;
+    max-width:42px!important;
+    text-align:center!important;
+    padding-left:4px!important;
+    padding-right:4px!important;
+}
+
+/* SKU nhỏ, không chiếm chỗ */
+.conversion-table .sku-code-cell{
+    padding-left:10px!important;
+    padding-right:8px!important;
+    white-space:nowrap!important;
+}
+.conversion-table .sku-code-cell strong{
+    white-space:nowrap!important;
+}
+
+/* Tên sản phẩm là cột rộng nhất */
+.conversion-table .product-name-cell{
+    white-space:normal!important;
+    overflow-wrap:break-word!important;
+    word-break:normal!important;
+    line-height:1.4!important;
+    padding-left:12px!important;
+    padding-right:12px!important;
+}
+
+/* Sáng / Chiều / Tổng vừa phải */
+.conversion-table .stat-shift-col{
+    width:74px!important;
+    min-width:74px!important;
+    max-width:74px!important;
+    text-align:center!important;
+}
+.conversion-table .stat-total-col{
+    width:78px!important;
+    min-width:78px!important;
+    max-width:78px!important;
+    text-align:center!important;
+}
+
+/* Cột quy đổi nhỏ gọn */
+.conversion-table .base-sku-header{
+    width:62px!important;
+    min-width:62px!important;
+    max-width:62px!important;
+    white-space:nowrap!important;
+    text-align:center!important;
+    padding-left:3px!important;
+    padding-right:3px!important;
+}
+.conversion-table .base-sku-header.wide-base-sku{
+    width:102px!important;
+    min-width:102px!important;
+    max-width:102px!important;
+}
+.conversion-table .wide-base-sku-cell{
+    width:102px!important;
+    min-width:102px!important;
+    max-width:102px!important;
+}
+.conversion-table .conversion-input{
+    width:36px!important;
+    height:28px!important;
+    padding:0!important;
+    margin:0 auto!important;
+    text-align:center!important;
+}
+.conversion-table th,
+.conversion-table td{
+    box-sizing:border-box!important;
+}
+
+/* Cột trạng thái Quy đổi gọn */
+.conversion-table th:last-child,
+.conversion-table td:last-child{
+    width:90px!important;
+    min-width:90px!important;
+    max-width:90px!important;
+    text-align:center!important;
+}
+
+/* Header không làm cột SKU / Tên sản phẩm bị bó */
+.conversion-table th:nth-child(2){
+    padding-left:10px!important;
+    text-align:left!important;
+}
+.conversion-table th:nth-child(3){
+    padding-left:12px!important;
+    text-align:left!important;
+}
+
+/* Bảng sau quy đổi vẫn giữ gọn */
+.converted-summary-table{
+    width:760px!important;
+    max-width:100%!important;
+    table-layout:fixed!important;
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1589,6 +1706,7 @@ button{cursor:pointer}
 
                     <div class="table-scroll conversion-scroll">
                         <table class="conversion-table">
+                            <colgroup id="skuStatsColgroup"></colgroup>
                             <thead id="skuStatsHead"></thead>
                             <tbody id="skuStatsBody"><tr><td class="empty-table">Chưa có dữ liệu</td></tr></tbody>
                             <tfoot id="skuStatsFoot"></tfoot>
@@ -3971,8 +4089,22 @@ function renderConversionTable() {
     const body = $("skuStatsBody");
     const foot = $("skuStatsFoot");
     const warning = $("conversionWarning");
+    const colgroup = $("skuStatsColgroup");
 
-    if (!head || !body || !foot || !warning) return;
+    if (!head || !body || !foot || !warning || !colgroup) return;
+
+    colgroup.innerHTML = `
+        <col style="width:42px">
+        <col style="width:88px">
+        <col style="width:410px">
+        <col style="width:74px">
+        <col style="width:74px">
+        <col style="width:78px">
+        ${state.baseSkus.map(baseSku =>
+            `<col style="width:${baseSku === "OBM-100326-2" ? 102 : 62}px">`
+        ).join("")}
+        <col style="width:90px">
+    `;
 
     head.innerHTML = `
         <tr>
