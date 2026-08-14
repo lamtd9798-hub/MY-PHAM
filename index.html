@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V35: bảng tồn kho chia nhóm trực quan + Chờ HĐ không hiển thị sai khi khác kỳ -->
+    <!-- ONE-FILE V36: đối chiếu kho ngay tổng quan + tồn lý thuyết + khớp/thiếu/thừa -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3947,6 +3947,40 @@ button{cursor:pointer}
     .inventory-v35-legend{grid-template-columns:1fr}
 }
 
+
+/* =========================================================
+   V36 - ĐỐI CHIẾU KHO NGAY TRÊN TỔNG QUAN
+========================================================= */
+.inventory-reconcile-overview-v36{margin-bottom:10px;padding:11px 12px;border:1px solid #d7e4e8;border-radius:9px;background:#fff}
+.inventory-reconcile-overview-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.inventory-reconcile-overview-title strong{display:block;color:#243e49;font-size:10px}
+.inventory-reconcile-overview-title span{display:block;margin-top:3px;color:#7d9098;font-size:7.5px}
+.inventory-reconcile-overview-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.inventory-reconcile-overview-card{padding:9px 10px;border:1px solid #e0e8eb;border-radius:8px;background:#fafcfd}
+.inventory-reconcile-overview-card span{display:block;color:#7a8b93;font-size:6.5px;font-weight:850}
+.inventory-reconcile-overview-card strong{display:block;margin-top:4px;color:#243e49;font-size:14px}
+.inventory-reconcile-overview-card.match{background:#eff9f6;border-color:#c2e2da}.inventory-reconcile-overview-card.match strong{color:#087863}
+.inventory-reconcile-overview-card.shortage{background:#fff3f3;border-color:#f0c9c9}.inventory-reconcile-overview-card.shortage strong{color:#c83e43}
+.inventory-reconcile-overview-card.surplus{background:#fff8eb;border-color:#efd9aa}.inventory-reconcile-overview-card.surplus strong{color:#a76b0e}
+.inventory-reconcile-overview-card.value strong{font-size:11px}
+.inventory-reconcile-overview-hint{margin-top:8px;padding:7px 9px;border-radius:7px;background:#f7f9fa;color:#758891;font-size:7.4px;line-height:1.5}
+.inventory-reconcile-overview-hint.ok{background:#eff9f6;color:#087863}.inventory-reconcile-overview-hint.warning{background:#fff8eb;color:#966315}
+.inventory-group-reconcile-v36{background:#f7f1fd!important;color:#7551a4!important;border-left:2px solid #bea7db!important}
+.inventory-summary-table .inventory-col-theory-v36,.inventory-summary-table td.inventory-col-theory-v36{background:#f4faf8;color:#14745e;font-weight:900}
+.inventory-summary-table .inventory-col-variance-v36,.inventory-summary-table td.inventory-col-variance-v36{background:#fbf9fd;font-weight:900}
+.inventory-summary-table .inventory-col-result-v36,.inventory-summary-table td.inventory-col-result-v36{background:#fcfbfd}
+.inventory-stock-variance{display:inline-flex;align-items:center;justify-content:center;min-width:42px;min-height:25px;padding:0 6px;border-radius:6px;font-size:8px;font-weight:950}
+.inventory-stock-variance.zero{background:#e7f7f2;color:#087863}.inventory-stock-variance.shortage{background:#ffeded;color:#c43d42}
+.inventory-stock-variance.surplus{background:#fff2d5;color:#9a650c}.inventory-stock-variance.pending{background:#f0f3f4;color:#8a989e}
+.inventory-stock-result-v36{display:inline-flex;align-items:center;justify-content:center;min-width:70px;min-height:24px;padding:0 7px;border-radius:999px;font-size:7px;font-weight:900;white-space:nowrap}
+.inventory-stock-result-v36.match{background:#e7f7f2;color:#087863}.inventory-stock-result-v36.shortage{background:#ffeded;color:#c43d42}
+.inventory-stock-result-v36.surplus{background:#fff2d5;color:#9a650c}.inventory-stock-result-v36.pending{background:#edf1f3;color:#73838b}
+.inventory-stock-result-date-v36{display:block;margin-top:3px;color:#89979d;font-size:6.2px;white-space:nowrap}
+.inventory-theory-date-v36{display:block;margin-top:2px;color:#82949b;font-size:6px;font-weight:650}
+.inventory-summary-table{min-width:1980px}.inventory-v36-legend{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1150px){.inventory-reconcile-overview-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.inventory-v36-legend{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.inventory-reconcile-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.inventory-v36-legend{grid-template-columns:1fr}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -4728,6 +4762,27 @@ button{cursor:pointer}
 
             <div id="inventoryWarningBox" class="inventory-warning-box hidden"></div>
 
+            <div id="inventoryReconcileOverviewV36" class="inventory-reconcile-overview-v36">
+                <div class="inventory-reconcile-overview-title">
+                    <div>
+                        <strong>🔎 Đối chiếu kho gần nhất</strong>
+                        <span id="inventoryReconcileOverviewDate">Chưa có lần đối chiếu</span>
+                    </div>
+                    <button type="button" id="btnInventoryReconcileNowV36" class="btn btn-primary">Kiểm kê ngay →</button>
+                </div>
+                <div class="inventory-reconcile-overview-grid">
+                    <div class="inventory-reconcile-overview-card"><span>ĐÃ ĐỐI CHIẾU</span><strong id="inventoryOverviewReconcileCount">0/0</strong></div>
+                    <div class="inventory-reconcile-overview-card match"><span>KHỚP</span><strong id="inventoryOverviewMatched">0</strong></div>
+                    <div class="inventory-reconcile-overview-card shortage"><span>THIẾU</span><strong id="inventoryOverviewShortage">0</strong></div>
+                    <div class="inventory-reconcile-overview-card surplus"><span>THỪA</span><strong id="inventoryOverviewSurplus">0</strong></div>
+                    <div class="inventory-reconcile-overview-card variance"><span>CHÊNH SỐ LƯỢNG</span><strong id="inventoryOverviewVarianceQty">—</strong></div>
+                    <div class="inventory-reconcile-overview-card value"><span>GIÁ TRỊ CHÊNH</span><strong id="inventoryOverviewVarianceValue">—</strong></div>
+                </div>
+                <div id="inventoryReconcileOverviewHint" class="inventory-reconcile-overview-hint">
+                    Chưa có dữ liệu đối chiếu. Vào “Kiểm kê & đối chiếu”, nhập số đếm thực tế rồi Chốt kiểm kê.
+                </div>
+            </div>
+
             <div class="inventory-kpi-grid">
                 <div class="inventory-kpi-card primary">
                     <span>TỒN THỰC TẾ TẠI KHO</span>
@@ -4788,88 +4843,55 @@ button{cursor:pointer}
                                 <th rowspan="2">STT</th>
                                 <th rowspan="2">SKU kho</th>
                                 <th rowspan="2">Tên sản phẩm</th>
-
-                                <th colspan="4" class="inventory-group-stock">
-                                    📦 KHO TẠI CHỖ
-                                </th>
-
-                                <th colspan="3" class="inventory-group-transit">
-                                    🚚 LUÂN CHUYỂN HIỆN TẠI
-                                </th>
-
-                                <th colspan="2" class="inventory-group-invoice">
-                                    🧾 ĐỐI CHIẾU HÓA ĐƠN
-                                </th>
-
-                                <th colspan="3" class="inventory-group-value">
-                                    💰 GIÁ TRỊ & CẢNH BÁO
-                                </th>
+                                <th colspan="5" class="inventory-group-stock">📦 KHO TẠI CHỖ</th>
+                                <th colspan="2" class="inventory-group-reconcile-v36">🔎 ĐỐI CHIẾU KHO</th>
+                                <th colspan="3" class="inventory-group-transit">🚚 LUÂN CHUYỂN HIỆN TẠI</th>
+                                <th colspan="2" class="inventory-group-invoice">🧾 ĐỐI CHIẾU HÓA ĐƠN</th>
+                                <th colspan="3" class="inventory-group-value">💰 GIÁ TRỊ & CẢNH BÁO</th>
                             </tr>
-
                             <tr class="inventory-column-header">
                                 <th class="center">Tồn đầu</th>
-                                <th class="center inventory-col-physical">Tồn thực tế</th>
-                                <th class="center inventory-col-reserved"
-                                    title="Hàng đã có đơn nhưng chưa rời kho. Nguồn: snapshot luân chuyển Shopee.">
-                                    Giữ đơn
-                                </th>
-                                <th class="center inventory-col-available"
-                                    title="Khả dụng = Tồn thực tế - Giữ đơn">
-                                    Khả dụng
-                                </th>
-
-                                <th class="center inventory-col-transit"
-                                    title="Hàng đã rời kho và đang vận chuyển. Nguồn: snapshot luân chuyển Shopee.">
-                                    Đang giao
-                                </th>
-                                <th class="center inventory-col-delivered"
-                                    title="Khách đã nhận. Nguồn: snapshot luân chuyển Shopee.">
-                                    Đã giao
-                                </th>
-                                <th class="center inventory-col-returning"
-                                    title="Hàng đang quay về kho, chưa cộng lại tồn thực tế.">
-                                    Hoàn đang về
-                                </th>
-
-                                <th class="center inventory-col-invoice"
-                                    title="Số lượng có Số hóa đơn hợp lệ trong file MISA đang xem. Không dùng để trừ tồn vật lý lần hai.">
-                                    Đã xuất HĐ
-                                </th>
-                                <th class="center inventory-col-waiting"
-                                    title="Chỉ tính khi dữ liệu MISA và snapshot đủ điều kiện so sánh.">
-                                    Chờ HĐ*
-                                </th>
-
+                                <th class="center inventory-col-physical" title="Số đếm thực tế ở lần kiểm kê gần nhất.">Tồn thực tế</th>
+                                <th class="center inventory-col-theory-v36" title="Tồn lý thuyết hiện tại = mốc kiểm kê + nhập + hoàn nhập - hàng rời kho - xuất khác +/- điều chỉnh.">Tồn LT hiện tại</th>
+                                <th class="center inventory-col-reserved" title="Hàng đã có đơn nhưng chưa rời kho.">Giữ đơn</th>
+                                <th class="center inventory-col-available" title="Khả dụng = Tồn thực tế - Giữ đơn">Khả dụng</th>
+                                <th class="center inventory-col-variance-v36" title="Chênh lần kiểm = Thực tế đếm - Tồn lý thuyết tại thời điểm kiểm kê.">Chênh lần kiểm</th>
+                                <th class="center inventory-col-result-v36">Kết quả</th>
+                                <th class="center inventory-col-transit">Đang giao</th>
+                                <th class="center inventory-col-delivered">Đã giao</th>
+                                <th class="center inventory-col-returning">Hoàn đang về</th>
+                                <th class="center inventory-col-invoice">Đã xuất HĐ</th>
+                                <th class="center inventory-col-waiting">Chờ HĐ*</th>
                                 <th class="right">Đơn giá</th>
                                 <th class="right">Giá trị tồn</th>
                                 <th class="center">Cảnh báo</th>
                             </tr>
                         </thead>
                         <tbody id="inventorySummaryBody">
-                            <tr><td colspan="15" class="empty-table">Chưa có dữ liệu tồn kho.</td></tr>
+                            <tr><td colspan="18" class="empty-table">Chưa có dữ liệu tồn kho.</td></tr>
                         </tbody>
                         <tfoot id="inventorySummaryFoot"></tfoot>
                     </table>
                 </div>
 
-                <div class="inventory-table-note inventory-v35-legend">
+                <div class="inventory-table-note inventory-v35-legend inventory-v36-legend">
                     <div>
                         <strong>📦 Kho tại chỗ:</strong>
+                        <b>Tồn LT hiện tại</b> là số hệ thống dự kiến còn trong kho dựa trên mốc kiểm kê và phát sinh sau mốc.
                         <b>Khả dụng = Tồn thực tế − Giữ đơn.</b>
-                        Đang giao / Đã giao đã ở ngoài kho nên không trừ Tồn thực tế thêm lần nữa.
                     </div>
-
                     <div>
-                        <strong>🚚 Luân chuyển hiện tại:</strong>
-                        Giữ đơn / Đang giao / Đã giao / Hoàn đang về chỉ lấy từ
-                        <strong>snapshot Shopee mới nhất</strong> upload trong module này.
+                        <strong>🔎 Đối chiếu kho:</strong>
+                        <b>Chênh lần kiểm = Số đếm thực tế − Tồn lý thuyết tại thời điểm kiểm kê.</b>
+                        0 = Khớp; âm = Thiếu; dương = Thừa. Chưa chốt kiểm kê thì hiển thị “Chưa đối chiếu”.
                     </div>
-
                     <div>
-                        <strong>🧾 Đối chiếu hóa đơn:</strong>
-                        Đã xuất HĐ lấy từ file MISA.
-                        <strong>* Chờ HĐ = Đã giao − Đã xuất HĐ</strong> chỉ hiển thị khi hai nguồn có thể so sánh.
-                        Nếu phát hiện <b>khác kỳ</b>, V35 hiển thị <b>—</b> thay vì 0 để tránh hiểu nhầm.
+                        <strong>🚚 Luân chuyển:</strong>
+                        Đang giao / Đã giao / Hoàn đang về là hàng ngoài kho, lấy từ snapshot Shopee mới nhất.
+                    </div>
+                    <div>
+                        <strong>🧾 Hóa đơn:</strong>
+                        Đã xuất HĐ lấy từ MISA. Nếu MISA và snapshot khác kỳ, Chờ HĐ hiển thị <b>—</b>.
                     </div>
                 </div>
             </div>
@@ -10212,12 +10234,91 @@ async function processInventoryTransitUpload(file) {
     }
 }
 
+
+function parseInventoryNumberFromNote(value) {
+    const raw = String(value ?? "").trim();
+    if (!raw) return null;
+    const normalized = raw.replace(/\s+/g, "").replace(/,/g, "");
+    const number = Number(normalized);
+    return Number.isFinite(number) ? number : null;
+}
+function parseInventoryReconcileNote(note) {
+    const textValue = String(note || "");
+    const theoryMatch = textValue.match(/Lý\s*thuyết\s*([+-]?\d[\d.,]*)/i);
+    const actualMatch = textValue.match(/Thực\s*tế\s*([+-]?\d[\d.,]*)/i);
+    const varianceMatch = textValue.match(/Chênh\s*([+-]?\d[\d.,]*)/i);
+    const theory = theoryMatch ? parseInventoryNumberFromNote(theoryMatch[1]) : null;
+    const actual = actualMatch ? parseInventoryNumberFromNote(actualMatch[1]) : null;
+    let variance = varianceMatch ? parseInventoryNumberFromNote(varianceMatch[1]) : null;
+    if (variance === null && theory !== null && actual !== null) variance = actual - theory;
+    if (theory === null || actual === null || variance === null) return null;
+    return { theory, actual, variance };
+}
+function getLatestInventoryReconcileRecord(itemCode) {
+    const rows = (inventoryState.stocktakes || [])
+        .filter(row => row.item_code === itemCode)
+        .map(row => ({ row, parsed: parseInventoryReconcileNote(row.note) }))
+        .filter(entry => entry.parsed)
+        .sort((a, b) => {
+            const d = String(b.row.stocktake_date || "").localeCompare(String(a.row.stocktake_date || ""));
+            return d || String(b.row.created_at || "").localeCompare(String(a.row.created_at || ""));
+        });
+    if (!rows.length) return null;
+    const latest = rows[0];
+    return {
+        date: latest.row.stocktake_date || "",
+        createdAt: latest.row.created_at || "",
+        theory: Number(latest.parsed.theory || 0),
+        actual: Number(latest.parsed.actual || 0),
+        variance: Number(latest.parsed.variance || 0)
+    };
+}
+function getInventoryReconcileStatusV36(record) {
+    if (!record) return { key: "pending", label: "Chưa đối chiếu" };
+    const variance = Number(record.variance || 0);
+    if (variance === 0) return { key: "match", label: "✓ Khớp" };
+    if (variance < 0) return { key: "shortage", label: `Thiếu ${formatNumber(Math.abs(variance))}` };
+    return { key: "surplus", label: `Thừa ${formatNumber(variance)}` };
+}
+function buildInventoryReconcileOverviewV36(summary) {
+    const records = summary.map(item => ({ item, record: item.lastReconcile })).filter(x => x.record?.date);
+    const latestDate = records.map(x => x.record.date).sort().reverse()[0] || "";
+    const currentRecords = latestDate ? records.filter(x => x.record.date === latestDate) : [];
+    const stats = {latestDate,counted:currentRecords.length,totalItems:summary.length,matched:0,shortage:0,surplus:0,varianceQty:0,varianceValue:0};
+    currentRecords.forEach(({item,record}) => {
+        const variance=Number(record.variance||0);
+        stats.varianceQty += variance;
+        stats.varianceValue += variance * Number(item.unitPrice||0);
+        if (variance===0) stats.matched++; else if (variance<0) stats.shortage++; else stats.surplus++;
+    });
+    return stats;
+}
+function renderInventoryReconcileOverviewV36(summary) {
+    const stats = buildInventoryReconcileOverviewV36(summary);
+    if ($("inventoryReconcileOverviewDate")) $("inventoryReconcileOverviewDate").textContent =
+        stats.latestDate ? `Lần chốt gần nhất: ${formatDateLabel(stats.latestDate)}` : "Chưa có lần đối chiếu nào được chốt";
+    if ($("inventoryOverviewReconcileCount")) $("inventoryOverviewReconcileCount").textContent=`${formatNumber(stats.counted)}/${formatNumber(stats.totalItems)}`;
+    if ($("inventoryOverviewMatched")) $("inventoryOverviewMatched").textContent=formatNumber(stats.matched);
+    if ($("inventoryOverviewShortage")) $("inventoryOverviewShortage").textContent=formatNumber(stats.shortage);
+    if ($("inventoryOverviewSurplus")) $("inventoryOverviewSurplus").textContent=formatNumber(stats.surplus);
+    if ($("inventoryOverviewVarianceQty")) $("inventoryOverviewVarianceQty").textContent=stats.counted?`${stats.varianceQty>0?"+":""}${formatNumber(stats.varianceQty)}`:"—";
+    if ($("inventoryOverviewVarianceValue")) $("inventoryOverviewVarianceValue").textContent=stats.counted?inventoryMoney(stats.varianceValue):"—";
+    const hint=$("inventoryReconcileOverviewHint"); if(!hint)return; hint.classList.remove("ok","warning");
+    if(!stats.latestDate){hint.textContent="Chưa thể kết luận kho khớp hay lệch. Hãy vào “Kiểm kê & đối chiếu”, nhập số đếm thực tế rồi Chốt kiểm kê.";return;}
+    if(stats.counted<stats.totalItems){hint.classList.add("warning");hint.textContent=`Ngày ${formatDateLabel(stats.latestDate)} mới đối chiếu ${stats.counted}/${stats.totalItems} mặt hàng. Còn ${stats.totalItems-stats.counted} mặt hàng chưa có kết quả.`;return;}
+    if(stats.shortage===0&&stats.surplus===0){hint.classList.add("ok");hint.textContent=`✓ Kho khớp tại lần kiểm ngày ${formatDateLabel(stats.latestDate)}: ${stats.totalItems}/${stats.totalItems} mặt hàng không chênh lệch.`;return;}
+    hint.classList.add("warning"); hint.textContent=`⚠ Lần kiểm ${formatDateLabel(stats.latestDate)} có ${stats.shortage} mặt hàng thiếu và ${stats.surplus} mặt hàng thừa. Chênh tổng ${stats.varianceQty>0?"+":""}${formatNumber(stats.varianceQty)} sản phẩm.`;
+}
 function buildInventorySummary() {
     if (!inventoryState.loaded) loadInventoryLocal();
 
     const movementRows = buildInventoryMovementRows();
     const misaAssignment = buildInventoryMisaAssignment();
     inventoryState.misaAssignment = misaAssignment;
+
+    const theoryAsOfDate = getLocalTodayKey();
+    const theoryRows = buildInventoryLedgerAsOf(theoryAsOfDate);
+    const theoryByItemCode = new Map(theoryRows.map(row => [row.itemCode, row]));
 
     const byItemCode = new Map();
 
@@ -10270,6 +10371,11 @@ function buildInventorySummary() {
             const delivered = Number(movement.delivered || 0);
             const available = Math.max(0, physical - reserved);
 
+            const theoryRow = theoryByItemCode.get(item.itemCode) || null;
+            const currentTheoretical = theoryRow ? Number(theoryRow.theoretical || 0) : physical;
+            const lastReconcile = getLatestInventoryReconcileRecord(item.itemCode);
+            const reconcileStatus = getInventoryReconcileStatusV36(lastReconcile);
+
             // V35:
             // Nếu MISA đã xuất nhiều hơn "Đã giao" của snapshot hiện tại,
             // hai nguồn rõ ràng không cùng phạm vi -> KHÔNG hiển thị Chờ HĐ = 0.
@@ -10295,6 +10401,10 @@ function buildInventorySummary() {
                 invoiceScopeMismatch,
                 invoiceDataMode: misaAssignment.detailed ? "invoice-number" : "legacy",
                 available,
+                currentTheoretical,
+                currentTheoryDate: theoryAsOfDate,
+                lastReconcile,
+                reconcileStatus,
                 stockValue: physical * Number(item.unitPrice || 0)
             };
         });
@@ -11151,7 +11261,7 @@ async function commitInventoryReconciliation() {
                 physical_qty: row.actual,
                 unit_price: Number(row.unitPrice || 0),
                 note:
-                    `Kiểm kê V31 · Lý thuyết ${row.theoretical} · ` +
+                    `Kiểm kê V36 · Lý thuyết ${row.theoretical} · ` +
                     `Thực tế ${row.actual} · Chênh ${row.actual - row.theoretical}`,
                 created_by: state.user?.id || null
             }));
@@ -11172,7 +11282,9 @@ async function commitInventoryReconciliation() {
                     item_code:row.itemCode,
                     physical_qty:row.actual,
                     unit_price:Number(row.unitPrice||0),
-                    note:`Kiểm kê V31 · Lý thuyết ${row.theoretical}`,
+                    note:
+                        `Kiểm kê V36 · Lý thuyết ${row.theoretical} · ` +
+                        `Thực tế ${row.actual} · Chênh ${row.actual - row.theoretical}`,
                     created_at:now
                 }))
             );
@@ -11340,6 +11452,7 @@ function renderInventoryModule() {
     const totals = summary.reduce((acc, item) => {
         acc.opening += Number(item.openingQty || 0);
         acc.physical += Number(item.physicalQty || 0);
+        acc.theoretical += Number(item.currentTheoretical || 0);
         acc.reserved += Number(item.reserved || 0);
         acc.available += Number(item.available || 0);
         acc.transit += Number(item.in_transit || 0);
@@ -11358,6 +11471,7 @@ function renderInventoryModule() {
     }, {
         opening:0,
         physical:0,
+        theoretical:0,
         reserved:0,
         available:0,
         transit:0,
@@ -11376,6 +11490,8 @@ function renderInventoryModule() {
     if ($("inventoryInvoicedTotal")) $("inventoryInvoicedTotal").textContent = formatNumber(totals.invoiced);
     if ($("inventoryStockValue")) $("inventoryStockValue").textContent = inventoryMoney(totals.value);
     if ($("navInventoryCount")) $("navInventoryCount").textContent = formatNumber(summary.length);
+
+    renderInventoryReconcileOverviewV36(summary);
 
     const latestStocktake = summary.map(x => x.stocktakeDate).filter(Boolean).sort().reverse()[0] || "";
     if ($("inventorySummarySubtitle")) {
@@ -11404,6 +11520,19 @@ function renderInventoryModule() {
             messages.push(
                 `<strong>Chưa có snapshot đơn luân chuyển Shopee.</strong> ` +
                 `Các cột Giữ đơn / Đang giao / Đã giao / Hoàn đang về đang để 0 để tránh lấy nhầm dữ liệu từ Thống kê SKU.`
+            );
+        }
+
+        const reconcileOverview = buildInventoryReconcileOverviewV36(summary);
+        if (!reconcileOverview.latestDate) {
+            messages.push(
+                `<strong>Chưa có lần kiểm kê đối chiếu nào được chốt.</strong> ` +
+                `V36 chưa thể kết luận kho “Khớp / Thiếu / Thừa”. Hãy vào tab <b>Kiểm kê & đối chiếu</b> để nhập số đếm thực tế.`
+            );
+        } else if (reconcileOverview.counted < reconcileOverview.totalItems) {
+            messages.push(
+                `<strong>Lần đối chiếu ${formatDateLabel(reconcileOverview.latestDate)} chưa đủ mặt hàng.</strong> ` +
+                `Đã kiểm ${reconcileOverview.counted}/${reconcileOverview.totalItems} mặt hàng.`
             );
         }
 
@@ -11438,7 +11567,7 @@ function renderInventoryModule() {
     const foot = $("inventorySummaryFoot");
     if (body && foot) {
         if (!filtered.length) {
-            body.innerHTML = '<tr><td colspan="15" class="empty-table">Không có mặt hàng phù hợp.</td></tr>';
+            body.innerHTML = '<tr><td colspan="18" class="empty-table">Không có mặt hàng phù hợp.</td></tr>';
             foot.innerHTML = "";
         } else {
             body.innerHTML = filtered.map((item, index) => {
@@ -11469,9 +11598,25 @@ function renderInventoryModule() {
                             }
                         </td>
                         <td class="inventory-num">${formatNumber(item.openingQty || 0)}</td>
-                        <td class="inventory-num inventory-col-physical">${formatNumber(item.physicalQty || 0)}</td>
+                        <td class="inventory-num inventory-col-physical">
+                            ${formatNumber(item.physicalQty || 0)}
+                            <span class="inventory-theory-date-v36">${item.stocktakeDate ? formatDateLabel(item.stocktakeDate) : "chưa có ngày kiểm"}</span>
+                        </td>
+                        <td class="inventory-num inventory-col-theory-v36">
+                            ${formatNumber(item.currentTheoretical || 0)}
+                            <span class="inventory-theory-date-v36">tới ${formatDateLabel(item.currentTheoryDate)}</span>
+                        </td>
                         <td class="inventory-num inventory-col-reserved">${formatNumber(item.reserved || 0)}</td>
                         <td class="inventory-num inventory-col-available">${formatNumber(item.available || 0)}</td>
+                        <td class="inventory-num inventory-col-variance-v36">
+                            ${item.lastReconcile
+                                ? `<span class="inventory-stock-variance ${Number(item.lastReconcile.variance||0)===0?"zero":Number(item.lastReconcile.variance||0)<0?"shortage":"surplus"}">${Number(item.lastReconcile.variance||0)>0?"+":""}${formatNumber(item.lastReconcile.variance||0)}</span>`
+                                : '<span class="inventory-stock-variance pending">—</span>'}
+                        </td>
+                        <td class="center inventory-col-result-v36">
+                            <span class="inventory-stock-result-v36 ${escapeHTML(item.reconcileStatus.key)}">${escapeHTML(item.reconcileStatus.label)}</span>
+                            ${item.lastReconcile?.date ? `<span class="inventory-stock-result-date-v36">${formatDateLabel(item.lastReconcile.date)}</span>` : ""}
+                        </td>
 
                         <td class="inventory-num inventory-col-transit">${formatNumber(item.in_transit || 0)}</td>
                         <td class="inventory-num inventory-col-delivered">${formatNumber(item.delivered || 0)}</td>
@@ -11509,8 +11654,11 @@ function renderInventoryModule() {
 
                     <td class="center">${formatNumber(totals.opening)}</td>
                     <td class="center">${formatNumber(totals.physical)}</td>
+                    <td class="center">${formatNumber(totals.theoretical)}</td>
                     <td class="center">${formatNumber(totals.reserved)}</td>
                     <td class="center">${formatNumber(totals.available)}</td>
+                    <td class="center">—</td>
+                    <td class="center">Xem từng SKU</td>
 
                     <td class="center">${formatNumber(totals.transit)}</td>
                     <td class="center">${formatNumber(totals.delivered)}</td>
@@ -11844,6 +11992,10 @@ $("btnInventoryRefresh")?.addEventListener("click", async () => {
         renderInventoryModule();
         showToast("Đã làm mới tồn kho và trạng thái luân chuyển.");
     } catch(error){ alert(error?.message || "Không làm mới được dữ liệu."); }
+});
+$("btnInventoryReconcileNowV36")?.addEventListener("click", () => {
+    setInventoryTab("reconcile");
+    setTimeout(() => $("inventoryTabReconcile")?.scrollIntoView({behavior:"smooth",block:"start"}), 50);
 });
 $("inventoryStockFileInput")?.addEventListener("change", e => {
     const file = e.target.files?.[0];
