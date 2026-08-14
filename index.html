@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V29: thêm module Tồn kho & luân chuyển + kiểm kê + Shopee + MISA -->
+    <!-- ONE-FILE V30: MISA chỉ tính dòng có Số hóa đơn + map mã MISA sang SKU kho -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3081,6 +3081,75 @@ button{cursor:pointer}
     font-size:10px!important;
 }
 
+
+/* =========================================================
+   V30 - ĐỐI CHIẾU MISA THEO SỐ HÓA ĐƠN
+========================================================= */
+.inventory-misa-rule{
+    margin-top:9px;
+    padding:9px 10px;
+    border:1px solid #cfe4df;
+    border-radius:7px;
+    background:#f3faf8;
+    color:#4f6d66;
+    font-size:8.2px;
+    line-height:1.5
+}
+.inventory-misa-rule strong{color:#087863}
+
+.inventory-misa-warning{
+    margin-top:9px;
+    padding:9px 10px;
+    border:1px solid #efd4a4;
+    border-radius:7px;
+    background:#fff9ed;
+    color:#8c651a;
+    font-size:8.2px;
+    line-height:1.5
+}
+
+.inventory-misa-unmapped{
+    margin-top:9px;
+    padding-top:8px;
+    border-top:1px dashed #dfe7ea;
+    color:#7d8e97;
+    font-size:8px;
+    line-height:1.55
+}
+.inventory-misa-unmapped strong{color:#a35f16}
+
+.inventory-misa-code-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:20px;
+    margin:3px 4px 0 0;
+    padding:2px 6px;
+    border:1px solid #e0e7ea;
+    border-radius:999px;
+    background:#fff;
+    color:#526a74;
+    font-size:7.2px;
+    font-weight:750
+}
+
+.inventory-scope-mismatch{
+    display:inline-flex;
+    align-items:center;
+    margin-left:5px;
+    padding:2px 5px;
+    border-radius:999px;
+    background:#fff3d6;
+    color:#9b680d;
+    font-size:6.8px;
+    font-weight:850;
+    vertical-align:middle
+}
+
+.invoice-file-info .invoice-issued-note{
+    color:#087863;
+    font-weight:800
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3892,7 +3961,7 @@ button{cursor:pointer}
                                 <th class="center">Giữ đơn</th>
                                 <th class="center inventory-col-transit">Đang giao</th>
                                 <th class="center">Đã giao</th>
-                                <th class="center">Đã xuất HĐ</th>
+                                <th class="center">Đã xuất HĐ (MISA)</th>
                                 <th class="center">Chờ HĐ*</th>
                                 <th class="center">Hoàn đang về</th>
                                 <th class="center inventory-col-available">Khả dụng</th>
@@ -3909,8 +3978,9 @@ button{cursor:pointer}
                 </div>
 
                 <div class="inventory-table-note">
-                    <strong>* Chờ HĐ</strong> = Đã giao − số lượng đã xuất hóa đơn theo <strong>file MISA đang xem</strong>.
-                    Đây là chỉ số vận hành ước tính theo SKU; để đối chiếu chính xác từng đơn cần file MISA có <strong>Mã đơn Shopee</strong>.
+                    <strong>* Chờ HĐ</strong> = Đã giao − số lượng <strong>đã phát hành hóa đơn</strong> trong file MISA đang xem.
+                    V30 chỉ tính các dòng có <strong>Số hóa đơn</strong> và không có trạng thái hủy/không hợp lệ.
+                    Chỉ số này vẫn là ước tính theo SKU nếu file MISA chưa có <strong>Mã đơn Shopee</strong>.
                 </div>
             </div>
 
@@ -3930,7 +4000,7 @@ button{cursor:pointer}
                     <div class="panel-header">
                         <div>
                             <h2>Đối chiếu hóa đơn MISA</h2>
-                            <p>Dùng bảng hóa đơn hiện đang mở để xác định số lượng đã xuất hóa đơn theo sản phẩm.</p>
+                            <p>Chỉ tính dòng đã phát hành: có Số hóa đơn và không bị hủy/không hợp lệ.</p>
                         </div>
                         <button type="button" id="btnInventoryOpenInvoice" class="text-button">Mở Thống kê hóa đơn →</button>
                     </div>
@@ -4014,7 +4084,7 @@ button{cursor:pointer}
                                 <th>Mã kho</th>
                                 <th>Tên sản phẩm</th>
                                 <th>SKU Shopee quy đổi</th>
-                                <th>Từ khóa MISA</th>
+                                <th>Mã / từ khóa MISA</th>
                                 <th>Tồn đầu</th>
                                 <th>Tồn thực tế</th>
                                 <th>Tồn an toàn</th>
@@ -4027,7 +4097,9 @@ button{cursor:pointer}
 
                 <div class="inventory-editor-help">
                     <strong>SKU Shopee quy đổi</strong> nên điền theo SKU kho cơ bản như REWD, RCS, RTB, ROE...
-                    để hệ thống ghép với bảng quy đổi SKU hiện tại. Các mặt hàng chưa xác định SKU có thể để trống và cập nhật sau.
+                    để hệ thống ghép với bảng quy đổi SKU hiện tại.
+                    Cột <strong>Mã / từ khóa MISA</strong> có thể nhập nhiều mã/từ khóa, ngăn cách bằng dấu <strong>|</strong>,
+                    ví dụ <code>REWD|TEST.1|Extra White & Deodorant Cream 35g</code>.
                 </div>
 
                 <div class="inventory-editor-footer">
@@ -8051,6 +8123,19 @@ $("btnConfirmAdminDelete")?.addEventListener("click", async () => {
 
 
 /* ======================== V28 - TỒN KHO & LUÂN CHUYỂN ======================== */
+
+const DEFAULT_MISA_CODE_ALIASES = {
+    REWD: ["REWD", "TEST.1"],
+    RCS: ["RCS", "TEST.2"],
+    RKN: ["RCC"],
+    REWS: ["REWS ver2", "TEST.REWS"],
+    RTB: ["RTB"],
+    RHBS: ["RHBS"],
+    ROE: ["ROE", "RROS"],
+    REWGS: ["REWGS250"]
+};
+
+
 function inventoryMoney(value) {
     return `${formatNumber(Math.round(Number(value) || 0))} đ`;
 }
@@ -8163,13 +8248,117 @@ function buildInventoryMovementRows() {
     return result;
 }
 
-function getInventoryInvoiceQty(item) {
+function getInventoryMisaTokens(item) {
+    const aliases = DEFAULT_MISA_CODE_ALIASES[String(item.shopeeSku || "").trim()] || [];
+
+    const customTokens = String(item.invoiceKeyword || "")
+        .split(/[|,;\n]+/)
+        .map(value => value.trim())
+        .filter(Boolean);
+
+    return [...new Set([...aliases, ...customTokens])];
+}
+
+function isMisaLineMatchedToInventoryItem(line, item) {
+    const lineCode = normalizeText(line.productCode || "");
+    const lineName = normalizeText(line.productName || "");
+    const tokens = getInventoryMisaTokens(item);
+
+    if (!tokens.length) return false;
+
+    // Ưu tiên 1: Mã hàng MISA khớp chính xác.
+    for (const token of tokens) {
+        const normalizedToken = normalizeText(token);
+        if (lineCode && normalizedToken && lineCode === normalizedToken) {
+            return true;
+        }
+    }
+
+    // Ưu tiên 2: từ khóa tên hàng MISA.
+    for (const token of tokens) {
+        const normalizedToken = normalizeText(token);
+
+        // Mã ngắn như RCS/RTB không dùng để dò trong tên sản phẩm.
+        if (normalizedToken.length < 5) continue;
+
+        if (lineName && normalizedToken && lineName.includes(normalizedToken)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function getIssuedMisaLines() {
     if (typeof ensureInvoiceStatsLoaded === "function") {
         ensureInvoiceStatsLoaded();
     }
 
+    return Array.isArray(invoiceState.lineRows)
+        ? invoiceState.lineRows.filter(line => line?.issued === true)
+        : [];
+}
+
+function buildInventoryMisaAssignment() {
+    const issuedLines = getIssuedMisaLines();
+    const qtyByItemCode = new Map();
+    const unmatched = [];
+
+    if (!issuedLines.length) {
+        return {
+            detailed: false,
+            issuedLines: [],
+            issuedQty: 0,
+            mappedQty: 0,
+            qtyByItemCode,
+            unmatched
+        };
+    }
+
+    const activeItems = inventoryState.items
+        .filter(item => item.active !== false);
+
+    let issuedQty = 0;
+    let mappedQty = 0;
+
+    issuedLines.forEach(line => {
+        const qty = Number(line.quantity || 0);
+        if (qty <= 0) return;
+
+        issuedQty += qty;
+
+        const matchedItem = activeItems.find(item =>
+            isMisaLineMatchedToInventoryItem(line, item)
+        );
+
+        if (!matchedItem) {
+            unmatched.push(line);
+            return;
+        }
+
+        qtyByItemCode.set(
+            matchedItem.itemCode,
+            Number(qtyByItemCode.get(matchedItem.itemCode) || 0) + qty
+        );
+
+        mappedQty += qty;
+    });
+
+    return {
+        detailed: true,
+        issuedLines,
+        issuedQty,
+        mappedQty,
+        qtyByItemCode,
+        unmatched
+    };
+}
+
+function getLegacyInventoryInvoiceQty(item) {
+    // Chỉ dùng cho dữ liệu hóa đơn đã lưu từ V29 trở về trước
+    // vì bản cũ chưa giữ Số hóa đơn ở từng dòng.
     const keyword = normalizeText(item.invoiceKeyword || "");
-    if (!keyword || !window.invoiceState && typeof invoiceState === "undefined") return 0;
+    if (!keyword) return 0;
 
     return (invoiceState.rows || []).reduce((sum, row) => {
         const product = normalizeText(row.productName || "");
@@ -8183,6 +8372,9 @@ function buildInventorySummary() {
     if (!inventoryState.loaded) loadInventoryLocal();
 
     const movementRows = buildInventoryMovementRows();
+    const misaAssignment = buildInventoryMisaAssignment();
+    inventoryState.misaAssignment = misaAssignment;
+
     const bySku = new Map();
 
     movementRows.forEach(row => {
@@ -8207,17 +8399,24 @@ function buildInventorySummary() {
             const movement = bySku.get(item.shopeeSku) || {
                 reserved: 0, in_transit: 0, delivered: 0, returning: 0, cancelled: 0, other: 0
             };
-            const invoiceQty = getInventoryInvoiceQty(item);
+            const invoiceQty = misaAssignment.detailed
+                ? Number(misaAssignment.qtyByItemCode.get(item.itemCode) || 0)
+                : getLegacyInventoryInvoiceQty(item);
+
             const physical = Number(item.physicalQty || 0);
             const reserved = Number(movement.reserved || 0);
+            const delivered = Number(movement.delivered || 0);
             const available = Math.max(0, physical - reserved);
-            const waitingInvoice = Math.max(0, Number(movement.delivered || 0) - invoiceQty);
+            const waitingInvoice = Math.max(0, delivered - invoiceQty);
+            const invoiceScopeMismatch = invoiceQty > delivered && invoiceQty > 0;
 
             return {
                 ...item,
                 ...movement,
                 invoiceQty,
                 waitingInvoice,
+                invoiceScopeMismatch,
+                invoiceDataMode: misaAssignment.detailed ? "invoice-number" : "legacy",
                 available,
                 stockValue: physical * Number(item.unitPrice || 0)
             };
@@ -8270,32 +8469,116 @@ function renderInventoryFlowBars(summary) {
 function renderInventoryMisaInfo(summary) {
     const box = $("inventoryMisaInfo");
     if (!box) return;
-    if (typeof ensureInvoiceStatsLoaded === "function") ensureInvoiceStatsLoaded();
+
+    if (typeof ensureInvoiceStatsLoaded === "function") {
+        ensureInvoiceStatsLoaded();
+    }
 
     if (!invoiceState.rows?.length) {
         box.innerHTML = `
             <strong>Chưa có file hóa đơn MISA đang xem.</strong><br>
-            Vào <b>Thống kê hóa đơn</b> và upload/xem một file, module tồn kho sẽ tự ghép số lượng theo từ khóa MISA đã cấu hình.
+            Vào <b>Thống kê hóa đơn</b> và upload/xem một file.
+            V30 sẽ chỉ tính các dòng có <b>Số hóa đơn</b>.
         `;
         return;
     }
 
-    const totalMapped = summary.reduce((s, x) => s + Number(x.invoiceQty || 0), 0);
     const dateText = invoiceState.dateFrom
         ? (invoiceState.dateFrom === invoiceState.dateTo
             ? formatDateLabel(invoiceState.dateFrom)
             : `${formatDateLabel(invoiceState.dateFrom)} → ${formatDateLabel(invoiceState.dateTo)}`)
         : "Không xác định";
 
+    const assignment = inventoryState.misaAssignment || buildInventoryMisaAssignment();
+    const totalMapped = summary.reduce((s, x) => s + Number(x.invoiceQty || 0), 0);
+
+    if (!assignment.detailed) {
+        box.innerHTML = `
+            <strong>⚠ ${escapeHTML(invoiceState.fileName || "File MISA")}</strong><br>
+            File này đang được xem từ dữ liệu lưu của bản cũ, chưa giữ chi tiết cột <b>Số hóa đơn</b>.
+
+            <div class="inventory-misa-warning">
+                Hãy <strong>upload lại file MISA một lần</strong> ở mục Thống kê hóa đơn.
+                Sau đó V30 mới xác nhận chính xác dòng nào đã phát hành hóa đơn.
+                Hiện cột “Đã xuất HĐ” đang dùng cách ghép tên sản phẩm cũ.
+            </div>
+        `;
+        return;
+    }
+
+    const unmatchedGroups = new Map();
+
+    assignment.unmatched.forEach(line => {
+        const key = `${line.productCode || "-"}|${line.productName || "-"}`;
+
+        if (!unmatchedGroups.has(key)) {
+            unmatchedGroups.set(key, {
+                productCode: line.productCode || "-",
+                productName: line.productName || "-",
+                quantity: 0
+            });
+        }
+
+        unmatchedGroups.get(key).quantity += Number(line.quantity || 0);
+    });
+
+    const unmatchedList = [...unmatchedGroups.values()]
+        .sort((a, b) => b.quantity - a.quantity);
+
     box.innerHTML = `
         <strong>✓ ${escapeHTML(invoiceState.fileName || "File MISA")}</strong><br>
-        Ngày hóa đơn: <b>${escapeHTML(dateText)}</b> · ${formatNumber(invoiceState.invoiceCount || 0)} hóa đơn.
+        Ngày hóa đơn: <b>${escapeHTML(dateText)}</b> ·
+        ${formatNumber(invoiceState.invoiceCount || 0)} số hóa đơn.
+
+        <div class="inventory-misa-rule">
+            <strong>Quy tắc V30:</strong>
+            chỉ tính dòng có <b>Số hóa đơn</b> và không bị hủy/không hợp lệ.
+            Hàng khuyến mại vẫn được tính số lượng xuất kho.
+        </div>
 
         <div class="inventory-misa-grid">
-            <div class="inventory-misa-stat"><span>SL ĐÃ GHÉP SKU</span><strong>${formatNumber(totalMapped)}</strong></div>
-            <div class="inventory-misa-stat"><span>NHÓM MẶT HÀNG</span><strong>${formatNumber(invoiceState.rows.length)}</strong></div>
-            <div class="inventory-misa-stat"><span>TỔNG TIỀN TT</span><strong>${inventoryMoney(getInvoiceTotals().payment)}</strong></div>
+            <div class="inventory-misa-stat">
+                <span>DÒNG ĐÃ PHÁT HÀNH</span>
+                <strong>${formatNumber(invoiceState.issuedLineCount || assignment.issuedLines.length)}</strong>
+            </div>
+
+            <div class="inventory-misa-stat">
+                <span>SL ĐÃ XUẤT HĐ</span>
+                <strong>${formatNumber(assignment.issuedQty)}</strong>
+            </div>
+
+            <div class="inventory-misa-stat">
+                <span>SL ĐÃ GHÉP KHO</span>
+                <strong>${formatNumber(totalMapped)}</strong>
+            </div>
+
+            <div class="inventory-misa-stat">
+                <span>SL CHƯA MAP</span>
+                <strong>${formatNumber(Math.max(0, assignment.issuedQty - assignment.mappedQty))}</strong>
+            </div>
+
+            <div class="inventory-misa-stat">
+                <span>NHÓM HÀNG HÓA ĐƠN</span>
+                <strong>${formatNumber(invoiceState.rows.length)}</strong>
+            </div>
+
+            <div class="inventory-misa-stat">
+                <span>TỔNG TIỀN TT</span>
+                <strong>${inventoryMoney(getInvoiceTotals().payment)}</strong>
+            </div>
         </div>
+
+        ${unmatchedList.length ? `
+            <div class="inventory-misa-unmapped">
+                <strong>Chưa ghép được vào kho:</strong><br>
+                ${unmatchedList.slice(0, 12).map(item => `
+                    <span class="inventory-misa-code-chip"
+                          title="${escapeHTML(item.productName)}">
+                        ${escapeHTML(item.productCode)} · ${formatNumber(item.quantity)}
+                    </span>
+                `).join("")}
+            </div>
+        ` : ""}
     `;
 }
 
@@ -8347,12 +8630,31 @@ function renderInventoryModule() {
     }
 
     const unmapped = getInventoryUnmappedSkus();
+    const scopeMismatch = summary.filter(item => item.invoiceScopeMismatch);
     const warning = $("inventoryWarningBox");
+
     if (warning) {
+        const messages = [];
+
         if (unmapped.length) {
+            messages.push(
+                `Có <strong>${unmapped.length} SKU quy đổi chưa được gắn với mặt hàng tồn kho</strong>: ` +
+                `${unmapped.map(escapeHTML).join(", ")}. ` +
+                `Bấm <b>Cập nhật tồn thực tế</b> để điền cột “SKU Shopee quy đổi”.`
+            );
+        }
+
+        if (scopeMismatch.length) {
+            messages.push(
+                `<strong>${scopeMismatch.length} mặt hàng có SL đã xuất HĐ lớn hơn SL “Đã giao” trong dữ liệu Shopee đang lưu.</strong> ` +
+                `Điều này thường do file MISA và dữ liệu Shopee đang khác phạm vi ngày. ` +
+                `Không dùng “Đã xuất HĐ” để trừ Tồn thực tế lần nữa.`
+            );
+        }
+
+        if (messages.length) {
             warning.classList.remove("hidden");
-            warning.innerHTML = `⚠ Có <strong>${unmapped.length} SKU quy đổi chưa được gắn với mặt hàng tồn kho</strong>: ${unmapped.map(escapeHTML).join(", ")}. ` +
-                `Bấm <b>Cập nhật tồn thực tế</b> để điền cột “SKU Shopee quy đổi”.`;
+            warning.innerHTML = `⚠ ${messages.join("<br>⚠ ")}`;
         } else {
             warning.classList.add("hidden");
             warning.innerHTML = "";
@@ -8383,7 +8685,12 @@ function renderInventoryModule() {
                         <td class="inventory-num">${formatNumber(item.reserved || 0)}</td>
                         <td class="inventory-num inventory-col-transit">${formatNumber(item.in_transit || 0)}</td>
                         <td class="inventory-num">${formatNumber(item.delivered || 0)}</td>
-                        <td class="inventory-num">${formatNumber(item.invoiceQty || 0)}</td>
+                        <td class="inventory-num">
+                            ${formatNumber(item.invoiceQty || 0)}
+                            ${item.invoiceScopeMismatch
+                                ? '<span class="inventory-scope-mismatch" title="MISA và Shopee đang khác phạm vi ngày">khác kỳ</span>'
+                                : ""}
+                        </td>
                         <td class="inventory-num">${formatNumber(item.waitingInvoice || 0)}</td>
                         <td class="inventory-num">${formatNumber(item.returning || 0)}</td>
                         <td class="inventory-num inventory-col-available">${formatNumber(item.available || 0)}</td>
@@ -8416,9 +8723,15 @@ function renderInventoryModule() {
     }
 
     if ($("inventoryInvoiceSourceLabel")) {
-        $("inventoryInvoiceSourceLabel").textContent = invoiceState?.rows?.length
-            ? `Theo ${invoiceState.fileName || "file MISA đang xem"}`
-            : "Chưa có file hóa đơn MISA";
+        if (!invoiceState?.rows?.length) {
+            $("inventoryInvoiceSourceLabel").textContent = "Chưa có file hóa đơn MISA";
+        } else if (Array.isArray(invoiceState.lineRows) && invoiceState.lineRows.length) {
+            $("inventoryInvoiceSourceLabel").textContent =
+                `Theo Số HĐ · ${invoiceState.fileName || "file MISA"}`;
+        } else {
+            $("inventoryInvoiceSourceLabel").textContent =
+                `Dữ liệu cũ · cần upload lại MISA`;
+        }
     }
 
     renderInventoryFlowBars(summary);
@@ -8489,7 +8802,7 @@ function renderInventoryEditor() {
             <td><input class="inventory-editor-input" data-field="itemCode" value="${escapeHTML(item.itemCode || "")}"></td>
             <td><input class="inventory-editor-input" data-field="name" value="${escapeHTML(item.name || "")}"></td>
             <td><input class="inventory-editor-input" data-field="shopeeSku" value="${escapeHTML(item.shopeeSku || "")}" placeholder="VD: REWD"></td>
-            <td><input class="inventory-editor-input" data-field="invoiceKeyword" value="${escapeHTML(item.invoiceKeyword || "")}" placeholder="Từ khóa tên hàng MISA"></td>
+            <td><input class="inventory-editor-input" data-field="invoiceKeyword" value="${escapeHTML(item.invoiceKeyword || "")}" placeholder="VD: REWD|TEST.1|Extra White..."></td>
             <td><input class="inventory-editor-input number" type="number" min="0" step="1" data-field="openingQty" value="${Number(item.openingQty || 0)}"></td>
             <td><input class="inventory-editor-input number" type="number" min="0" step="1" data-field="physicalQty" value="${Number(item.physicalQty || 0)}"></td>
             <td><input class="inventory-editor-input number" type="number" min="0" step="1" data-field="safetyStock" value="${Number(item.safetyStock || 0)}"></td>
@@ -8697,9 +9010,12 @@ const invoiceState = {
     dateFrom: "",
     dateTo: "",
     sourceRowCount: 0,
+    issuedLineCount: 0,
+    unissuedLineCount: 0,
     invoiceCount: 0,
     currentHistoryId: "",
-    rows: []
+    rows: [],
+    lineRows: []
 };
 
 const invoiceHistoryState = {
@@ -8830,6 +9146,27 @@ async function readInvoiceExcelFile(file) {
     });
 }
 
+
+function isIssuedMisaInvoiceLine(invoiceNo, taxStatus, invoiceStatus) {
+    const number = String(invoiceNo || "").trim();
+    if (!number) return false;
+
+    const tax = normalizeText(taxStatus || "");
+    const status = normalizeText(invoiceStatus || "");
+
+    // Có số HĐ nhưng nếu báo hủy/không hợp lệ thì không được tính.
+    if (
+        status.includes("huy") ||
+        status.includes("xoabo") ||
+        tax.includes("khonghople") ||
+        tax.includes("khonghople")
+    ) {
+        return false;
+    }
+
+    return true;
+}
+
 function parseInvoiceMatrix(matrix, fileName) {
     if (!Array.isArray(matrix) || !matrix.length) {
         throw new Error("File hóa đơn không có dữ liệu.");
@@ -8861,11 +9198,15 @@ function parseInvoiceMatrix(matrix, fileName) {
         productName: findInvoiceHeaderIndex(headers, ["Tên hàng"]),
         quantity: findInvoiceHeaderIndex(headers, ["Số lượng"]),
         vat: findInvoiceHeaderIndex(headers, ["Tiền thuế GTGT", "Thuế GTGT"]),
-        payment: findInvoiceHeaderIndex(headers, ["Tổng tiền TT", "Tổng tiền thanh toán"])
+        payment: findInvoiceHeaderIndex(headers, ["Tổng tiền TT", "Tổng tiền thanh toán"]),
+        taxStatus: findInvoiceHeaderIndex(headers, ["Trạng thái gửi CQT"]),
+        promoFlag: findInvoiceHeaderIndex(headers, ["Hàng KM"]),
+        invoiceStatus: findInvoiceHeaderIndex(headers, ["Trạng thái HĐ", "Trạng thái hóa đơn"])
     };
 
     const requiredMissing = [];
 
+    if (col.invoiceNo < 0) requiredMissing.push("Số hóa đơn");
     if (col.productName < 0) requiredMissing.push("Tên hàng");
     if (col.quantity < 0) requiredMissing.push("Số lượng");
     if (col.vat < 0) requiredMissing.push("Tiền thuế GTGT");
@@ -8928,33 +9269,76 @@ function parseInvoiceMatrix(matrix, fileName) {
                 ? String(row[col.invoiceNo] ?? "").trim()
                 : "";
 
+        const productCode =
+            col.productCode >= 0
+                ? String(row[col.productCode] ?? "").trim()
+                : "";
+
         const dateKey =
             col.invoiceDate >= 0
                 ? normalizeOrderDate(row[col.invoiceDate])
                 : "";
 
-        if (invoiceNo) invoiceNumbers.add(invoiceNo);
-        if (dateKey) dateKeys.push(dateKey);
+        const taxStatus =
+            col.taxStatus >= 0
+                ? String(row[col.taxStatus] ?? "").trim()
+                : "";
+
+        const invoiceStatus =
+            col.invoiceStatus >= 0
+                ? String(row[col.invoiceStatus] ?? "").trim()
+                : "";
+
+        const promoFlag =
+            col.promoFlag >= 0
+                ? String(row[col.promoFlag] ?? "").trim()
+                : "";
+
+        const issued = isIssuedMisaInvoiceLine(
+            invoiceNo,
+            taxStatus,
+            invoiceStatus
+        );
+
+        if (issued) {
+            invoiceNumbers.add(invoiceNo);
+            if (dateKey) dateKeys.push(dateKey);
+        }
 
         sourceRows.push({
+            invoiceNo,
+            invoiceDate: dateKey,
+            productCode,
             productName,
             quantity,
             vat,
             payment,
             preTax,
-            promo
+            promo,
+            promoFlag,
+            taxStatus,
+            invoiceStatus,
+            issued
         });
     }
 
     if (!sourceRows.length) {
         throw new Error(
-            "Không tìm thấy dòng hóa đơn hợp lệ sau dòng tiêu đề."
+            "Không tìm thấy dòng hàng hóa hợp lệ sau dòng tiêu đề."
+        );
+    }
+
+    const issuedRows = sourceRows.filter(row => row.issued === true);
+
+    if (!issuedRows.length) {
+        throw new Error(
+            "File có dữ liệu hàng hóa nhưng không có dòng nào có Số hóa đơn hợp lệ."
         );
     }
 
     const grouped = new Map();
 
-    sourceRows.forEach(row => {
+    issuedRows.forEach(row => {
         const key = row.productName;
 
         if (!grouped.has(key)) {
@@ -8994,8 +9378,11 @@ function parseInvoiceMatrix(matrix, fileName) {
         dateFrom: uniqueDates[0] || "",
         dateTo: uniqueDates[uniqueDates.length - 1] || "",
         sourceRowCount: sourceRows.length,
+        issuedLineCount: issuedRows.length,
+        unissuedLineCount: sourceRows.length - issuedRows.length,
         invoiceCount: invoiceNumbers.size,
-        rows
+        rows,
+        lineRows: sourceRows
     };
 }
 
@@ -9009,9 +9396,12 @@ function saveInvoiceStatsLocal() {
                 dateFrom: invoiceState.dateFrom,
                 dateTo: invoiceState.dateTo,
                 sourceRowCount: invoiceState.sourceRowCount,
+                issuedLineCount: invoiceState.issuedLineCount,
+                unissuedLineCount: invoiceState.unissuedLineCount,
                 invoiceCount: invoiceState.invoiceCount,
                 currentHistoryId: invoiceState.currentHistoryId,
-                rows: invoiceState.rows
+                rows: invoiceState.rows,
+                lineRows: invoiceState.lineRows
             })
         );
     } catch (error) {
@@ -9036,11 +9426,16 @@ function ensureInvoiceStatsLoaded() {
         invoiceState.dateFrom = saved.dateFrom || "";
         invoiceState.dateTo = saved.dateTo || "";
         invoiceState.sourceRowCount = Number(saved.sourceRowCount || 0);
+        invoiceState.issuedLineCount = Number(saved.issuedLineCount || 0);
+        invoiceState.unissuedLineCount = Number(saved.unissuedLineCount || 0);
         invoiceState.invoiceCount = Number(saved.invoiceCount || 0);
         invoiceState.currentHistoryId = saved.currentHistoryId || "";
         invoiceState.rows = saved.rows.filter(item =>
             Number(item?.quantity || 0) > 0
         );
+        invoiceState.lineRows = Array.isArray(saved.lineRows)
+            ? saved.lineRows
+            : [];
 
         // Nếu LocalStorage là dữ liệu của bản cũ, lưu lại bản đã làm sạch.
         if (invoiceState.rows.length !== saved.rows.length) {
@@ -9083,6 +9478,7 @@ function getInvoiceSnapshotTotals(rows) {
 function buildInvoiceHistoryItem(source = invoiceState) {
     const importedAt = source.importedAt || new Date().toISOString();
     const rows = cloneInvoiceRows(source.rows);
+    const lineRows = cloneInvoiceRows(source.lineRows);
     const totals = getInvoiceSnapshotTotals(rows);
 
     return {
@@ -9092,13 +9488,16 @@ function buildInvoiceHistoryItem(source = invoiceState) {
         dateFrom: source.dateFrom || "",
         dateTo: source.dateTo || "",
         sourceRowCount: Number(source.sourceRowCount || 0),
+        issuedLineCount: Number(source.issuedLineCount || 0),
+        unissuedLineCount: Number(source.unissuedLineCount || 0),
         invoiceCount: Number(source.invoiceCount || 0),
         productCount: rows.length,
         totalQuantity: totals.quantity,
         vatTotal: totals.vat,
         paymentTotal: totals.payment,
         preTaxTotal: totals.preTax,
-        rows
+        rows,
+        lineRows
     };
 }
 
@@ -9358,8 +9757,11 @@ function loadInvoiceHistoryItem(historyId) {
     invoiceState.dateFrom = item.dateFrom || "";
     invoiceState.dateTo = item.dateTo || "";
     invoiceState.sourceRowCount = Number(item.sourceRowCount || 0);
+    invoiceState.issuedLineCount = Number(item.issuedLineCount || 0);
+    invoiceState.unissuedLineCount = Number(item.unissuedLineCount || 0);
     invoiceState.invoiceCount = Number(item.invoiceCount || 0);
     invoiceState.rows = cloneInvoiceRows(item.rows);
+    invoiceState.lineRows = cloneInvoiceRows(item.lineRows || []);
 
     if ($("invoiceSearchInput")) {
         $("invoiceSearchInput").value = "";
@@ -9418,8 +9820,11 @@ function deleteInvoiceHistoryItem(historyId) {
             invoiceState.dateFrom = next.dateFrom || "";
             invoiceState.dateTo = next.dateTo || "";
             invoiceState.sourceRowCount = Number(next.sourceRowCount || 0);
+            invoiceState.issuedLineCount = Number(next.issuedLineCount || 0);
+            invoiceState.unissuedLineCount = Number(next.unissuedLineCount || 0);
             invoiceState.invoiceCount = Number(next.invoiceCount || 0);
             invoiceState.rows = cloneInvoiceRows(next.rows);
+            invoiceState.lineRows = cloneInvoiceRows(next.lineRows || []);
         } else {
             invoiceState.currentHistoryId = "";
             invoiceState.fileName = "";
@@ -9427,8 +9832,11 @@ function deleteInvoiceHistoryItem(historyId) {
             invoiceState.dateFrom = "";
             invoiceState.dateTo = "";
             invoiceState.sourceRowCount = 0;
+            invoiceState.issuedLineCount = 0;
+            invoiceState.unissuedLineCount = 0;
             invoiceState.invoiceCount = 0;
             invoiceState.rows = [];
+            invoiceState.lineRows = [];
         }
 
         saveInvoiceStatsLocal();
@@ -9546,8 +9954,9 @@ function renderInvoiceStats() {
             fileInfo.className = "invoice-file-info loaded";
             fileInfo.innerHTML = `
                 <strong>✓ ${escapeHTML(invoiceState.fileName)}</strong>
-                · ${formatNumber(invoiceState.sourceRowCount)} dòng chi tiết
-                · ${formatNumber(invoiceState.invoiceCount)} hóa đơn
+                · ${formatNumber(invoiceState.sourceRowCount)} dòng hàng hóa
+                · <span class="invoice-issued-note">${formatNumber(invoiceState.issuedLineCount || invoiceState.sourceRowCount)} dòng đã phát hành</span>
+                · ${formatNumber(invoiceState.invoiceCount)} số hóa đơn
                 · Ngày: <strong>${escapeHTML(dateText)}</strong>
             `;
         }
@@ -9664,9 +10073,12 @@ async function handleInvoiceUpload(file) {
         invoiceState.dateFrom = result.dateFrom;
         invoiceState.dateTo = result.dateTo;
         invoiceState.sourceRowCount = result.sourceRowCount;
+        invoiceState.issuedLineCount = result.issuedLineCount;
+        invoiceState.unissuedLineCount = result.unissuedLineCount;
         invoiceState.invoiceCount = result.invoiceCount;
         invoiceState.currentHistoryId = "";
         invoiceState.rows = result.rows;
+        invoiceState.lineRows = result.lineRows;
 
         // V27: mỗi lần upload tạo một bản lịch sử riêng.
         addCurrentInvoiceToHistory();
@@ -9707,9 +10119,12 @@ function clearInvoiceStats() {
     invoiceState.dateFrom = "";
     invoiceState.dateTo = "";
     invoiceState.sourceRowCount = 0;
+    invoiceState.issuedLineCount = 0;
+    invoiceState.unissuedLineCount = 0;
     invoiceState.invoiceCount = 0;
     invoiceState.currentHistoryId = "";
     invoiceState.rows = [];
+    invoiceState.lineRows = [];
 
     try {
         localStorage.removeItem(INVOICE_STATS_STORAGE_KEY);
