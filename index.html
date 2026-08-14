@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V12: chọn ngày lưu + upload BUỔI SÁNG/BUỔI CHIỀU + bảng tổng nhiều ngày -->
+    <!-- ONE-FILE V13: mỗi ca chọn ngày + trạng thái, bảng SÁNG/CHIỀU/TỔNG, lịch sử theo ngày -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -479,6 +479,146 @@ button{cursor:pointer}
     .upload-shift-grid{grid-template-columns:1fr}
 }
 
+
+/* =========================================================
+   V13 - NHẬP SÁNG/CHIỀU RIÊNG + LỊCH SỬ
+========================================================= */
+.shift-tabs{
+    display:flex;gap:7px;padding:0 18px 14px
+}
+.shift-tab-btn{
+    flex:1;min-height:42px;border:1px solid #dce5e9;border-radius:9px;
+    background:#fff;color:#637683;font-family:inherit;font-size:10px;font-weight:750;
+    cursor:pointer;transition:.15s
+}
+.shift-tab-btn.active{
+    border-color:#72caba;background:#ecf9f6;color:#087863;
+    box-shadow:0 0 0 2px rgba(15,155,129,.05)
+}
+.shift-pane{display:none;padding:0 18px 18px}
+.shift-pane.active{display:block}
+.shift-config-grid{
+    display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px;margin-bottom:14px
+}
+.shift-config-box{
+    border:1px solid #e1e8ec;border-radius:9px;background:#fafcfd;padding:13px
+}
+.shift-config-box label{
+    display:block;margin-bottom:6px;color:#536875;font-size:9px;font-weight:750
+}
+.shift-config-box input[type="date"]{
+    width:100%;height:38px;padding:0 10px;border:1px solid #ced9df;border-radius:7px;
+    background:#fff;font-family:inherit;font-size:10px;font-weight:650;outline:none
+}
+.shift-config-box input[type="date"]:focus{
+    border-color:#0f9b81;box-shadow:0 0 0 3px rgba(15,155,129,.08)
+}
+.shift-status-title{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px
+}
+.shift-status-title strong{font-size:9px;color:#536875}
+.shift-status-actions{display:flex;gap:5px}
+.shift-status-action{
+    height:24px;padding:0 7px;border:1px solid #dce5e9;border-radius:6px;
+    background:#fff;color:#6f818c;font-family:inherit;font-size:8px;cursor:pointer
+}
+.shift-status-grid{display:flex;flex-wrap:wrap;gap:6px}
+.shift-status-check{
+    display:flex;align-items:flex-start;gap:6px;max-width:360px;
+    padding:7px 8px;border:1px solid #e0e7eb;border-radius:7px;background:#fff;
+    cursor:pointer;user-select:none
+}
+.shift-status-check.checked{
+    border-color:#75cdbd;background:#effaf7
+}
+.shift-status-check input{
+    margin-top:1px;accent-color:#0f9b81
+}
+.shift-status-check span{
+    color:#536875;font-size:8.5px;line-height:1.35
+}
+.shift-upload-zone{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:13px;border:1px dashed #cbd9df;border-radius:9px;background:#fbfdfd
+}
+.shift-upload-zone-left strong{
+    display:block;color:#233a44;font-size:10px;margin-bottom:3px
+}
+.shift-upload-zone-left small{
+    display:block;color:#8a9aa5;font-size:8.5px;line-height:1.4
+}
+.shift-import-result{
+    margin-top:10px;padding:9px 11px;border:1px solid #dce6e9;border-radius:7px;
+    background:#fff;color:#73848f;font-size:8.5px;line-height:1.45
+}
+.shift-import-result.loaded{
+    border-color:#b8e0d7;background:#f2faf8;color:#356f63
+}
+.stats-report-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 16px
+}
+.stats-report-left{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.stats-report-left label{font-size:9px;font-weight:750;color:#536875}
+.stats-report-select{
+    height:35px;min-width:150px;padding:0 9px;border:1px solid #d5dfe4;border-radius:7px;
+    background:#fff;font-family:inherit;font-size:10px;font-weight:650;color:#253943
+}
+.shift-summary-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 14px
+}
+.shift-summary-card{
+    border:1px solid #e0e7eb;border-radius:9px;background:#fafcfd;padding:11px
+}
+.shift-summary-card.morning{border-left:3px solid #f1b543}
+.shift-summary-card.afternoon{border-left:3px solid #5ea7e7}
+.shift-summary-card strong{display:block;font-size:10px;color:#273c46;margin-bottom:4px}
+.shift-summary-card span{display:block;color:#7e909b;font-size:8.5px;line-height:1.45}
+.stat-shift-col{
+    min-width:72px!important;width:72px!important;max-width:72px!important;
+    text-align:center!important
+}
+.stat-total-col{
+    min-width:78px!important;width:78px!important;max-width:78px!important;
+    text-align:center!important;background:#f1faf7!important
+}
+.stat-total-value{font-weight:850;color:#087863;font-size:12px}
+.history-kpis{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px
+}
+.history-kpi{
+    padding:14px;border:1px solid #e1e7eb;border-radius:9px;background:#fff
+}
+.history-kpi span{display:block;color:#7a8b97;font-size:8px;font-weight:700}
+.history-kpi strong{display:block;margin-top:6px;color:#172b34;font-size:19px}
+.history-filter-bar{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:12px 16px;border-bottom:1px solid #edf1f3
+}
+.history-date-title strong{display:block;font-size:10px}
+.history-date-title span{display:block;margin-top:3px;color:#8b9ba5;font-size:8px}
+.history-config{
+    max-width:330px;white-space:normal!important;line-height:1.45
+}
+.history-config strong{display:block;font-size:8.5px;color:#344b56;margin-bottom:2px}
+.history-config span{color:#82939e;font-size:8px}
+.btn-view-history{
+    height:28px;padding:0 9px;border:1px solid #b6ddd5;border-radius:6px;
+    background:#effaf7;color:#087863;font-family:inherit;font-size:8px;font-weight:750;cursor:pointer
+}
+.btn-view-history:hover{background:#e4f6f2}
+.history-empty{
+    padding:44px;text-align:center;color:#93a2ac;font-size:10px
+}
+@media(max-width:900px){
+    .shift-config-grid{grid-template-columns:1fr}
+    .shift-summary-grid{grid-template-columns:1fr}
+    .history-kpis{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){
+    .history-kpis{grid-template-columns:1fr}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -542,6 +682,11 @@ button{cursor:pointer}
                 <span class="nav-icon">🧮</span>
                 <span>Thống kê SKU</span>
                 <span class="nav-badge" id="navSkuCount">0</span>
+            </button>
+            <button class="nav-item" data-view="history">
+                <span class="nav-icon">🗓️</span>
+                <span>Lịch sử thống kê</span>
+                <span class="nav-badge" id="navHistoryCount">0</span>
             </button>
         </nav>
 
@@ -685,53 +830,100 @@ button{cursor:pointer}
                 <div class="panel report-date-panel">
                     <div class="report-date-content">
                         <div class="report-date-left">
-                            <h3>📅 1. Chọn ngày muốn lưu dữ liệu</h3>
-                            <p>Ngày bạn chọn ở đây là ngày thống kê của kho dữ liệu. Sau đó mới chọn file buổi sáng hoặc buổi chiều.</p>
+                            <h3>📅 1. Chọn NGÀY BÁO CÁO muốn lưu</h3>
+                            <p>Đây là ngày dùng để xem lịch sử. Ví dụ ngày báo cáo 14/08 có thể gồm file sáng lấy đơn ngày 13 và file chiều lấy đơn ngày 14.</p>
                         </div>
 
                         <div class="report-date-control">
-                            <label>NGÀY THỐNG KÊ</label>
+                            <label>NGÀY BÁO CÁO</label>
                             <input id="reportDateInput" type="date">
                             <div class="report-date-selected" id="reportDateLabel">-</div>
                         </div>
                     </div>
-
-                    <div class="manual-date-note">
-                        Ví dụ: chọn <strong>14/08/2026</strong> → file sáng và file chiều đều được gộp vào dữ liệu ngày 14.
-                        Dữ liệu ngày khác vẫn được giữ riêng trên Supabase Cloud.
-                    </div>
                 </div>
 
-                <div class="upload-shift-grid">
-                    <div class="shift-upload-card morning">
-                        <div class="shift-tag">BUỔI SÁNG</div>
-                        <div class="shift-upload-icon">🌤️</div>
-                        <h3>2A. Upload file buổi sáng</h3>
-                        <p>Thường dùng cho file lấy đầu ngày / số đơn phát sinh từ chiều hôm trước đến sáng nay.</p>
-
-                        <label class="upload-button primary">
-                            Chọn file buổi sáng
-                            <input type="file" id="morningFile" accept=".xlsx,.xls,.csv">
-                        </label>
-
-                        <div class="shift-status" id="morningFileStatus">
-                            Chọn ngày trước, sau đó upload file.
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>2. Nhập file theo ca</h2>
+                            <p>Mỗi ca tự chọn ngày đơn hàng và trạng thái cần lấy trước khi upload Excel.</p>
                         </div>
                     </div>
 
-                    <div class="shift-upload-card afternoon">
-                        <div class="shift-tag">BUỔI CHIỀU</div>
-                        <div class="shift-upload-icon">🌇</div>
-                        <h3>2B. Upload file buổi chiều</h3>
-                        <p>Upload thêm file trong ngày. Các đơn đã có từ file sáng sẽ được cập nhật, đơn mới sẽ được cộng thêm.</p>
+                    <div class="shift-tabs">
+                        <button type="button" class="shift-tab-btn active" data-shift-tab="morning">🌤️ BUỔI SÁNG</button>
+                        <button type="button" class="shift-tab-btn" data-shift-tab="afternoon">🌇 BUỔI CHIỀU</button>
+                    </div>
 
-                        <label class="upload-button primary">
-                            Chọn file buổi chiều
-                            <input type="file" id="afternoonFile" accept=".xlsx,.xls,.csv">
-                        </label>
+                    <div id="shiftPaneMorning" class="shift-pane active">
+                        <div class="shift-config-grid">
+                            <div class="shift-config-box">
+                                <label>📅 NGÀY ĐƠN HÀNG CẦN LẤY</label>
+                                <input id="morningSourceDate" type="date">
+                            </div>
 
-                        <div class="shift-status" id="afternoonFileStatus">
-                            Chọn ngày trước, sau đó upload file.
+                            <div class="shift-config-box">
+                                <div class="shift-status-title">
+                                    <strong>📦 TRẠNG THÁI ĐƠN HÀNG BUỔI SÁNG</strong>
+                                    <div class="shift-status-actions">
+                                        <button type="button" class="shift-status-action" data-status-all="morning">Chọn tất cả</button>
+                                        <button type="button" class="shift-status-action" data-status-clear="morning">Bỏ chọn</button>
+                                    </div>
+                                </div>
+                                <div id="morningStatusFilters" class="shift-status-grid"></div>
+                            </div>
+                        </div>
+
+                        <div class="shift-upload-zone">
+                            <div class="shift-upload-zone-left">
+                                <strong>Upload file Excel buổi sáng</strong>
+                                <small>Chỉ những dòng đúng ngày + đúng trạng thái đã chọn ở trên mới được lưu vào ca sáng.</small>
+                            </div>
+
+                            <label class="upload-button primary">
+                                Chọn file BUỔI SÁNG
+                                <input type="file" id="morningFile" accept=".xlsx,.xls,.csv">
+                            </label>
+                        </div>
+
+                        <div id="morningFileStatus" class="shift-import-result">
+                            Chưa có dữ liệu buổi sáng cho ngày báo cáo này.
+                        </div>
+                    </div>
+
+                    <div id="shiftPaneAfternoon" class="shift-pane">
+                        <div class="shift-config-grid">
+                            <div class="shift-config-box">
+                                <label>📅 NGÀY ĐƠN HÀNG CẦN LẤY</label>
+                                <input id="afternoonSourceDate" type="date">
+                            </div>
+
+                            <div class="shift-config-box">
+                                <div class="shift-status-title">
+                                    <strong>📦 TRẠNG THÁI ĐƠN HÀNG BUỔI CHIỀU</strong>
+                                    <div class="shift-status-actions">
+                                        <button type="button" class="shift-status-action" data-status-all="afternoon">Chọn tất cả</button>
+                                        <button type="button" class="shift-status-action" data-status-clear="afternoon">Bỏ chọn</button>
+                                    </div>
+                                </div>
+                                <div id="afternoonStatusFilters" class="shift-status-grid"></div>
+                            </div>
+                        </div>
+
+                        <div class="shift-upload-zone">
+                            <div class="shift-upload-zone-left">
+                                <strong>Upload file Excel buổi chiều</strong>
+                                <small>Chỉ những dòng đúng ngày + đúng trạng thái đã chọn ở trên mới được lưu vào ca chiều.</small>
+                            </div>
+
+                            <label class="upload-button primary">
+                                Chọn file BUỔI CHIỀU
+                                <input type="file" id="afternoonFile" accept=".xlsx,.xls,.csv">
+                            </label>
+                        </div>
+
+                        <div id="afternoonFileStatus" class="shift-import-result">
+                            Chưa có dữ liệu buổi chiều cho ngày báo cáo này.
                         </div>
                     </div>
                 </div>
@@ -815,51 +1007,44 @@ button{cursor:pointer}
         <!-- ======================== THỐNG KÊ SKU ======================== -->
         <section id="view-sku-stats" class="view">
             <div class="sku-top-grid">
-                <div class="mini-kpi accent"><span>DÒNG SKU ĐƯỢC TÍNH</span><strong id="skuFilteredRows">0</strong></div>
-                <div class="mini-kpi"><span>SKU KHÁC NHAU</span><strong id="skuUniqueCount">0</strong></div>
-                <div class="mini-kpi"><span>SỐ LƯỢNG SKU</span><strong id="skuTotalCount">0</strong></div>
+                <div class="mini-kpi accent"><span>SL SKU BUỔI SÁNG</span><strong id="skuMorningCount">0</strong></div>
+                <div class="mini-kpi"><span>SL SKU BUỔI CHIỀU</span><strong id="skuAfternoonCount">0</strong></div>
+                <div class="mini-kpi"><span>TỔNG SKU</span><strong id="skuTotalCount">0</strong></div>
                 <div class="mini-kpi total"><span>TỔNG SP SAU QUY ĐỔI</span><strong id="skuConvertedTotal">0</strong></div>
             </div>
 
             <div class="panel">
-                <div class="panel-header table-toolbar">
+                <div class="panel-header">
                     <div>
-                        <h2>Điều kiện thống kê</h2>
-                        <p>Mặc định chọn đúng 3 trạng thái bạn yêu cầu. Có thể tích/bỏ tích để kiểm tra trường hợp khác.</p>
+                        <h2>Ngày báo cáo đang xem</h2>
+                        <p>Trạng thái và ngày nguồn đã được lưu riêng ở từng ca khi upload file.</p>
                     </div>
                     <div class="toolbar">
                         <select id="skuCountMode" class="select-control">
-                            <option value="rows" selected>Đếm số lần SKU xuất hiện ở cột T</option>
+                            <option value="rows" selected>Đếm số lần SKU xuất hiện</option>
                             <option value="quantity">Cộng theo cột Số lượng</option>
                         </select>
                         <button id="btnExportSku" class="btn btn-primary">Xuất Excel</button>
                     </div>
                 </div>
-                <div class="filter-section">
-                    <div class="filter-section-title">
-                        <div>
-                            <strong>📅 Ngày thống kê đã lưu</strong>
-                            <span>Chọn 1 ngày để xem riêng; chọn nhiều ngày để hệ thống tự cộng thành một bảng tổng.</span>
-                        </div>
+
+                <div class="stats-report-bar">
+                    <div class="stats-report-left">
+                        <label>📅 NGÀY BÁO CÁO</label>
+                        <select id="statsReportDateSelect" class="stats-report-select"></select>
                     </div>
 
-                    <div class="date-filter-wrap" id="skuDateFilters">
-                        <div class="empty-box compact-empty">Hãy nhập file đơn hàng Shopee trước.</div>
-                    </div>
+                    <button type="button" class="btn btn-light" id="btnOpenHistory">🗓️ Xem lịch sử thống kê</button>
                 </div>
 
-                <div class="filter-divider"></div>
-
-                <div class="filter-section">
-                    <div class="filter-section-title">
-                        <div>
-                            <strong>📦 Trạng thái đơn hàng</strong>
-                            <span>Mặc định chọn: Đang giao, Đã giao và Người mua xác nhận đã nhận hàng.</span>
-                        </div>
+                <div class="shift-summary-grid">
+                    <div class="shift-summary-card morning">
+                        <strong>🌤️ Buổi sáng</strong>
+                        <span id="morningConfigSummary">Chưa có dữ liệu.</span>
                     </div>
-
-                    <div class="status-filter-wrap" id="skuStatusFilters">
-                        <div class="empty-box compact-empty">Hãy nhập file đơn hàng Shopee trước.</div>
+                    <div class="shift-summary-card afternoon">
+                        <strong>🌇 Buổi chiều</strong>
+                        <span id="afternoonConfigSummary">Chưa có dữ liệu.</span>
                     </div>
                 </div>
             </div>
@@ -895,6 +1080,45 @@ button{cursor:pointer}
                     <table>
                         <thead><tr><th>SKU kho / SKU quy đổi</th><th class="center">Tổng số lượng cần chuẩn bị</th></tr></thead>
                         <tbody id="convertedTotalsBody"><tr><td colspan="2" class="empty-table">Chưa có dữ liệu</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================== LỊCH SỬ ======================== -->
+        <section id="view-history" class="view">
+            <div class="history-kpis">
+                <div class="history-kpi"><span>NGÀY ĐÃ LƯU</span><strong id="historyDayCount">0</strong></div>
+                <div class="history-kpi"><span>TỔNG LẦN UPLOAD</span><strong id="historyImportCount">0</strong></div>
+                <div class="history-kpi"><span>TỔNG MÃ ĐƠN</span><strong id="historyOrderCount">0</strong></div>
+                <div class="history-kpi"><span>TỔNG DÒNG SKU</span><strong id="historyRowCount">0</strong></div>
+            </div>
+
+            <div class="panel">
+                <div class="history-filter-bar">
+                    <div class="history-date-title">
+                        <strong>Lịch sử thống kê theo NGÀY BÁO CÁO</strong>
+                        <span>Bấm “Xem thống kê” để mở lại đúng bảng Sáng / Chiều / Tổng của ngày đó.</span>
+                    </div>
+                </div>
+
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ngày báo cáo</th>
+                                <th>Cấu hình BUỔI SÁNG</th>
+                                <th class="center">SL sáng</th>
+                                <th>Cấu hình BUỔI CHIỀU</th>
+                                <th class="center">SL chiều</th>
+                                <th class="center">TỔNG</th>
+                                <th>Cập nhật gần nhất</th>
+                                <th class="center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr><td colspan="8" class="empty-table">Chưa có lịch sử.</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -1024,9 +1248,22 @@ const state = {
     selectedStatuses: new Set(),
     statusFilterInitialized: false,
 
-    // Bộ lọc ngày đặt hàng
+    // Ngày báo cáo đang xem
     selectedDates: new Set(),
     dateFilterInitialized: false,
+
+    // Bộ lọc riêng cho từng ca khi nhập file
+    shiftFilters: {
+        morning: {
+            sourceDate: "",
+            statuses: new Set()
+        },
+        afternoon: {
+            sourceDate: "",
+            statuses: new Set()
+        }
+    },
+    activeShiftTab: "morning",
 
     countMode: "rows",
     baseSkus: [],
@@ -1082,6 +1319,10 @@ const PAGE_INFO = {
         title: "Thống kê & quy đổi SKU",
         subtitle: "Đếm SKU theo trạng thái và quy đổi combo / quà tặng"
     },
+    history: {
+        title: "Lịch sử thống kê",
+        subtitle: "Xem lại từng ngày báo cáo, cấu hình buổi sáng / buổi chiều và bảng tổng"
+    },
     orders: {
         title: "Đơn hàng Shopee",
         subtitle: "Danh sách dữ liệu đọc trực tiếp từ file đơn hàng Shopee"
@@ -1115,6 +1356,25 @@ const ALIASES = {
     product: ["Tên sản phẩm", "Sản phẩm", "Product Name", "Tên hàng"],
     quantity: ["Số lượng", "Quantity", "SL"]
 };
+
+const SHOPEE_STATUS_OPTIONS = [
+    "Chờ giao hàng",
+    "Chờ xác nhận",
+    "Đã giao",
+    "Đã hủy",
+    "Đang giao",
+    "Người mua xác nhận đã nhận được hàng, tuy nhiên Người mua vẫn có thể gửi yêu cầu Trả hàng/Hoàn tiền"
+];
+
+const DEFAULT_SHIFT_STATUSES = [
+    "Đang giao",
+    "Đã giao",
+    "Người mua xác nhận đã nhận được hàng, tuy nhiên Người mua vẫn có thể gửi yêu cầu Trả hàng/Hoàn tiền"
+];
+
+function createDefaultShiftStatusSet() {
+    return new Set(DEFAULT_SHIFT_STATUSES);
+}
 
 
 /* ======================== SUPABASE CLOUD ======================== */
@@ -1225,7 +1485,9 @@ function cloudImportToState(info) {
         unchanged: Number(info.unchanged || 0),
         dates: Array.isArray(info.dates) ? info.dates : [],
         reportDate: info.report_date || (Array.isArray(info.dates) && info.dates.length === 1 ? info.dates[0] : ""),
-        importSlot: info.import_slot || ""
+        importSlot: info.import_slot || "",
+        sourceDate: info.source_date || "",
+        selectedStatuses: Array.isArray(info.selected_statuses) ? info.selected_statuses : []
     };
 }
 
@@ -1313,7 +1575,9 @@ async function dbPutImport(importInfo) {
         unchanged: importInfo.unchanged,
         dates: importInfo.dates || [],
         report_date: importInfo.reportDate || null,
-        import_slot: importInfo.importSlot || null
+        import_slot: importInfo.importSlot || null,
+        source_date: importInfo.sourceDate || null,
+        selected_statuses: importInfo.selectedStatuses || []
     };
 
     const { error } = await client
@@ -1360,18 +1624,42 @@ async function dbDeleteSavedDate(dateKey) {
     if (importError) throw importError;
 }
 
+
+async function dbReplaceShiftData(reportDate, slot, rows, importInfo) {
+    const client = initSupabaseClient();
+
+    // Mỗi ngày báo cáo chỉ giữ 1 bộ dữ liệu mới nhất cho từng ca.
+    const { error: deleteRowsError } = await client
+        .from(DB_ROWS)
+        .delete()
+        .eq("report_date", reportDate)
+        .eq("import_slot", slot);
+
+    if (deleteRowsError) throw deleteRowsError;
+
+    const { error: deleteImportsError } = await client
+        .from(DB_IMPORTS)
+        .delete()
+        .eq("report_date", reportDate)
+        .eq("import_slot", slot);
+
+    if (deleteImportsError) throw deleteImportsError;
+
+    await dbPutManyRows(rows);
+    await dbPutImport(importInfo);
+}
+
 function createPersistentRowKey(row) {
     const reportDate = row.reportDate || row.orderDate || "";
+    const slot = row.importSlot || "morning";
     const order = normalizeText(row.orderId || "");
     const sku = normalizeText(row.sku || "");
     const product = normalizeText(row.product || "");
 
-    // Cùng đơn + SKU trong CÙNG NGÀY thống kê sẽ được update,
-    // nên file sáng và chiều không cộng trùng.
-    if (order) return `${reportDate}|${order}|${sku}|${product}`;
+    // Tách SÁNG / CHIỀU thành 2 nhóm độc lập.
+    if (order) return `${reportDate}|${slot}|${order}|${sku}|${product}`;
 
-    // Trường hợp thiếu mã đơn.
-    return `${reportDate}|noorder|${row.sourceOrderDate || ""}|${sku}|${product}|${row.quantity || 0}`;
+    return `${reportDate}|${slot}|noorder|${row.sourceOrderDate || ""}|${sku}|${product}|${row.quantity || 0}`;
 }
 
 async function createFileFingerprint(file) {
@@ -1493,6 +1781,23 @@ async function enterAuthenticatedApp(session) {
         loadSavedDataFromDb({ resetFilters: true }),
         loadConversionConfigFromCloud()
     ]);
+
+    const reportDates = [...new Set(
+        state.skuRows.map(row => row.orderDate).filter(Boolean)
+    )].sort();
+
+    const initialReportDate = reportDates.length
+        ? reportDates[reportDates.length - 1]
+        : getLocalTodayKey();
+
+    state.selectedDates = new Set([initialReportDate]);
+    state.dateFilterInitialized = true;
+
+    if ($("reportDateInput")) {
+        $("reportDateInput").value = initialReportDate;
+    }
+
+    loadShiftConfigurationForReportDate(initialReportDate);
 
     renderAll();
     openView("overview");
@@ -1672,6 +1977,7 @@ function openView(viewName) {
 
     if (viewName === "orders") renderOrdersTab();
     if (viewName === "returns") renderReturnsTab();
+    if (viewName === "history") renderHistory();
 }
 
 /* ======================== EXCEL ======================== */
@@ -1758,6 +2064,14 @@ function getLocalTodayKey() {
     return `${y}-${m}-${d}`;
 }
 
+function addDaysToDateKey(dateKey, days) {
+    if (!dateKey) return "";
+    const [y, m, d] = dateKey.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    date.setDate(date.getDate() + days);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 function getSelectedReportDate() {
     return $("reportDateInput")?.value || "";
 }
@@ -1766,21 +2080,19 @@ function slotLabel(slot) {
     return slot === "morning" ? "Buổi sáng" : "Buổi chiều";
 }
 
-function renderReportDateUi() {
-    const input = $("reportDateInput");
-    const label = $("reportDateLabel");
-
-    if (!input) return;
-
-    if (!input.value) {
-        input.value = getLocalTodayKey();
+function getShiftFilter(slot) {
+    if (!state.shiftFilters[slot]) {
+        state.shiftFilters[slot] = {
+            sourceDate: "",
+            statuses: createDefaultShiftStatusSet()
+        };
     }
 
-    if (label) {
-        label.textContent = formatDateLabel(input.value);
+    if (!(state.shiftFilters[slot].statuses instanceof Set)) {
+        state.shiftFilters[slot].statuses = new Set(state.shiftFilters[slot].statuses || []);
     }
 
-    renderUploadSlotStatuses();
+    return state.shiftFilters[slot];
 }
 
 function getLatestImportForSlot(reportDate, slot) {
@@ -1794,38 +2106,147 @@ function getLatestImportForSlot(reportDate, slot) {
         )[0] || null;
 }
 
+function loadShiftConfigurationForReportDate(reportDate) {
+    ["morning", "afternoon"].forEach(slot => {
+        const latest = getLatestImportForSlot(reportDate, slot);
+        const filter = getShiftFilter(slot);
+
+        if (latest) {
+            filter.sourceDate = latest.sourceDate || reportDate;
+
+            filter.statuses = latest.selectedStatuses?.length
+                ? new Set(latest.selectedStatuses)
+                : createDefaultShiftStatusSet();
+        } else {
+            // Mặc định tiện cho quy trình hiện tại:
+            // sáng lấy ngày hôm trước, chiều lấy ngày báo cáo.
+            filter.sourceDate = slot === "morning"
+                ? addDaysToDateKey(reportDate, -1)
+                : reportDate;
+
+            filter.statuses = createDefaultShiftStatusSet();
+        }
+    });
+
+    syncShiftInputsFromState();
+}
+
+function syncShiftInputsFromState() {
+    const morning = getShiftFilter("morning");
+    const afternoon = getShiftFilter("afternoon");
+
+    if ($("morningSourceDate")) $("morningSourceDate").value = morning.sourceDate || "";
+    if ($("afternoonSourceDate")) $("afternoonSourceDate").value = afternoon.sourceDate || "";
+
+    renderShiftStatusFilters("morning");
+    renderShiftStatusFilters("afternoon");
+    renderUploadSlotStatuses();
+}
+
+function renderShiftStatusFilters(slot) {
+    const container = $(slot === "morning" ? "morningStatusFilters" : "afternoonStatusFilters");
+    if (!container) return;
+
+    const filter = getShiftFilter(slot);
+
+    container.innerHTML = SHOPEE_STATUS_OPTIONS.map((status, index) => {
+        const checked = filter.statuses.has(status);
+
+        const shortText = status.length > 72
+            ? status.slice(0, 72) + "..."
+            : status;
+
+        return `
+            <label class="shift-status-check ${checked ? "checked" : ""}" title="${escapeHTML(status)}">
+                <input
+                    type="checkbox"
+                    data-shift-status="${slot}"
+                    data-shift-status-index="${index}"
+                    ${checked ? "checked" : ""}
+                >
+                <span>${escapeHTML(shortText)}</span>
+            </label>
+        `;
+    }).join("");
+
+    document.querySelectorAll(`[data-shift-status="${slot}"]`).forEach((checkbox, index) => {
+        checkbox.addEventListener("change", () => {
+            const status = SHOPEE_STATUS_OPTIONS[index];
+
+            if (checkbox.checked) filter.statuses.add(status);
+            else filter.statuses.delete(status);
+
+            renderShiftStatusFilters(slot);
+        });
+    });
+}
+
+function setShiftTab(slot) {
+    state.activeShiftTab = slot;
+
+    document.querySelectorAll("[data-shift-tab]").forEach(button => {
+        button.classList.toggle("active", button.dataset.shiftTab === slot);
+    });
+
+    $("shiftPaneMorning")?.classList.toggle("active", slot === "morning");
+    $("shiftPaneAfternoon")?.classList.toggle("active", slot === "afternoon");
+}
+
+function renderReportDateUi({ reloadShiftConfig = false } = {}) {
+    const input = $("reportDateInput");
+    const label = $("reportDateLabel");
+
+    if (!input) return;
+
+    if (!input.value) {
+        input.value = getLocalTodayKey();
+    }
+
+    if (label) label.textContent = formatDateLabel(input.value);
+
+    if (reloadShiftConfig) {
+        loadShiftConfigurationForReportDate(input.value);
+    } else {
+        renderUploadSlotStatuses();
+    }
+}
+
+function formatStatusList(statuses) {
+    if (!statuses?.length) return "Chưa chọn trạng thái";
+
+    return statuses.map(status => {
+        if (status.startsWith("Người mua xác nhận")) {
+            return "Người mua đã nhận hàng";
+        }
+        return status;
+    }).join(", ");
+}
+
 function renderUploadSlotStatuses() {
     const reportDate = getSelectedReportDate();
 
-    const configs = [
-        { slot: "morning", element: $("morningFileStatus") },
-        { slot: "afternoon", element: $("afternoonFileStatus") }
-    ];
-
-    configs.forEach(({ slot, element }) => {
+    ["morning", "afternoon"].forEach(slot => {
+        const element = $(slot === "morning" ? "morningFileStatus" : "afternoonFileStatus");
         if (!element) return;
-
-        if (!reportDate) {
-            element.className = "shift-status";
-            element.textContent = "Hãy chọn ngày thống kê trước.";
-            return;
-        }
 
         const latest = getLatestImportForSlot(reportDate, slot);
 
         if (!latest) {
-            element.className = "shift-status";
-            element.innerHTML =
-                `<strong>${formatDateLabel(reportDate)}</strong>` +
-                `Chưa có file ${slotLabel(slot).toLowerCase()} cho ngày này.`;
+            element.className = "shift-import-result";
+            element.innerHTML = `
+                <strong>${slotLabel(slot)} · ${formatDateLabel(reportDate)}</strong><br>
+                Chưa lưu dữ liệu cho ca này.
+            `;
             return;
         }
 
-        element.className = "shift-status loaded";
-        element.innerHTML =
-            `<strong>✓ ${escapeHTML(latest.fileName)}</strong>` +
-            `${formatDateLabel(reportDate)} · ${slotLabel(slot)} · ` +
-            `${formatNumber(latest.rowCount)} dòng · ${formatDateTimeVi(latest.importedAt)}`;
+        element.className = "shift-import-result loaded";
+        element.innerHTML = `
+            <strong>✓ ${escapeHTML(latest.fileName)}</strong><br>
+            Ngày đơn hàng: ${formatDateLabel(latest.sourceDate || reportDate)}
+            · ${formatStatusList(latest.selectedStatuses)}
+            · ${formatNumber(latest.rowCount)} dòng
+        `;
     });
 }
 
@@ -1833,38 +2254,35 @@ async function processShopeeUpload(file, slot, inputElement) {
     if (!file) return;
 
     const reportDate = getSelectedReportDate();
+    const filter = getShiftFilter(slot);
+    const sourceDate = filter.sourceDate;
+    const selectedStatuses = [...filter.statuses];
 
     if (!reportDate) {
-        alert("Hãy chọn NGÀY THỐNG KÊ trước khi upload file.");
+        alert("Hãy chọn NGÀY BÁO CÁO trước.");
+        inputElement.value = "";
+        return;
+    }
+
+    if (!sourceDate) {
+        alert(`Hãy chọn NGÀY ĐƠN HÀNG cho ${slotLabel(slot)} trước.`);
+        inputElement.value = "";
+        return;
+    }
+
+    if (!selectedStatuses.length) {
+        alert(`Hãy chọn ít nhất 1 TRẠNG THÁI cho ${slotLabel(slot)}.`);
         inputElement.value = "";
         return;
     }
 
     try {
-        showToast(`Đang đọc ${slotLabel(slot).toLowerCase()} ngày ${formatDateLabel(reportDate)}...`);
+        showToast(`Đang đọc ${slotLabel(slot).toLowerCase()}...`);
         setCloudStatus("☁️ Đang đồng bộ...", "syncing");
 
-        const baseFingerprint = await createFileFingerprint(file);
-
-        // Cùng một file chỉ bị xem là trùng khi upload đúng cùng ngày + cùng ca.
-        const importKey = `${reportDate}|${slot}|${baseFingerprint}`;
-        const existingImport = await dbGet(DB_IMPORTS, importKey);
-
-        if (existingImport) {
-            inputElement.value = "";
-
-            alert(
-                `${slotLabel(slot)} ngày ${formatDateLabel(reportDate)} đã nhập file này trước đó. ` +
-                "Hệ thống không nhập lại để tránh cộng trùng."
-            );
-
-            setCloudStatus("☁️ Supabase Cloud");
-            return;
-        }
-
         const rows = await readExcelFile(file);
-        const parsedRawRows = parseShopeeRows(rows);
-        const validationError = validateShopeeFile(rows, parsedRawRows, file.name);
+        const parsedAll = parseShopeeRows(rows);
+        const validationError = validateShopeeFile(rows, parsedAll, file.name);
 
         if (validationError) {
             inputElement.value = "";
@@ -1873,80 +2291,81 @@ async function processShopeeUpload(file, slot, inputElement) {
             return;
         }
 
-        // Ngày trong file được giữ ở sourceOrderDate.
-        // Ngày thống kê được ép theo ngày người dùng đã chọn.
-        const parsedRows = parsedRawRows.map(row => ({
-            ...row,
-            sourceOrderDate: row.orderDate || "",
-            orderDate: reportDate,
-            reportDate,
-            importSlot: slot
-        }));
-
-        // Luôn lấy cloud mới nhất để nhiều máy không cộng trùng nhau.
-        await loadSavedDataFromDb({ resetFilters: false });
-
-        const nowIso = new Date().toISOString();
-        const currentMap = new Map(
-            state.skuRows.map(row => [
-                row.rowKey || createPersistentRowKey(row),
-                row
-            ])
+        const filteredRows = parsedAll.filter(row =>
+            row.orderDate === sourceDate &&
+            filter.statuses.has(row.status)
         );
 
-        let added = 0;
-        let updated = 0;
-        let unchanged = 0;
+        if (!filteredRows.length) {
+            inputElement.value = "";
+            setCloudStatus("☁️ Supabase Cloud");
 
-        const rowsToSave = parsedRows.map(row => {
-            const rowKey = createPersistentRowKey(row);
-            const oldRow = currentMap.get(rowKey);
+            alert(
+                `Không tìm thấy dòng nào phù hợp.\n\n` +
+                `Ngày đơn hàng: ${formatDateLabel(sourceDate)}\n` +
+                `Trạng thái: ${formatStatusList(selectedStatuses)}`
+            );
+            return;
+        }
 
-            if (!oldRow) added++;
-            else if (rowsAreDifferent(oldRow, row)) updated++;
-            else unchanged++;
+        const nowIso = new Date().toISOString();
+        const baseFingerprint = await createFileFingerprint(file);
+        const importKey = `${reportDate}|${slot}|${sourceDate}|${baseFingerprint}`;
 
-            return {
+        const rowsToSave = filteredRows.map(row => {
+            const savedRow = {
                 ...row,
-                rowKey,
+                sourceOrderDate: row.orderDate || "",
+                orderDate: reportDate,
+                reportDate,
+                importSlot: slot,
                 updatedAt: nowIso,
                 sourceFile: file.name
             };
+
+            savedRow.rowKey = createPersistentRowKey(savedRow);
+            return savedRow;
         });
 
-        await dbPutManyRows(rowsToSave);
-
-        await dbPutImport({
-            hash: importKey,
-            fileName: file.name,
-            fileSize: file.size,
-            importedAt: nowIso,
-            rowCount: parsedRows.length,
-            added,
-            updated,
-            unchanged,
-            dates: [reportDate],
+        // Thay toàn bộ dữ liệu của đúng ca trong ngày báo cáo.
+        // Nếu upload lại file sáng, dữ liệu sáng cũ được thay bằng bản mới.
+        await dbReplaceShiftData(
             reportDate,
-            importSlot: slot
-        });
+            slot,
+            rowsToSave,
+            {
+                hash: importKey,
+                fileName: file.name,
+                fileSize: file.size,
+                importedAt: nowIso,
+                rowCount: rowsToSave.length,
+                added: rowsToSave.length,
+                updated: 0,
+                unchanged: 0,
+                dates: [reportDate],
+                reportDate,
+                importSlot: slot,
+                sourceDate,
+                selectedStatuses
+            }
+        );
 
-        await loadSavedDataFromDb({ resetFilters: true });
+        await loadSavedDataFromDb({ resetFilters: false });
 
-        // Sau upload chỉ chọn ngày vừa nhập để xem ngay bảng ngày đó.
         state.selectedDates = new Set([reportDate]);
         state.dateFilterInitialized = true;
 
         inputElement.value = "";
 
         renderAll();
-        renderReportDateUi();
+        loadShiftConfigurationForReportDate(reportDate);
+        setShiftTab(slot);
         openView("sku-stats");
 
         setCloudStatus("☁️ Supabase Cloud");
 
         showToast(
-            `${slotLabel(slot)} ${formatDateLabel(reportDate)}: ` +
-            `+${formatNumber(added)} mới, ${formatNumber(updated)} cập nhật.`
+            `${slotLabel(slot)}: đã lưu ${formatNumber(rowsToSave.length)} dòng cho ngày báo cáo ${formatDateLabel(reportDate)}.`
         );
     } catch (error) {
         console.error(error);
@@ -1954,8 +2373,8 @@ async function processShopeeUpload(file, slot, inputElement) {
         setCloudStatus("☁️ Lỗi đồng bộ", "error");
 
         alert(
-            "Không đọc hoặc lưu được file lên Supabase. " +
-            (error?.message ? "\\n\\n" + error.message : "")
+            "Không đọc hoặc lưu được file.\n\n" +
+            (error?.message || "")
         );
     }
 }
@@ -1968,94 +2387,74 @@ $("afternoonFile")?.addEventListener("change", event => {
     processShopeeUpload(event.target.files[0], "afternoon", event.target);
 });
 
-$("reportDateInput")?.addEventListener("change", () => {
-    renderReportDateUi();
+$("morningSourceDate")?.addEventListener("change", event => {
+    getShiftFilter("morning").sourceDate = event.target.value;
+});
+
+$("afternoonSourceDate")?.addEventListener("change", event => {
+    getShiftFilter("afternoon").sourceDate = event.target.value;
+});
+
+$("reportDateInput")?.addEventListener("change", event => {
+    const reportDate = event.target.value;
+
+    state.selectedDates = new Set([reportDate]);
+    state.dateFilterInitialized = true;
+
+    renderReportDateUi({ reloadShiftConfig: true });
+    rebuildSkuStatistics();
+});
+
+document.querySelectorAll("[data-shift-tab]").forEach(button => {
+    button.addEventListener("click", () => setShiftTab(button.dataset.shiftTab));
+});
+
+document.querySelectorAll("[data-status-all]").forEach(button => {
+    button.addEventListener("click", () => {
+        const slot = button.dataset.statusAll;
+        getShiftFilter(slot).statuses = new Set(SHOPEE_STATUS_OPTIONS);
+        renderShiftStatusFilters(slot);
+    });
+});
+
+document.querySelectorAll("[data-status-clear]").forEach(button => {
+    button.addEventListener("click", () => {
+        const slot = button.dataset.statusClear;
+        getShiftFilter(slot).statuses.clear();
+        renderShiftStatusFilters(slot);
+    });
 });
 
 /* ======================== LỌC THEO NGÀY ĐẶT HÀNG ======================== */
 function renderDateFilters() {
-    const container = $("skuDateFilters");
-    if (!container) return;
+    const select = $("statsReportDateSelect");
+    if (!select) return;
 
-    if (!state.skuRows.length) {
-        container.innerHTML = '<div class="empty-box compact-empty">Hãy nhập file đơn hàng Shopee trước.</div>';
-        return;
-    }
-
-    const counts = new Map();
-
-    state.skuRows.forEach(row => {
-        const dateKey = row.orderDate || "";
-        if (!dateKey) return;
-        counts.set(dateKey, (counts.get(dateKey) || 0) + 1);
-    });
-
-    const dates = [...counts.keys()].sort();
+    const dates = [...new Set(
+        state.skuRows.map(row => row.orderDate).filter(Boolean)
+    )].sort().reverse();
 
     if (!dates.length) {
-        container.innerHTML = '<div class="empty-box compact-empty">File không có dữ liệu ở cột "Ngày đặt hàng".</div>';
+        select.innerHTML = '<option value="">Chưa có dữ liệu</option>';
+        state.selectedDates.clear();
         return;
     }
 
-    // Mặc định: chọn tất cả các ngày trong file.
-    if (!state.dateFilterInitialized) {
-        state.selectedDates = new Set(dates);
+    let selectedDate = [...state.selectedDates][0];
+
+    if (!selectedDate || !dates.includes(selectedDate)) {
+        selectedDate = dates[0];
+        state.selectedDates = new Set([selectedDate]);
         state.dateFilterInitialized = true;
     }
 
-    container.innerHTML = `
-        <button type="button" class="date-action-btn" id="btnSelectAllDates">Chọn tất cả</button>
-        <button type="button" class="date-action-btn secondary" id="btnClearDates">Bỏ chọn</button>
+    select.innerHTML = dates.map(dateKey => `
+        <option value="${escapeHTML(dateKey)}" ${dateKey === selectedDate ? "selected" : ""}>
+            ${formatDateLabel(dateKey)}
+        </option>
+    `).join("");
 
-        ${dates.map((dateKey, index) => {
-            const checked = state.selectedDates.has(dateKey);
-
-            return `
-                <label class="date-check ${checked ? "checked" : ""}">
-                    <input
-                        type="checkbox"
-                        class="date-checkbox"
-                        data-index="${index}"
-                        ${checked ? "checked" : ""}
-                    >
-                    <span class="date-check-main">
-                        <strong>${formatDateLabel(dateKey)}</strong>
-                        <small>${formatNumber(counts.get(dateKey))} dòng SKU</small>
-                    </span>
-                </label>
-            `;
-        }).join("")}
-    `;
-
-    document.querySelectorAll(".date-checkbox").forEach((checkbox, index) => {
-        checkbox.addEventListener("change", () => {
-            const dateKey = dates[index];
-
-            if (checkbox.checked) state.selectedDates.add(dateKey);
-            else state.selectedDates.delete(dateKey);
-
-            renderDateFilters();
-            rebuildSkuStatistics();
-        });
-    });
-
-    const selectAll = $("btnSelectAllDates");
-    if (selectAll) {
-        selectAll.addEventListener("click", () => {
-            state.selectedDates = new Set(dates);
-            renderDateFilters();
-            rebuildSkuStatistics();
-        });
-    }
-
-    const clearAll = $("btnClearDates");
-    if (clearAll) {
-        clearAll.addEventListener("click", () => {
-            state.selectedDates.clear();
-            renderDateFilters();
-            rebuildSkuStatistics();
-        });
-    }
+    renderStatsShiftSummaries(selectedDate);
 }
 
 /* ======================== DEFAULT STATUS ======================== */
@@ -2069,51 +2468,7 @@ function isDefaultStatus(status) {
 }
 
 function renderStatusFilters() {
-    const container = $("skuStatusFilters");
-
-    if (!state.skuRows.length) {
-        container.innerHTML = '<div class="empty-box">Hãy nhập file đơn hàng Shopee trước.</div>';
-        return;
-    }
-
-    const counts = new Map();
-    state.skuRows.forEach(row => {
-        const status = row.status || "(Trống)";
-        counts.set(status, (counts.get(status) || 0) + 1);
-    });
-
-    const statuses = [...counts.keys()].sort((a, b) => a.localeCompare(b, "vi"));
-
-    if (!state.statusFilterInitialized) {
-        state.selectedStatuses = new Set(statuses.filter(isDefaultStatus));
-        state.statusFilterInitialized = true;
-    }
-
-    container.innerHTML = statuses.map((status, index) => {
-        const checked = state.selectedStatuses.has(status);
-        const display = status.length > 82 ? status.slice(0, 82) + "..." : status;
-
-        return `
-            <label class="status-check ${checked ? "checked" : ""}" title="${escapeHTML(status)}">
-                <input type="checkbox" class="status-checkbox" data-index="${index}" ${checked ? "checked" : ""}>
-                <span class="status-check-text">
-                    <strong>${escapeHTML(display)}</strong>
-                    <small>${formatNumber(counts.get(status))} dòng SKU</small>
-                </span>
-            </label>
-        `;
-    }).join("");
-
-    document.querySelectorAll(".status-checkbox").forEach((checkbox, index) => {
-        checkbox.addEventListener("change", () => {
-            const status = statuses[index];
-            if (checkbox.checked) state.selectedStatuses.add(status);
-            else state.selectedStatuses.delete(status);
-
-            renderStatusFilters();
-            rebuildSkuStatistics();
-        });
-    });
+    // V13: trạng thái được chọn riêng lúc nhập BUỔI SÁNG / BUỔI CHIỀU.
 }
 
 /* ======================== SKU STATS ======================== */
@@ -2122,73 +2477,118 @@ $("skuCountMode").addEventListener("change", () => {
     rebuildSkuStatistics();
 });
 
+
+function renderStatsShiftSummaries(reportDate) {
+    const morning = getLatestImportForSlot(reportDate, "morning");
+    const afternoon = getLatestImportForSlot(reportDate, "afternoon");
+
+    const morningEl = $("morningConfigSummary");
+    const afternoonEl = $("afternoonConfigSummary");
+
+    if (morningEl) {
+        morningEl.textContent = morning
+            ? `Ngày đơn: ${formatDateLabel(morning.sourceDate || reportDate)} · ${formatStatusList(morning.selectedStatuses)} · ${formatNumber(morning.rowCount)} dòng`
+            : "Chưa có dữ liệu buổi sáng.";
+    }
+
+    if (afternoonEl) {
+        afternoonEl.textContent = afternoon
+            ? `Ngày đơn: ${formatDateLabel(afternoon.sourceDate || reportDate)} · ${formatStatusList(afternoon.selectedStatuses)} · ${formatNumber(afternoon.rowCount)} dòng`
+            : "Chưa có dữ liệu buổi chiều.";
+    }
+}
+
+$("statsReportDateSelect")?.addEventListener("change", event => {
+    const dateKey = event.target.value;
+    if (!dateKey) return;
+
+    state.selectedDates = new Set([dateKey]);
+    state.dateFilterInitialized = true;
+
+    rebuildSkuStatistics();
+    renderStatsShiftSummaries(dateKey);
+});
+
+$("btnOpenHistory")?.addEventListener("click", () => openView("history"));
+
 function rebuildSkuStatistics() {
-    state.countMode = $("skuCountMode").value || state.countMode || "rows";
+    const modeSelect = $("skuCountMode");
+    state.countMode = modeSelect?.value || state.countMode || "rows";
+
+    const reportDate = [...state.selectedDates][0] || "";
 
     const statsMap = new Map();
-    let filteredRows = 0;
-    let totalCount = 0;
+    let morningTotal = 0;
+    let afternoonTotal = 0;
 
     state.skuRows.forEach(row => {
-        // Phải thỏa đồng thời: Ngày đặt hàng + Trạng thái.
-        if (!state.selectedDates.has(row.orderDate)) return;
-        if (!state.selectedStatuses.has(row.status)) return;
+        if (!reportDate || row.orderDate !== reportDate) return;
 
-        filteredRows++;
-        const add = state.countMode === "quantity" ? (row.quantity || 0) : 1;
-        totalCount += add;
+        const add = state.countMode === "quantity"
+            ? (row.quantity || 0)
+            : 1;
 
         if (!statsMap.has(row.sku)) {
             statsMap.set(row.sku, {
                 sku: row.sku,
                 product: row.product,
-                count: 0,
-                rawRows: 0,
-                quantitySum: 0
+                morning: 0,
+                afternoon: 0,
+                count: 0
             });
         }
 
         const item = statsMap.get(row.sku);
-        item.count += add;
-        item.rawRows += 1;
-        item.quantitySum += row.quantity || 0;
-        if (!item.product && row.product) item.product = row.product;
+
+        if (row.importSlot === "afternoon") {
+            item.afternoon += add;
+            afternoonTotal += add;
+        } else {
+            // Dữ liệu cũ không có ca được xem như BUỔI SÁNG.
+            item.morning += add;
+            morningTotal += add;
+        }
+
+        item.count = item.morning + item.afternoon;
+
+        if (!item.product && row.product) {
+            item.product = row.product;
+        }
     });
 
-    state.skuStats = [...statsMap.values()].sort((a, b) =>
-        b.count - a.count || a.sku.localeCompare(b.sku)
-    );
+    state.skuStats = [...statsMap.values()]
+        .sort((a, b) =>
+            b.count - a.count ||
+            a.sku.localeCompare(b.sku)
+        );
 
+    const totalCount = morningTotal + afternoonTotal;
     const convertedTotals = calculateConvertedTotals();
     const convertedGrandTotal = sum(Object.values(convertedTotals));
 
-    $("skuFilteredRows").textContent = formatNumber(filteredRows);
-    $("skuUniqueCount").textContent = formatNumber(state.skuStats.length);
-    $("skuTotalCount").textContent = formatNumber(totalCount);
-    $("skuConvertedTotal").textContent = formatNumber(convertedGrandTotal);
+    if ($("skuMorningCount")) $("skuMorningCount").textContent = formatNumber(morningTotal);
+    if ($("skuAfternoonCount")) $("skuAfternoonCount").textContent = formatNumber(afternoonTotal);
+    if ($("skuTotalCount")) $("skuTotalCount").textContent = formatNumber(totalCount);
+    if ($("skuConvertedTotal")) $("skuConvertedTotal").textContent = formatNumber(convertedGrandTotal);
 
-    $("overviewFilteredRows").textContent = formatNumber(filteredRows);
-    $("overviewUniqueSku").textContent = formatNumber(state.skuStats.length);
-    $("overviewSkuCount").textContent = formatNumber(totalCount);
-    $("overviewConvertedTotal").textContent = formatNumber(convertedGrandTotal);
-    $("overviewCountModeText").textContent = state.countMode === "rows"
-        ? "Đếm số lần SKU xuất hiện"
-        : "Cộng theo cột Số lượng";
+    // Tổng quan vẫn dùng tổng 2 ca.
+    if ($("overviewFilteredRows")) $("overviewFilteredRows").textContent = formatNumber(totalCount);
+    if ($("overviewUniqueSku")) $("overviewUniqueSku").textContent = formatNumber(state.skuStats.length);
+    if ($("overviewSkuCount")) $("overviewSkuCount").textContent = formatNumber(totalCount);
+    if ($("overviewConvertedTotal")) $("overviewConvertedTotal").textContent = formatNumber(convertedGrandTotal);
+    if ($("overviewCountModeText")) {
+        $("overviewCountModeText").textContent = state.countMode === "rows"
+            ? "Sáng + Chiều"
+            : "Cộng theo cột Số lượng";
+    }
 
-    $("navSkuCount").textContent = state.skuStats.length;
+    if ($("navSkuCount")) $("navSkuCount").textContent = state.skuStats.length;
 
     const scopeText = $("skuTableScopeText");
     if (scopeText) {
-        const selectedDateLabels = [...state.selectedDates]
-            .sort()
-            .map(formatDateLabel);
-
-        const dateText = selectedDateLabels.length
-            ? selectedDateLabels.join(" + ")
-            : "chưa chọn ngày";
-
-        scopeText.textContent =
-            `BẢNG TỔNG: ${dateText} · ${formatNumber(filteredRows)} dòng SKU sau khi lọc trạng thái.`;
+        scopeText.textContent = reportDate
+            ? `NGÀY BÁO CÁO ${formatDateLabel(reportDate)} · Sáng ${formatNumber(morningTotal)} · Chiều ${formatNumber(afternoonTotal)} · Tổng ${formatNumber(totalCount)}`
+            : "Chưa chọn ngày báo cáo.";
     }
 
     renderConversionTable();
@@ -2196,6 +2596,7 @@ function rebuildSkuStatistics() {
     renderOverviewSkuTable();
     renderOverviewFileSummary();
     renderImportSummary();
+    renderHistory();
 }
 
 /* ======================== CONVERSION CONFIG ======================== */
@@ -2430,25 +2831,36 @@ function renderConversionTable() {
     const foot = $("skuStatsFoot");
     const warning = $("conversionWarning");
 
+    if (!head || !body || !foot || !warning) return;
+
     head.innerHTML = `
         <tr>
             <th>SKU sản phẩm</th>
             <th>Tên sản phẩm</th>
-            <th>Số lượng SKU</th>
+            <th class="stat-shift-col">Buổi sáng</th>
+            <th class="stat-shift-col">Buổi chiều</th>
+            <th class="stat-total-col">TỔNG</th>
+
             ${state.baseSkus.map(baseSku => `
                 <th class="base-sku-header">
                     ${escapeHTML(baseSku)}
                     <button class="remove-base-sku" data-base-sku="${escapeHTML(baseSku)}" title="Xóa cột">×</button>
                 </th>
             `).join("")}
+
             <th>Quy đổi</th>
         </tr>
     `;
 
     if (!state.skuStats.length) {
         body.innerHTML = `
-            <tr><td colspan="${4 + state.baseSkus.length}" class="empty-table">Không có SKU trong các trạng thái đang chọn.</td></tr>
+            <tr>
+                <td colspan="${6 + state.baseSkus.length}" class="empty-table">
+                    Chưa có dữ liệu Sáng / Chiều cho ngày báo cáo đang chọn.
+                </td>
+            </tr>
         `;
+
         foot.innerHTML = "";
         warning.classList.add("hidden");
         bindRemoveBaseSkuButtons();
@@ -2459,15 +2871,32 @@ function renderConversionTable() {
 
     body.innerHTML = state.skuStats.map(item => {
         const mapped = hasAnyConversion(item.sku);
+
         if (!mapped) unmapped.push(item.sku);
 
         return `
             <tr>
                 <td><strong>${escapeHTML(item.sku)}</strong></td>
-                <td class="product-name-cell">${escapeHTML(item.product)}</td>
-                <td class="sku-qty">${formatNumber(item.count)}</td>
+
+                <td class="product-name-cell">
+                    ${escapeHTML(item.product)}
+                </td>
+
+                <td class="stat-shift-col">
+                    ${item.morning ? formatNumber(item.morning) : ""}
+                </td>
+
+                <td class="stat-shift-col">
+                    ${item.afternoon ? formatNumber(item.afternoon) : ""}
+                </td>
+
+                <td class="stat-total-col stat-total-value">
+                    ${formatNumber(item.count)}
+                </td>
+
                 ${state.baseSkus.map(baseSku => {
                     const factor = getConversionFactor(item.sku, baseSku);
+
                     return `
                         <td>
                             <input
@@ -2479,11 +2908,11 @@ function renderConversionTable() {
                                 data-source-sku="${escapeHTML(item.sku)}"
                                 data-base-sku="${escapeHTML(baseSku)}"
                                 value="${factor === 0 ? "" : factor}"
-                                aria-label="${escapeHTML(item.sku)} sang ${escapeHTML(baseSku)}"
                             >
                         </td>
                     `;
                 }).join("")}
+
                 <td>
                     ${mapped
                         ? '<span class="sku-mapped">Đã cấu hình</span>'
@@ -2494,22 +2923,33 @@ function renderConversionTable() {
     }).join("");
 
     const totals = calculateConvertedTotals();
+    const morningTotal = sum(state.skuStats.map(item => item.morning));
+    const afternoonTotal = sum(state.skuStats.map(item => item.afternoon));
+    const grandTotal = sum(state.skuStats.map(item => item.count));
 
     foot.innerHTML = `
         <tr>
-            <td><strong>TỔNG QUY ĐỔI</strong></td>
-            <td>SL SKU × hệ số quy đổi</td>
-            <td>${formatNumber(sum(state.skuStats.map(item => item.count)))}</td>
+            <td><strong>TỔNG</strong></td>
+            <td>Sáng + Chiều</td>
+            <td class="stat-shift-col">${formatNumber(morningTotal)}</td>
+            <td class="stat-shift-col">${formatNumber(afternoonTotal)}</td>
+            <td class="stat-total-col">${formatNumber(grandTotal)}</td>
+
             ${state.baseSkus.map(baseSku => `
-                <td class="conversion-total-highlight">${formatNumber(totals[baseSku] || 0)}</td>
+                <td class="conversion-total-highlight">
+                    ${formatNumber(totals[baseSku] || 0)}
+                </td>
             `).join("")}
+
             <td></td>
         </tr>
     `;
 
     if (unmapped.length) {
         warning.classList.remove("hidden");
-        warning.innerHTML = `⚠ Có <strong>${unmapped.length}</strong> SKU chưa cấu hình quy đổi: <strong>${unmapped.map(escapeHTML).join(", ")}</strong>. Hãy nhập hệ số ở dòng tương ứng.`;
+        warning.innerHTML =
+            `⚠ Có <strong>${unmapped.length}</strong> SKU chưa cấu hình quy đổi: ` +
+            `<strong>${unmapped.map(escapeHTML).join(", ")}</strong>.`;
     } else {
         warning.classList.add("hidden");
         warning.innerHTML = "";
@@ -2520,7 +2960,9 @@ function renderConversionTable() {
 
         input.addEventListener("change", async () => {
             const raw = String(input.value || "").trim();
-            const finalValue = raw === "" ? 0 : Math.max(0, Number(raw) || 0);
+            const finalValue = raw === ""
+                ? 0
+                : Math.max(0, Number(raw) || 0);
 
             try {
                 setCloudStatus("☁️ Đang lưu quy đổi...", "syncing");
@@ -2537,6 +2979,7 @@ function renderConversionTable() {
                 console.error(error);
                 setCloudStatus("☁️ Lỗi lưu quy đổi", "error");
                 alert("Không lưu được hệ số quy đổi lên cloud.");
+
                 await loadConversionConfigFromCloud();
                 rebuildSkuStatistics();
             }
@@ -2703,154 +3146,50 @@ function renderSavedDays() {
     const body = $("savedDaysBody");
     if (!body) return;
 
-    const groups = new Map();
-
-    state.skuRows.forEach(row => {
-        const key = row.orderDate || "";
-
-        if (!groups.has(key)) {
-            groups.set(key, {
-                dateKey: key,
-                rows: 0,
-                orders: new Set(),
-                skus: new Set(),
-                lastUpdated: ""
-            });
-        }
-
-        const group = groups.get(key);
-        group.rows++;
-
-        if (row.orderId) group.orders.add(row.orderId);
-        if (row.sku) group.skus.add(row.sku);
-
-        if (String(row.updatedAt || "") > String(group.lastUpdated || "")) {
-            group.lastUpdated = row.updatedAt || "";
-        }
-    });
-
-    const days = [...groups.values()]
-        .sort((a, b) => String(b.dateKey).localeCompare(String(a.dateKey)));
-
+    const groups = getReportDateGroups();
     const allOrders = new Set(
         state.skuRows.map(row => row.orderId).filter(Boolean)
     );
 
-    $("savedDayCount").textContent = formatNumber(days.filter(x => x.dateKey).length);
-    $("savedOrderCount").textContent = formatNumber(allOrders.size);
-    $("savedImportCount").textContent = formatNumber(state.imports.length);
-    $("savedLastImport").textContent =
-        state.imports[0]?.importedAt
-            ? formatDateTimeVi(state.imports[0].importedAt)
-            : "-";
+    if ($("savedDayCount")) $("savedDayCount").textContent = formatNumber(groups.length);
+    if ($("savedOrderCount")) $("savedOrderCount").textContent = formatNumber(allOrders.size);
+    if ($("savedImportCount")) $("savedImportCount").textContent = formatNumber(state.imports.length);
+    if ($("savedLastImport")) {
+        $("savedLastImport").textContent =
+            state.imports[0]?.importedAt
+                ? formatDateTimeVi(state.imports[0].importedAt)
+                : "-";
+    }
 
-    if (!days.length) {
-        body.innerHTML =
-            '<tr><td colspan="7" class="empty-table">Chưa có dữ liệu được lưu.</td></tr>';
+    if (!groups.length) {
+        body.innerHTML = '<tr><td colspan="7" class="empty-table">Chưa có dữ liệu được lưu.</td></tr>';
         return;
     }
 
-    function renderSlotCell(dateKey, slot) {
-        const latest = getLatestImportForSlot(dateKey, slot);
-
-        if (latest) {
-            return `
-                <span class="saved-slot yes" title="${escapeHTML(latest.fileName)}">
-                    <strong>✓ ${slot === "morning" ? "Sáng" : "Chiều"}</strong>
-                </span>
-            `;
-        }
-
-        // Dữ liệu V11 cũ chưa có thông tin sáng/chiều.
-        const hasOldImport = state.imports.some(info =>
-            !info.importSlot &&
-            (
-                info.reportDate === dateKey ||
-                (Array.isArray(info.dates) && info.dates.includes(dateKey))
-            )
-        );
-
-        if (hasOldImport) {
-            return `<span class="saved-slot old">Dữ liệu cũ</span>`;
-        }
-
-        return `<span class="saved-slot no">Chưa up</span>`;
-    }
-
-    body.innerHTML = days.map(group => `
+    body.innerHTML = groups.slice(0, 10).map(group => `
         <tr>
-            <td>
-                <span class="saved-day-date">${group.dateKey ? formatDateLabel(group.dateKey) : "(Không có ngày)"}</span>
-                <span class="saved-day-sub">${escapeHTML(group.dateKey || "")}</span>
-            </td>
-
-            <td class="center">${renderSlotCell(group.dateKey, "morning")}</td>
-            <td class="center">${renderSlotCell(group.dateKey, "afternoon")}</td>
-
-            <td class="center"><strong>${formatNumber(group.rows)}</strong></td>
+            <td><strong>${formatDateLabel(group.dateKey)}</strong></td>
+            <td class="center">${getLatestImportForSlot(group.dateKey, "morning") ? "✓" : ""}</td>
+            <td class="center">${getLatestImportForSlot(group.dateKey, "afternoon") ? "✓" : ""}</td>
+            <td class="center">${formatNumber(group.morning + group.afternoon)}</td>
             <td class="center">${formatNumber(group.orders.size)}</td>
-            <td>${formatDateTimeVi(group.lastUpdated)}</td>
-
+            <td>${formatDateTimeVi(group.updatedAt)}</td>
             <td class="center">
-                <div class="saved-actions">
-                    ${group.dateKey
-                        ? `<button class="btn-select-day" data-select-date="${escapeHTML(group.dateKey)}">Chọn ngày</button>`
-                        : ""}
-                    ${group.dateKey
-                        ? `<button class="btn-delete-day" data-delete-date="${escapeHTML(group.dateKey)}">Xóa ngày</button>`
-                        : ""}
-                </div>
+                <button type="button" class="btn-view-history" data-quick-history="${escapeHTML(group.dateKey)}">
+                    Xem
+                </button>
             </td>
         </tr>
     `).join("");
 
-    document.querySelectorAll("[data-select-date]").forEach(button => {
+    document.querySelectorAll("[data-quick-history]").forEach(button => {
         button.addEventListener("click", () => {
-            const dateKey = button.dataset.selectDate;
-            if (!dateKey) return;
-
-            if ($("reportDateInput")) {
-                $("reportDateInput").value = dateKey;
-            }
-
+            const dateKey = button.dataset.quickHistory;
             state.selectedDates = new Set([dateKey]);
             state.dateFilterInitialized = true;
-
-            renderReportDateUi();
             renderDateFilters();
             rebuildSkuStatistics();
-
-            openView("import");
-            showToast(`Đã chọn ngày ${formatDateLabel(dateKey)} để upload thêm file.`);
-        });
-    });
-
-    document.querySelectorAll("[data-delete-date]").forEach(button => {
-        button.addEventListener("click", async () => {
-            const dateKey = button.dataset.deleteDate;
-            if (!dateKey) return;
-
-            if (!confirm(
-                `Xóa toàn bộ dữ liệu ngày ${formatDateLabel(dateKey)} khỏi SUPABASE CLOUD? ` +
-                "Cả dữ liệu sáng và chiều của ngày này sẽ bị xóa."
-            )) return;
-
-            try {
-                setCloudStatus("☁️ Đang xóa...", "syncing");
-
-                await dbDeleteSavedDate(dateKey);
-                await loadSavedDataFromDb({ resetFilters: true });
-
-                renderAll();
-                renderReportDateUi();
-
-                setCloudStatus("☁️ Supabase Cloud");
-                showToast(`Đã xóa dữ liệu ngày ${formatDateLabel(dateKey)}.`);
-            } catch (error) {
-                console.error(error);
-                setCloudStatus("☁️ Lỗi đồng bộ", "error");
-                alert("Không xóa được dữ liệu ngày này.");
-            }
+            openView("sku-stats");
         });
     });
 }
@@ -3085,6 +3424,155 @@ function showToast(message) {
 }
 
 /* ======================== RENDER ALL ======================== */
+
+function getReportDateGroups() {
+    const groups = new Map();
+
+    state.skuRows.forEach(row => {
+        const dateKey = row.orderDate || "";
+        if (!dateKey) return;
+
+        if (!groups.has(dateKey)) {
+            groups.set(dateKey, {
+                dateKey,
+                morning: 0,
+                afternoon: 0,
+                orders: new Set(),
+                updatedAt: ""
+            });
+        }
+
+        const group = groups.get(dateKey);
+        const add = state.countMode === "quantity"
+            ? (row.quantity || 0)
+            : 1;
+
+        if (row.importSlot === "afternoon") {
+            group.afternoon += add;
+        } else {
+            group.morning += add;
+        }
+
+        if (row.orderId) group.orders.add(row.orderId);
+
+        if (String(row.updatedAt || "") > String(group.updatedAt || "")) {
+            group.updatedAt = row.updatedAt || "";
+        }
+    });
+
+    return [...groups.values()]
+        .sort((a, b) =>
+            String(b.dateKey).localeCompare(String(a.dateKey))
+        );
+}
+
+function renderHistoryConfig(reportDate, slot) {
+    const info = getLatestImportForSlot(reportDate, slot);
+
+    if (!info) {
+        return `
+            <div class="history-config">
+                <strong>${slotLabel(slot)}</strong>
+                <span>Chưa có dữ liệu</span>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="history-config">
+            <strong>Ngày đơn: ${formatDateLabel(info.sourceDate || reportDate)}</strong>
+            <span>${escapeHTML(formatStatusList(info.selectedStatuses))}</span>
+        </div>
+    `;
+}
+
+function renderHistory() {
+    const body = $("historyTableBody");
+    if (!body) return;
+
+    const groups = getReportDateGroups();
+
+    const allOrders = new Set(
+        state.skuRows.map(row => row.orderId).filter(Boolean)
+    );
+
+    if ($("historyDayCount")) $("historyDayCount").textContent = formatNumber(groups.length);
+    if ($("historyImportCount")) $("historyImportCount").textContent = formatNumber(state.imports.length);
+    if ($("historyOrderCount")) $("historyOrderCount").textContent = formatNumber(allOrders.size);
+    if ($("historyRowCount")) $("historyRowCount").textContent = formatNumber(state.skuRows.length);
+    if ($("navHistoryCount")) $("navHistoryCount").textContent = formatNumber(groups.length);
+
+    if (!groups.length) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="8" class="history-empty">
+                    Chưa có lịch sử thống kê.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    body.innerHTML = groups.map(group => {
+        const total = group.morning + group.afternoon;
+
+        return `
+            <tr>
+                <td>
+                    <strong>${formatDateLabel(group.dateKey)}</strong>
+                </td>
+
+                <td>
+                    ${renderHistoryConfig(group.dateKey, "morning")}
+                </td>
+
+                <td class="center">
+                    ${formatNumber(group.morning)}
+                </td>
+
+                <td>
+                    ${renderHistoryConfig(group.dateKey, "afternoon")}
+                </td>
+
+                <td class="center">
+                    ${formatNumber(group.afternoon)}
+                </td>
+
+                <td class="center">
+                    <strong>${formatNumber(total)}</strong>
+                </td>
+
+                <td>
+                    ${formatDateTimeVi(group.updatedAt)}
+                </td>
+
+                <td class="center">
+                    <button
+                        type="button"
+                        class="btn-view-history"
+                        data-history-date="${escapeHTML(group.dateKey)}"
+                    >
+                        Xem thống kê
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join("");
+
+    document.querySelectorAll("[data-history-date]").forEach(button => {
+        button.addEventListener("click", () => {
+            const dateKey = button.dataset.historyDate;
+
+            state.selectedDates = new Set([dateKey]);
+            state.dateFilterInitialized = true;
+
+            renderDateFilters();
+            rebuildSkuStatistics();
+            openView("sku-stats");
+        });
+    });
+}
+
 function renderAll() {
     renderTopFileState();
     renderImportSummary();
@@ -3096,6 +3584,7 @@ function renderAll() {
     renderOverviewFileSummary();
     renderOrdersTab();
     renderReturnsTab();
+    renderHistory();
     refreshNavCounts();
 }
 
