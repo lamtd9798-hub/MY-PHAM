@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css?v=5.0.0">
+    <link rel="stylesheet" href="style.css?v=6.0.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -289,7 +289,7 @@
                         <p id="orderTableSummary">0 dòng sản phẩm</p>
                     </div>
                     <div class="toolbar">
-                        <input id="orderSearch" class="search-input" type="text" placeholder="Tìm mã đơn, SKU, sản phẩm...">
+                        <input type="text" id="orderSearch" class="search-input" placeholder="Tìm mã đơn, SKU, tên sản phẩm...">
                     </div>
                 </div>
                 <div class="table-scroll large-table">
@@ -298,7 +298,7 @@
                             <tr>
                                 <th>Mã đơn</th>
                                 <th>Trạng thái</th>
-                                <th>SKU sản phẩm</th>
+                                <th>SKU</th>
                                 <th>Tên sản phẩm</th>
                                 <th class="center">Số lượng</th>
                             </tr>
@@ -316,8 +316,8 @@
             <div class="panel placeholder-panel">
                 <div class="placeholder-icon">💳</div>
                 <h2>Phí sàn</h2>
-                <p>Tab đã hoạt động. Hiện chưa nhập file tài chính nên chưa có dữ liệu phí để đối soát.</p>
-                <div class="placeholder-note">Khi có file báo cáo thu nhập/đối soát Shopee, chúng ta sẽ nối dữ liệu vào đây.</div>
+                <p>Tab này đã hoạt động. Hiện bạn chưa cần nhập file tài chính nên phần phí chỉ để sẵn khung.</p>
+                <div class="placeholder-note">Khi có file báo cáo thu nhập/đối soát Shopee, tôi sẽ nối dữ liệu vào đây.</div>
             </div>
         </section>
 
@@ -342,7 +342,7 @@
                             </tr>
                         </thead>
                         <tbody id="returnTableBody">
-                            <tr><td colspan="5" class="empty-table">Chưa có dữ liệu hoàn / hủy.</td></tr>
+                            <tr><td colspan="5" class="empty-table">Hãy nhập file Shopee trước.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -354,8 +354,8 @@
             <div class="panel placeholder-panel">
                 <div class="placeholder-icon">💰</div>
                 <h2>Thanh toán</h2>
-                <p>Tab đã hoạt động. Hiện chưa có file thanh toán/thu nhập nên chưa hiển thị kỳ thanh toán.</p>
-                <div class="placeholder-note">Phần này sẽ làm tiếp khi bạn có file thực tế từ Shopee.</div>
+                <p>Tab này đã hoạt động. Hiện chưa có file thanh toán/thu nhập nên chưa có số liệu để hiển thị.</p>
+                <div class="placeholder-note">Không ảnh hưởng tới chức năng nhập file và thống kê SKU hiện tại.</div>
             </div>
         </section>
 
@@ -363,15 +363,15 @@
         <section id="view-issues" class="view">
             <div class="panel placeholder-panel">
                 <div class="placeholder-icon">⚠️</div>
-                <h2>Sai lệch đối soát</h2>
-                <p>Tab đã hoạt động. Muốn phát hiện sai lệch tiền cần thêm dữ liệu tài chính của Shopee.</p>
-                <div class="placeholder-note">Thống kê SKU hiện tại vẫn chạy độc lập chỉ bằng file Order.all...xlsx.</div>
+                <h2>Sai lệch</h2>
+                <p>Tab này đã hoạt động. Muốn kiểm tra chênh lệch tiền cần thêm file tài chính Shopee ở giai đoạn sau.</p>
+                <div class="placeholder-note">Phần thống kê SKU vẫn chạy độc lập chỉ bằng file Order.all...xlsx.</div>
             </div>
         </section>
     </main>
 </div>
 
 <div id="toast" class="toast"></div>
-<script src="script.js?v=5.0.0"></script>
+<script src="script.js?v=6.0.0"></script>
 </body>
 </html>
