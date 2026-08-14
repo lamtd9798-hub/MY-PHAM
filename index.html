@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V8: cập nhật bảng quy đổi SKU mới -->
+    <!-- ONE-FILE V9: thêm bộ lọc theo Ngày đặt hàng + Trạng thái -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -181,6 +181,108 @@ button{cursor:pointer}
 }
 @media(max-width:850px){
     .runtime-error{left:80px}
+}
+
+
+/* =========================================================
+   V9 - BỘ LỌC NGÀY ĐẶT HÀNG
+========================================================= */
+.filter-section{
+    padding:14px 16px 12px;
+}
+.filter-section + .filter-section{
+    padding-top:12px;
+}
+.filter-section-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+}
+.filter-section-title strong{
+    display:block;
+    color:#243746;
+    font-size:11px;
+    font-weight:750;
+}
+.filter-section-title span{
+    display:block;
+    margin-top:3px;
+    color:#8a9aa7;
+    font-size:9px;
+}
+.filter-divider{
+    height:1px;
+    margin:0 16px;
+    background:#edf1f4;
+}
+.date-filter-wrap{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:7px;
+}
+.date-check{
+    display:flex;
+    align-items:center;
+    min-width:126px;
+    min-height:43px;
+    padding:7px 10px;
+    border:1px solid #dfe6eb;
+    border-radius:8px;
+    background:#fff;
+    cursor:pointer;
+    user-select:none;
+    transition:.15s;
+}
+.date-check:hover{
+    border-color:#a7d8ce;
+    background:#f8fcfb;
+}
+.date-check.checked{
+    border-color:#65c5b2;
+    background:#edf9f6;
+    box-shadow:0 0 0 2px rgba(15,155,129,.05);
+}
+.date-check input{
+    margin-right:7px;
+    accent-color:var(--primary);
+}
+.date-check-main strong{
+    display:block;
+    color:#243746;
+    font-size:10px;
+    font-weight:750;
+}
+.date-check-main small{
+    display:block;
+    margin-top:2px;
+    color:#8fa0ac;
+    font-size:8px;
+}
+.date-action-btn{
+    height:31px;
+    padding:0 10px;
+    border:1px solid #b9ddd5;
+    border-radius:7px;
+    background:#f1faf8;
+    color:#087863;
+    font-family:inherit;
+    font-size:9px;
+    font-weight:650;
+    cursor:pointer;
+}
+.date-action-btn:hover{
+    background:#e7f7f3;
+}
+.date-action-btn.secondary{
+    border-color:#dde4e9;
+    background:#fff;
+    color:#64748b;
+}
+.compact-empty{
+    width:100%;
+    padding:12px!important;
 }
 
 </style>
@@ -413,8 +515,32 @@ button{cursor:pointer}
                         <button id="btnExportSku" class="btn btn-primary">Xuất Excel</button>
                     </div>
                 </div>
-                <div class="status-filter-wrap" id="skuStatusFilters">
-                    <div class="empty-box">Hãy nhập file đơn hàng Shopee trước.</div>
+                <div class="filter-section">
+                    <div class="filter-section-title">
+                        <div>
+                            <strong>📅 Ngày đặt hàng</strong>
+                            <span>File có 2-3 ngày thì có thể chọn riêng từng ngày hoặc nhiều ngày cùng lúc.</span>
+                        </div>
+                    </div>
+
+                    <div class="date-filter-wrap" id="skuDateFilters">
+                        <div class="empty-box compact-empty">Hãy nhập file đơn hàng Shopee trước.</div>
+                    </div>
+                </div>
+
+                <div class="filter-divider"></div>
+
+                <div class="filter-section">
+                    <div class="filter-section-title">
+                        <div>
+                            <strong>📦 Trạng thái đơn hàng</strong>
+                            <span>Mặc định chọn: Đang giao, Đã giao và Người mua xác nhận đã nhận hàng.</span>
+                        </div>
+                    </div>
+
+                    <div class="status-filter-wrap" id="skuStatusFilters">
+                        <div class="empty-box compact-empty">Hãy nhập file đơn hàng Shopee trước.</div>
+                    </div>
                 </div>
             </div>
 
@@ -569,8 +695,15 @@ const state = {
     fileName: "",
     skuRows: [],
     skuStats: [],
+
+    // Bộ lọc trạng thái
     selectedStatuses: new Set(),
     statusFilterInitialized: false,
+
+    // Bộ lọc ngày đặt hàng
+    selectedDates: new Set(),
+    dateFilterInitialized: false,
+
     countMode: "rows",
     baseSkus: [],
     conversionRules: {}
@@ -647,6 +780,10 @@ const PAGE_INFO = {
 
 const ALIASES = {
     orderId: ["Mã đơn hàng", "Mã đơn", "Order ID", "Shopee Order ID"],
+
+    // File Order.all... của Shopee: cột C = Ngày đặt hàng
+    orderDate: ["Ngày đặt hàng", "Ngày tạo đơn", "Order Creation Date", "Order Date", "Ngày"],
+
     status: ["Trạng Thái Đơn Hàng", "Trạng thái đơn hàng", "Trạng thái", "Order Status"],
     sku: ["SKU sản phẩm", "SKU", "Seller SKU", "Product SKU"],
     product: ["Tên sản phẩm", "Sản phẩm", "Product Name", "Tên hàng"],
@@ -660,6 +797,51 @@ function $(id) {
 
 function formatNumber(value) {
     return (Number(value) || 0).toLocaleString("vi-VN");
+}
+
+
+/* ======================== NGÀY ĐẶT HÀNG ======================== */
+function normalizeOrderDate(value) {
+    if (value === null || value === undefined || value === "") return "";
+
+    // Trường hợp XLSX trả về Date.
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        const y = value.getFullYear();
+        const m = String(value.getMonth() + 1).padStart(2, "0");
+        const d = String(value.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+    }
+
+    // Trường hợp Excel serial date.
+    if (typeof value === "number" && typeof XLSX !== "undefined") {
+        const parsed = XLSX.SSF.parse_date_code(value);
+        if (parsed) {
+            return `${parsed.y}-${String(parsed.m).padStart(2, "0")}-${String(parsed.d).padStart(2, "0")}`;
+        }
+    }
+
+    const text = String(value).trim();
+
+    // Shopee thường trả: 2026-08-13 00:01
+    let match = text.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+    if (match) {
+        return `${match[1]}-${String(match[2]).padStart(2, "0")}-${String(match[3]).padStart(2, "0")}`;
+    }
+
+    // Hỗ trợ dạng 13/08/2026 hoặc 13-08-2026.
+    match = text.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if (match) {
+        return `${match[3]}-${String(match[2]).padStart(2, "0")}-${String(match[1]).padStart(2, "0")}`;
+    }
+
+    return "";
+}
+
+function formatDateLabel(dateKey) {
+    if (!dateKey) return "(Không có ngày)";
+    const parts = dateKey.split("-");
+    if (parts.length !== 3) return dateKey;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 
 function escapeHTML(value) {
@@ -773,9 +955,16 @@ function parseShopeeRows(rows) {
         const sku = String(pick(row, ALIASES.sku)).trim();
         if (!sku) return;
 
+        const rawOrderDate = pick(row, ALIASES.orderDate);
+
         parsed.push({
             rowNumber: index + 2,
             orderId: String(pick(row, ALIASES.orderId)).trim(),
+
+            // Dùng cột "Ngày đặt hàng" để lọc theo ngày.
+            orderDate: normalizeOrderDate(rawOrderDate),
+            orderDateRaw: String(rawOrderDate ?? "").trim(),
+
             status: String(pick(row, ALIASES.status)).trim(),
             sku,
             product: String(pick(row, ALIASES.product)).trim(),
@@ -822,6 +1011,8 @@ $("orderFile").addEventListener("change", async event => {
             state.skuStats = [];
             state.selectedStatuses.clear();
             state.statusFilterInitialized = false;
+            state.selectedDates.clear();
+            state.dateFilterInitialized = false;
             $("orderFileStatus").textContent = "✕ " + validationError;
             $("orderFileStatus").className = "upload-file-status error";
             event.target.value = "";
@@ -835,10 +1026,13 @@ $("orderFile").addEventListener("change", async event => {
         state.skuStats = [];
         state.selectedStatuses.clear();
         state.statusFilterInitialized = false;
+        state.selectedDates.clear();
+        state.dateFilterInitialized = false;
 
         $("orderFileStatus").textContent = "✓ " + file.name;
         $("orderFileStatus").className = "upload-file-status success";
 
+        renderDateFilters();
         renderStatusFilters();
         rebuildSkuStatistics();
         renderImportSummary();
@@ -852,6 +1046,92 @@ $("orderFile").addEventListener("change", async event => {
         alert("Không đọc được file Excel. Hãy kiểm tra lại file Shopee.");
     }
 });
+
+/* ======================== LỌC THEO NGÀY ĐẶT HÀNG ======================== */
+function renderDateFilters() {
+    const container = $("skuDateFilters");
+    if (!container) return;
+
+    if (!state.skuRows.length) {
+        container.innerHTML = '<div class="empty-box compact-empty">Hãy nhập file đơn hàng Shopee trước.</div>';
+        return;
+    }
+
+    const counts = new Map();
+
+    state.skuRows.forEach(row => {
+        const dateKey = row.orderDate || "";
+        if (!dateKey) return;
+        counts.set(dateKey, (counts.get(dateKey) || 0) + 1);
+    });
+
+    const dates = [...counts.keys()].sort();
+
+    if (!dates.length) {
+        container.innerHTML = '<div class="empty-box compact-empty">File không có dữ liệu ở cột "Ngày đặt hàng".</div>';
+        return;
+    }
+
+    // Mặc định: chọn tất cả các ngày trong file.
+    if (!state.dateFilterInitialized) {
+        state.selectedDates = new Set(dates);
+        state.dateFilterInitialized = true;
+    }
+
+    container.innerHTML = `
+        <button type="button" class="date-action-btn" id="btnSelectAllDates">Chọn tất cả</button>
+        <button type="button" class="date-action-btn secondary" id="btnClearDates">Bỏ chọn</button>
+
+        ${dates.map((dateKey, index) => {
+            const checked = state.selectedDates.has(dateKey);
+
+            return `
+                <label class="date-check ${checked ? "checked" : ""}">
+                    <input
+                        type="checkbox"
+                        class="date-checkbox"
+                        data-index="${index}"
+                        ${checked ? "checked" : ""}
+                    >
+                    <span class="date-check-main">
+                        <strong>${formatDateLabel(dateKey)}</strong>
+                        <small>${formatNumber(counts.get(dateKey))} dòng SKU</small>
+                    </span>
+                </label>
+            `;
+        }).join("")}
+    `;
+
+    document.querySelectorAll(".date-checkbox").forEach((checkbox, index) => {
+        checkbox.addEventListener("change", () => {
+            const dateKey = dates[index];
+
+            if (checkbox.checked) state.selectedDates.add(dateKey);
+            else state.selectedDates.delete(dateKey);
+
+            renderDateFilters();
+            rebuildSkuStatistics();
+        });
+    });
+
+    const selectAll = $("btnSelectAllDates");
+    if (selectAll) {
+        selectAll.addEventListener("click", () => {
+            state.selectedDates = new Set(dates);
+            renderDateFilters();
+            rebuildSkuStatistics();
+        });
+    }
+
+    const clearAll = $("btnClearDates");
+    if (clearAll) {
+        clearAll.addEventListener("click", () => {
+            state.selectedDates.clear();
+            renderDateFilters();
+            rebuildSkuStatistics();
+        });
+    }
+}
 
 /* ======================== DEFAULT STATUS ======================== */
 function isDefaultStatus(status) {
@@ -925,6 +1205,8 @@ function rebuildSkuStatistics() {
     let totalCount = 0;
 
     state.skuRows.forEach(row => {
+        // Phải thỏa đồng thời: Ngày đặt hàng + Trạng thái.
+        if (!state.selectedDates.has(row.orderDate)) return;
         if (!state.selectedStatuses.has(row.status)) return;
 
         filteredRows++;
@@ -1477,6 +1759,8 @@ $("btnReset").addEventListener("click", () => {
     state.skuStats = [];
     state.selectedStatuses.clear();
     state.statusFilterInitialized = false;
+    state.selectedDates.clear();
+    state.dateFilterInitialized = false;
     $("orderFile").value = "";
     $("orderFileStatus").textContent = "Chưa có file";
     $("orderFileStatus").className = "upload-file-status";
@@ -1500,6 +1784,7 @@ function showToast(message) {
 function renderAll() {
     renderTopFileState();
     renderImportSummary();
+    renderDateFilters();
     renderStatusFilters();
     rebuildSkuStatistics();
     renderOverviewFileSummary();
