@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V25: bỏ dòng rác hóa đơn + tăng chữ + nới lịch ngày + tăng bảng tuần/tháng/năm -->
+    <!-- ONE-FILE V26: tăng cỡ chữ bảng thống kê SKU -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2567,6 +2567,85 @@ button{cursor:pointer}
     .dashboard-top-grid{
         grid-template-columns:1fr!important;
     }
+}
+
+
+/* =========================================================
+   V26 - TĂNG CỠ CHỮ BẢNG THỐNG KÊ & QUY ĐỔI SKU
+========================================================= */
+
+/* Tiêu đề các cột */
+.conversion-table thead th{
+    font-size:9px!important;
+    line-height:1.25!important;
+    padding-top:10px!important;
+    padding-bottom:10px!important;
+}
+
+/* STT */
+.conversion-table tbody td:nth-child(1){
+    font-size:9.5px!important;
+}
+
+/* Mã SKU */
+.conversion-table tbody td:nth-child(2),
+.conversion-table .sku-code-cell{
+    font-size:10.5px!important;
+    font-weight:800!important;
+}
+
+/* TÊN SẢN PHẨM - phần user khoanh */
+.conversion-table tbody td:nth-child(3),
+.conversion-table .product-name-cell{
+    font-size:11.2px!important;
+    line-height:1.42!important;
+    font-weight:500!important;
+}
+
+/* Tăng chiều cao dòng để chữ thoáng */
+.conversion-table tbody td{
+    padding-top:11px!important;
+    padding-bottom:11px!important;
+}
+
+/* Sáng / Chiều */
+.conversion-table .stat-shift-col{
+    font-size:10.3px!important;
+}
+
+/* Tổng */
+.conversion-table .stat-total-col,
+.conversion-table .stat-total-value{
+    font-size:11.5px!important;
+    font-weight:900!important;
+}
+
+/* Các hệ số quy đổi trong ô */
+.conversion-table .conversion-input{
+    font-size:10.5px!important;
+    font-weight:750!important;
+}
+
+/* Trạng thái Đã cấu hình */
+.conversion-table .sku-mapped,
+.conversion-table .sku-unmapped{
+    font-size:8.3px!important;
+}
+
+/* Hàng tổng cuối bảng */
+.conversion-table tfoot td{
+    font-size:10.5px!important;
+    padding-top:11px!important;
+    padding-bottom:11px!important;
+}
+.conversion-table tfoot td:nth-child(2),
+.conversion-table tfoot td:nth-child(3){
+    font-weight:850!important;
+}
+
+/* Giữ tên sản phẩm rộng, tránh bị bó lại */
+.conversion-table col:nth-child(3){
+    width:430px!important;
 }
 
 </style>
