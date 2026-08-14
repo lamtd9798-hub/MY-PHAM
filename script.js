@@ -1,5 +1,5 @@
 /* =========================================================
-   RUCOS - SHOPEE SKU STATISTICS + TABS V5
+   RUCOS - SHOPEE SKU STATISTICS V4
    Chỉ tập trung: nhập file Shopee -> lọc trạng thái -> thống kê -> quy đổi
 ========================================================= */
 
@@ -56,23 +56,23 @@ const PAGE_INFO = {
     },
     orders: {
         title: "Đơn hàng Shopee",
-        subtitle: "Danh sách dòng sản phẩm đọc trực tiếp từ file đơn hàng Shopee"
+        subtitle: "Danh sách dữ liệu đọc trực tiếp từ file đơn hàng Shopee"
     },
     fees: {
         title: "Phí sàn",
-        subtitle: "Module đối soát phí - sẽ nối file tài chính khi có dữ liệu"
+        subtitle: "Khung đối soát phí - chờ dữ liệu tài chính ở giai đoạn sau"
     },
     returns: {
         title: "Hoàn / Hủy",
-        subtitle: "Theo dõi các đơn hoàn, trả hoặc hủy có trong file Shopee"
+        subtitle: "Theo dõi đơn hoàn, trả hoặc hủy có trong file Shopee"
     },
     payments: {
         title: "Thanh toán",
-        subtitle: "Module thanh toán - sẽ nối file thu nhập/settlement khi có dữ liệu"
+        subtitle: "Khung thanh toán - chờ file thu nhập/settlement ở giai đoạn sau"
     },
     issues: {
         title: "Sai lệch",
-        subtitle: "Module phát hiện sai lệch tài chính - sẽ triển khai khi có dữ liệu đối soát"
+        subtitle: "Khung phát hiện sai lệch tài chính - triển khai khi có dữ liệu đối soát"
     }
 };
 
@@ -698,13 +698,12 @@ function renderTopFileState() {
 
 
 /* ======================== ĐƠN HÀNG + HOÀN/HỦY ======================== */
-function buildUniqueOrderCount() {
-    const ids = new Set(
-        state.skuRows
+function uniqueOrderCount(rows = state.skuRows) {
+    return new Set(
+        rows
             .map(row => String(row.orderId || "").trim())
             .filter(Boolean)
-    );
-    return ids.size;
+    ).size;
 }
 
 function isReturnOrCancelStatus(status) {
@@ -712,8 +711,8 @@ function isReturnOrCancelStatus(status) {
     return (
         text.includes("trahang") ||
         text.includes("hoantra") ||
-        text.includes("refund") ||
         text.includes("returned") ||
+        text.includes("refund") ||
         text.includes("dahuy") ||
         text.includes("huy") ||
         text.includes("cancel")
@@ -731,15 +730,22 @@ function renderOrdersTab() {
     if (search) {
         data = data.filter(row =>
             normalizeText(
-                `${row.orderId} ${row.sku} ${row.product} ${row.status}`
+                `${row.orderId} ${row.status} ${row.sku} ${row.product}`
             ).includes(search)
         );
     }
 
-    summary.textContent = `${formatNumber(data.length)} dòng sản phẩm · ${formatNumber(buildUniqueOrderCount())} mã đơn`;
+    summary.textContent =
+        `${formatNumber(data.length)} dòng sản phẩm · ${formatNumber(uniqueOrderCount(state.skuRows))} mã đơn`;
 
     if (!data.length) {
-        body.innerHTML = `<tr><td colspan="5" class="empty-table">${state.skuRows.length ? "Không tìm thấy dữ liệu phù hợp." : "Hãy nhập file Shopee trước."}</td></tr>`;
+        body.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-table">
+                    ${state.skuRows.length ? "Không tìm thấy dữ liệu phù hợp." : "Hãy nhập file Shopee trước."}
+                </td>
+            </tr>
+        `;
         return;
     }
 
@@ -747,7 +753,7 @@ function renderOrdersTab() {
         <tr>
             <td><strong>${escapeHTML(row.orderId || "-")}</strong></td>
             <td>${escapeHTML(row.status || "-")}</td>
-            <td><strong>${escapeHTML(row.sku)}</strong></td>
+            <td><strong>${escapeHTML(row.sku || "-")}</strong></td>
             <td>${escapeHTML(row.product || "")}</td>
             <td class="center">${formatNumber(row.quantity || 0)}</td>
         </tr>
@@ -760,12 +766,18 @@ function renderReturnsTab() {
     if (!body || !summary) return;
 
     const data = state.skuRows.filter(row => isReturnOrCancelStatus(row.status));
-    const uniqueOrders = new Set(data.map(row => row.orderId).filter(Boolean)).size;
 
-    summary.textContent = `${formatNumber(data.length)} dòng · ${formatNumber(uniqueOrders)} mã đơn`;
+    summary.textContent =
+        `${formatNumber(data.length)} dòng · ${formatNumber(uniqueOrderCount(data))} mã đơn`;
 
     if (!data.length) {
-        body.innerHTML = `<tr><td colspan="5" class="empty-table">${state.skuRows.length ? "Không có đơn hoàn / hủy trong file đang nhập." : "Hãy nhập file Shopee trước."}</td></tr>`;
+        body.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-table">
+                    ${state.skuRows.length ? "Không có đơn hoàn / hủy trong file đang nhập." : "Hãy nhập file Shopee trước."}
+                </td>
+            </tr>
+        `;
         return;
     }
 
@@ -773,7 +785,7 @@ function renderReturnsTab() {
         <tr>
             <td><strong>${escapeHTML(row.orderId || "-")}</strong></td>
             <td>${escapeHTML(row.status || "-")}</td>
-            <td><strong>${escapeHTML(row.sku)}</strong></td>
+            <td><strong>${escapeHTML(row.sku || "-")}</strong></td>
             <td>${escapeHTML(row.product || "")}</td>
             <td class="center">${formatNumber(row.quantity || 0)}</td>
         </tr>
@@ -781,19 +793,19 @@ function renderReturnsTab() {
 }
 
 function refreshNavCounts() {
-    const navOrder = $("navOrderCount");
-    const navReturn = $("navReturnCount");
+    const orderBadge = $("navOrderCount");
+    const returnBadge = $("navReturnCount");
 
-    if (navOrder) navOrder.textContent = formatNumber(buildUniqueOrderCount());
+    if (orderBadge) {
+        orderBadge.textContent = formatNumber(uniqueOrderCount());
+    }
 
-    if (navReturn) {
-        const returnOrders = new Set(
-            state.skuRows
-                .filter(row => isReturnOrCancelStatus(row.status))
-                .map(row => row.orderId)
-                .filter(Boolean)
+    if (returnBadge) {
+        returnBadge.textContent = formatNumber(
+            uniqueOrderCount(
+                state.skuRows.filter(row => isReturnOrCancelStatus(row.status))
+            )
         );
-        navReturn.textContent = formatNumber(returnOrders.size);
     }
 }
 
