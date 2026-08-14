@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V30: MISA chỉ tính dòng có Số hóa đơn + map mã MISA sang SKU kho -->
+    <!-- ONE-FILE V31: kiểm kê & đối chiếu kho + nhập/xuất khác + tồn lý thuyết -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3150,6 +3150,391 @@ button{cursor:pointer}
     font-weight:800
 }
 
+
+/* =========================================================
+   V31 - KIỂM KÊ & ĐỐI CHIẾU KHO
+========================================================= */
+.inventory-module-tabs{
+    display:flex;
+    gap:6px;
+    padding:7px;
+    margin-bottom:11px;
+    overflow-x:auto
+}
+.inventory-tab-btn{
+    min-height:36px;
+    flex:0 0 auto;
+    padding:0 13px;
+    border:1px solid #dbe5e8;
+    border-radius:7px;
+    background:#fff;
+    color:#5c717b;
+    font-size:9px;
+    font-weight:800
+}
+.inventory-tab-btn:hover{background:#f6faf9}
+.inventory-tab-btn.active{
+    border-color:#84cfbe;
+    background:#eaf8f4;
+    color:#087863
+}
+.inventory-tab-pane{display:none}
+.inventory-tab-pane.active{display:block}
+
+.inventory-v31-panel{margin-bottom:11px;overflow:hidden}
+.inventory-v31-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px
+}
+.inventory-v31-header h2{font-size:13px!important}
+.inventory-v31-header p{
+    max-width:880px;
+    font-size:8.5px!important;
+    line-height:1.5
+}
+.inventory-v31-date{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    color:#667b85;
+    font-size:7.3px;
+    font-weight:850;
+    white-space:nowrap
+}
+.inventory-v31-date input{
+    height:34px;
+    min-width:142px;
+    border:1px solid #d6e1e5;
+    border-radius:7px;
+    padding:0 8px;
+    background:#fff;
+    color:#304953;
+    font-family:inherit;
+    font-size:9px;
+    font-weight:700
+}
+
+/* KPI */
+.inventory-v31-kpis{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:9px;
+    padding:12px
+}
+.inventory-v31-kpi{
+    min-height:78px;
+    padding:11px 12px;
+    border:1px solid #dfe7ea;
+    border-radius:9px;
+    background:#fff
+}
+.inventory-v31-kpi span{
+    display:block;
+    color:#74858e;
+    font-size:7.5px;
+    font-weight:850
+}
+.inventory-v31-kpi strong{
+    display:block;
+    margin-top:7px;
+    color:#1f3c47;
+    font-size:17px
+}
+.inventory-v31-kpi.positive{background:#f4fbf8;border-color:#cce5df}
+.inventory-v31-kpi.positive strong{color:#087863}
+.inventory-v31-kpi.negative{background:#fff8f3;border-color:#f0d6c2}
+.inventory-v31-kpi.negative strong{color:#b65b2d}
+.inventory-v31-kpi.accent{background:#eaf8f5;border-color:#a9dacd}
+.inventory-v31-kpi.accent strong{color:#087863}
+
+/* Current stock / reconcile tables */
+.inventory-v31-table-wrap{
+    overflow:auto;
+    border-top:1px solid #edf1f3
+}
+.inventory-v31-table,
+.inventory-reconcile-table,
+.inventory-tx-table,
+.inventory-misa-detail-table{
+    width:100%;
+    min-width:1300px;
+    border-collapse:collapse
+}
+.inventory-v31-table th,
+.inventory-reconcile-table th,
+.inventory-tx-table th,
+.inventory-misa-detail-table th{
+    position:sticky;
+    top:0;
+    z-index:2;
+    padding:10px 9px;
+    border-bottom:1px solid #dfe7ea;
+    background:#f8fafb;
+    color:#5a707a;
+    font-size:8.5px;
+    font-weight:850;
+    text-align:center;
+    white-space:nowrap
+}
+.inventory-v31-table th:nth-child(3),
+.inventory-reconcile-table th:nth-child(3),
+.inventory-tx-table th:nth-child(4),
+.inventory-misa-detail-table th:nth-child(3){
+    text-align:left
+}
+.inventory-v31-table td,
+.inventory-reconcile-table td,
+.inventory-tx-table td,
+.inventory-misa-detail-table td{
+    padding:10px 9px;
+    border-bottom:1px solid #edf1f3;
+    color:#3f5862;
+    font-size:9.7px;
+    text-align:center;
+    vertical-align:middle;
+    font-variant-numeric:tabular-nums
+}
+.inventory-v31-table td:nth-child(3),
+.inventory-reconcile-table td:nth-child(3),
+.inventory-tx-table td:nth-child(4),
+.inventory-misa-detail-table td:nth-child(3){
+    text-align:left
+}
+.inventory-v31-table td:nth-child(2),
+.inventory-reconcile-table td:nth-child(2),
+.inventory-tx-table td:nth-child(3),
+.inventory-misa-detail-table td:nth-child(2){
+    font-weight:850
+}
+.inventory-v31-table .positive-col{color:#087863}
+.inventory-v31-table .negative-col{color:#b15c32}
+.inventory-v31-table .theory-col,
+.inventory-reconcile-table .theory-col{
+    background:#edf9f6;
+    color:#087863;
+    font-weight:950
+}
+.inventory-reconcile-table .actual-col{
+    background:#f3f8fc
+}
+.inventory-v31-table tfoot td,
+.inventory-reconcile-table tfoot td{
+    padding:11px 9px;
+    border-top:2px solid #83cfbe;
+    background:#eaf8f5;
+    color:#075f50;
+    font-size:9.8px;
+    font-weight:900
+}
+.inventory-v31-note{
+    padding:10px 13px;
+    border-top:1px solid #edf1f3;
+    background:#fbfcfd;
+    color:#7f919a;
+    font-size:8.2px;
+    line-height:1.55
+}
+.inventory-v31-note.warning{
+    border-top-color:#eedaa9;
+    background:#fffaf0;
+    color:#8d681b
+}
+
+/* Transaction tab */
+.inventory-v31-two-col{
+    display:grid;
+    grid-template-columns:1.45fr .55fr;
+    gap:11px;
+    margin-bottom:11px
+}
+.inventory-tx-form{
+    display:grid;
+    grid-template-columns:145px minmax(220px,1.25fr) 170px 130px minmax(180px,1fr);
+    gap:9px;
+    padding:13px
+}
+.inventory-tx-form label{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    color:#657a84;
+    font-size:7.3px;
+    font-weight:850
+}
+.inventory-tx-form label.wide{
+    grid-column:1 / -2
+}
+.inventory-tx-form input,
+.inventory-tx-form select{
+    width:100%;
+    height:35px;
+    border:1px solid #d7e2e6;
+    border-radius:7px;
+    padding:0 9px;
+    background:#fff;
+    color:#304953;
+    font-family:inherit;
+    font-size:9px;
+    outline:0
+}
+.inventory-tx-form input:focus,
+.inventory-tx-form select:focus{
+    border-color:#76c6b5;
+    box-shadow:0 0 0 2px rgba(13,156,130,.07)
+}
+.inventory-tx-submit{
+    display:flex;
+    align-items:end;
+    justify-content:flex-end
+}
+.inventory-tx-summary{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+    padding:13px
+}
+.inventory-tx-mini{
+    padding:10px;
+    border:1px solid #e0e7ea;
+    border-radius:8px;
+    background:#fafcfd
+}
+.inventory-tx-mini span{
+    display:block;
+    color:#87969e;
+    font-size:6.8px;
+    font-weight:800
+}
+.inventory-tx-mini strong{
+    display:block;
+    margin-top:5px;
+    font-size:13px
+}
+.inventory-tx-mini.in strong,
+.inventory-tx-mini.return strong{color:#087863}
+.inventory-tx-mini.out strong{color:#bd5a2b}
+.inventory-tx-mini.adjust strong{color:#5f54a4}
+.inventory-tx-type{
+    display:inline-flex;
+    align-items:center;
+    min-height:22px;
+    padding:0 7px;
+    border-radius:999px;
+    font-size:7.2px;
+    font-weight:850;
+    white-space:nowrap
+}
+.inventory-tx-type.INBOUND{background:#e8f8f3;color:#087863}
+.inventory-tx-type.RETURN_IN{background:#edf8ef;color:#357a45}
+.inventory-tx-type.OUT_OTHER{background:#fff0e6;color:#a95225}
+.inventory-tx-type.ADJUSTMENT{background:#f0edfb;color:#6b50a2}
+.inventory-tx-delete{
+    height:27px;
+    padding:0 8px;
+    border:1px solid #f0bcbc;
+    border-radius:6px;
+    background:#fff7f7;
+    color:#c54242;
+    font-size:7.5px;
+    font-weight:800
+}
+
+/* Reconcile */
+.inventory-reconcile-actions{
+    display:flex;
+    align-items:end;
+    gap:7px;
+    flex-wrap:wrap;
+    justify-content:flex-end
+}
+.inventory-reconcile-kpis{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:8px;
+    padding:12px
+}
+.inventory-reconcile-kpi{
+    min-height:76px;
+    padding:10px 11px;
+    border:1px solid #dfe7ea;
+    border-radius:8px;
+    background:#fff
+}
+.inventory-reconcile-kpi span{
+    display:block;
+    color:#7d8c94;
+    font-size:7px;
+    font-weight:850
+}
+.inventory-reconcile-kpi strong{
+    display:block;
+    margin-top:6px;
+    color:#213d47;
+    font-size:16px
+}
+.inventory-reconcile-kpi.ok{background:#eff9f6;border-color:#c2e2da}
+.inventory-reconcile-kpi.ok strong{color:#087863}
+.inventory-reconcile-kpi.shortage{background:#fff3f3;border-color:#f0c9c9}
+.inventory-reconcile-kpi.shortage strong{color:#c83e43}
+.inventory-reconcile-kpi.surplus{background:#fff8eb;border-color:#efd9aa}
+.inventory-reconcile-kpi.surplus strong{color:#a76b0e}
+.inventory-reconcile-kpi.value{background:#f3f7fb}
+.inventory-reconcile-input{
+    width:86px;
+    height:32px;
+    border:1px solid #bcd3df;
+    border-radius:6px;
+    padding:0 7px;
+    background:#fff;
+    text-align:center;
+    font-family:inherit;
+    font-size:10px;
+    font-weight:850;
+    outline:0
+}
+.inventory-reconcile-input:focus{
+    border-color:#4ca2d1;
+    box-shadow:0 0 0 2px rgba(76,162,209,.1)
+}
+.inventory-variance.negative{color:#c63d42;font-weight:950}
+.inventory-variance.positive{color:#ad6c0c;font-weight:950}
+.inventory-variance.zero{color:#087863;font-weight:950}
+.inventory-reconcile-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:23px;
+    padding:0 8px;
+    border-radius:999px;
+    font-size:7.2px;
+    font-weight:850;
+    white-space:nowrap
+}
+.inventory-reconcile-status.pending{background:#edf1f3;color:#73838b}
+.inventory-reconcile-status.match{background:#e7f7f2;color:#087863}
+.inventory-reconcile-status.shortage{background:#ffeded;color:#c43d42}
+.inventory-reconcile-status.surplus{background:#fff2d5;color:#9a650c}
+
+/* MISA detail */
+.inventory-misa-detail-table{min-width:900px}
+
+/* Small screens */
+@media(max-width:1200px){
+    .inventory-v31-two-col{grid-template-columns:1fr}
+    .inventory-tx-form{
+        grid-template-columns:repeat(2,minmax(0,1fr))
+    }
+    .inventory-tx-form label.wide{grid-column:1 / -1}
+    .inventory-tx-submit{grid-column:1 / -1}
+}
+@media(max-width:900px){
+    .inventory-v31-kpis,
+    .inventory-reconcile-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .inventory-v31-header{align-items:flex-start;flex-direction:column}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3894,6 +4279,16 @@ button{cursor:pointer}
                 </div>
             </div>
 
+            <div class="panel inventory-module-tabs">
+                <button type="button" class="inventory-tab-btn active" data-inventory-tab="overview">📊 Tổng quan</button>
+                <button type="button" class="inventory-tab-btn" data-inventory-tab="current">📦 Tồn kho hiện tại</button>
+                <button type="button" class="inventory-tab-btn" data-inventory-tab="transactions">📥 Nhập / xuất khác</button>
+                <button type="button" class="inventory-tab-btn" data-inventory-tab="reconcile">🔎 Kiểm kê & đối chiếu</button>
+                <button type="button" class="inventory-tab-btn" data-inventory-tab="misa">🧾 Đối chiếu MISA</button>
+            </div>
+
+            <div id="inventoryTabOverview" class="inventory-tab-pane active">
+
             <div id="inventoryWarningBox" class="inventory-warning-box hidden"></div>
 
             <div class="inventory-kpi-grid">
@@ -4055,6 +4450,316 @@ button{cursor:pointer}
                     </table>
                 </div>
             </div>
+
+            </div><!-- /inventoryTabOverview -->
+
+            <!-- ======================== V31 - TỒN KHO HIỆN TẠI ======================== -->
+            <div id="inventoryTabCurrent" class="inventory-tab-pane">
+                <div class="panel inventory-v31-panel">
+                    <div class="panel-header inventory-v31-header">
+                        <div>
+                            <h2>📦 Tồn kho lý thuyết hiện tại</h2>
+                            <p>
+                                Tính từ mốc kiểm kê gần nhất đến ngày đang xem. Hàng Shopee đã rời kho được tính theo
+                                <strong>chênh lệch luân chuyển sau mốc kiểm kê</strong>, nên không trừ lại các đơn đã nằm ngoài kho trước mốc.
+                            </p>
+                        </div>
+
+                        <label class="inventory-v31-date">
+                            TÍNH ĐẾN NGÀY
+                            <input id="inventoryCurrentDate" type="date">
+                        </label>
+                    </div>
+
+                    <div class="inventory-v31-kpis">
+                        <div class="inventory-v31-kpi">
+                            <span>TỒN KIỂM KÊ GỐC</span>
+                            <strong id="inventoryCurrentBaselineTotal">0</strong>
+                        </div>
+                        <div class="inventory-v31-kpi positive">
+                            <span>NHẬP + HOÀN NHẬP</span>
+                            <strong id="inventoryCurrentInboundTotal">0</strong>
+                        </div>
+                        <div class="inventory-v31-kpi negative">
+                            <span>XUẤT SAU MỐC</span>
+                            <strong id="inventoryCurrentOutboundTotal">0</strong>
+                        </div>
+                        <div class="inventory-v31-kpi accent">
+                            <span>TỒN LÝ THUYẾT</span>
+                            <strong id="inventoryCurrentTheoryTotal">0</strong>
+                        </div>
+                    </div>
+
+                    <div class="inventory-v31-table-wrap">
+                        <table class="inventory-v31-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>SKU kho</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th>Ngày mốc</th>
+                                    <th>Tồn mốc</th>
+                                    <th class="positive-col">+ Nhập kho</th>
+                                    <th class="positive-col">+ Hoàn nhập</th>
+                                    <th class="negative-col">- Xuất Shopee</th>
+                                    <th class="negative-col">- Xuất khác</th>
+                                    <th>± Điều chỉnh</th>
+                                    <th class="theory-col">Tồn lý thuyết</th>
+                                    <th>Đơn giá</th>
+                                    <th>Giá trị lý thuyết</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryCurrentBody">
+                                <tr><td colspan="13" class="empty-table">Chưa có dữ liệu.</td></tr>
+                            </tbody>
+                            <tfoot id="inventoryCurrentFoot"></tfoot>
+                        </table>
+                    </div>
+
+                    <div class="inventory-v31-note">
+                        <strong>Công thức:</strong>
+                        Tồn lý thuyết = Tồn tại mốc kiểm kê + Nhập kho + Hoàn nhập
+                        − Phần hàng Shopee rời kho sau mốc − Xuất khác ± Điều chỉnh.
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======================== V31 - NHẬP / XUẤT KHÁC ======================== -->
+            <div id="inventoryTabTransactions" class="inventory-tab-pane">
+                <div class="inventory-v31-two-col">
+                    <div class="panel inventory-v31-panel">
+                        <div class="panel-header">
+                            <div>
+                                <h2>📥 Ghi nhận biến động kho</h2>
+                                <p>Dùng cho nhập hàng, hàng hoàn đã nhận lại, xuất khác và điều chỉnh kho.</p>
+                            </div>
+                        </div>
+
+                        <div class="inventory-tx-form">
+                            <label>
+                                NGÀY
+                                <input id="inventoryTxDate" type="date">
+                            </label>
+
+                            <label>
+                                MẶT HÀNG
+                                <select id="inventoryTxItem"></select>
+                            </label>
+
+                            <label>
+                                LOẠI
+                                <select id="inventoryTxType">
+                                    <option value="INBOUND">Nhập kho</option>
+                                    <option value="RETURN_IN">Hoàn đã nhập kho</option>
+                                    <option value="OUT_OTHER">Xuất kho khác</option>
+                                    <option value="ADJUSTMENT">Điều chỉnh +/-</option>
+                                </select>
+                            </label>
+
+                            <label>
+                                SỐ LƯỢNG
+                                <input id="inventoryTxQty" type="number" step="1" placeholder="VD: 100">
+                            </label>
+
+                            <label>
+                                SỐ PHIẾU / THAM CHIẾU
+                                <input id="inventoryTxReference" type="text" placeholder="VD: NK-140826">
+                            </label>
+
+                            <label class="wide">
+                                GHI CHÚ
+                                <input id="inventoryTxNote" type="text" placeholder="Nhà cung cấp / lý do điều chỉnh...">
+                            </label>
+
+                            <div class="inventory-tx-submit">
+                                <button type="button" id="btnInventoryAddTransaction" class="btn btn-primary">
+                                    + Ghi nhận biến động
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="inventory-v31-note">
+                            Với <strong>Điều chỉnh +/-</strong>: nhập số dương để cộng tồn, nhập số âm để giảm tồn.
+                            Hàng Shopee đang giao/đã giao <strong>không nhập ở đây</strong>, hệ thống tự tính từ dữ liệu Shopee.
+                        </div>
+                    </div>
+
+                    <div class="panel inventory-v31-panel">
+                        <div class="panel-header">
+                            <div>
+                                <h2>Tổng biến động đã ghi nhận</h2>
+                                <p id="inventoryTxKpiSubtitle">0 giao dịch</p>
+                            </div>
+                        </div>
+                        <div class="inventory-tx-summary" id="inventoryTxSummary"></div>
+                    </div>
+                </div>
+
+                <div class="panel inventory-v31-panel">
+                    <div class="panel-header inventory-v31-header">
+                        <div>
+                            <h2>Lịch sử nhập / xuất khác</h2>
+                            <p>Những dòng này được dùng trực tiếp khi tính tồn lý thuyết.</p>
+                        </div>
+                        <select id="inventoryTxFilter" class="select-control">
+                            <option value="all">Tất cả loại</option>
+                            <option value="INBOUND">Nhập kho</option>
+                            <option value="RETURN_IN">Hoàn nhập kho</option>
+                            <option value="OUT_OTHER">Xuất khác</option>
+                            <option value="ADJUSTMENT">Điều chỉnh</option>
+                        </select>
+                    </div>
+
+                    <div class="inventory-v31-table-wrap">
+                        <table class="inventory-tx-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Ngày</th>
+                                    <th>SKU kho</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th>Loại</th>
+                                    <th>Số lượng</th>
+                                    <th>Tham chiếu</th>
+                                    <th>Ghi chú</th>
+                                    <th>Người tạo</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTxBody">
+                                <tr><td colspan="10" class="empty-table">Chưa có biến động kho.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======================== V31 - KIỂM KÊ & ĐỐI CHIẾU ======================== -->
+            <div id="inventoryTabReconcile" class="inventory-tab-pane">
+                <div class="panel inventory-reconcile-panel">
+                    <div class="panel-header inventory-v31-header">
+                        <div>
+                            <h2>🔎 Kiểm kê & đối chiếu kho</h2>
+                            <p>
+                                Nhập số đếm thực tế tại kho. Hệ thống so với tồn lý thuyết để xác định
+                                SKU nào khớp, thiếu hoặc thừa.
+                            </p>
+                        </div>
+
+                        <div class="inventory-reconcile-actions">
+                            <label class="inventory-v31-date">
+                                NGÀY KIỂM KÊ
+                                <input id="inventoryReconcileDate" type="date">
+                            </label>
+
+                            <button type="button" id="btnInventoryClearCounts" class="btn btn-light">
+                                Xóa số vừa nhập
+                            </button>
+
+                            <button type="button" id="btnInventoryCommitReconcile" class="btn btn-primary">
+                                ✅ Chốt kiểm kê
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="inventory-reconcile-kpis">
+                        <div class="inventory-reconcile-kpi ok">
+                            <span>SKU KHỚP</span>
+                            <strong id="reconcileMatchedCount">0</strong>
+                        </div>
+                        <div class="inventory-reconcile-kpi shortage">
+                            <span>SKU THIẾU</span>
+                            <strong id="reconcileShortageCount">0</strong>
+                        </div>
+                        <div class="inventory-reconcile-kpi surplus">
+                            <span>SKU THỪA</span>
+                            <strong id="reconcileSurplusCount">0</strong>
+                        </div>
+                        <div class="inventory-reconcile-kpi">
+                            <span>CHÊNH LỆCH SL</span>
+                            <strong id="reconcileVarianceQty">0</strong>
+                        </div>
+                        <div class="inventory-reconcile-kpi value">
+                            <span>GIÁ TRỊ CHÊNH LỆCH</span>
+                            <strong id="reconcileVarianceValue">0 đ</strong>
+                        </div>
+                    </div>
+
+                    <div class="inventory-v31-table-wrap">
+                        <table class="inventory-reconcile-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>SKU kho</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th>Ngày mốc</th>
+                                    <th>Tồn mốc</th>
+                                    <th>+ Nhập</th>
+                                    <th>+ Hoàn nhập</th>
+                                    <th>- Shopee</th>
+                                    <th>- Xuất khác</th>
+                                    <th>± Điều chỉnh</th>
+                                    <th class="theory-col">Tồn lý thuyết</th>
+                                    <th class="actual-col">KIỂM THỰC TẾ</th>
+                                    <th>Chênh lệch</th>
+                                    <th>Giá trị CL</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryReconcileBody">
+                                <tr><td colspan="15" class="empty-table">Chưa có dữ liệu.</td></tr>
+                            </tbody>
+                            <tfoot id="inventoryReconcileFoot"></tfoot>
+                        </table>
+                    </div>
+
+                    <div class="inventory-v31-note warning">
+                        <strong>Chốt kiểm kê</strong> sẽ lấy số bạn nhập làm mốc tồn thực tế mới.
+                        Từ ngày tiếp theo, hệ thống sẽ tính lại tồn lý thuyết bắt đầu từ mốc mới này.
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======================== V31 - MISA TAB ======================== -->
+            <div id="inventoryTabMisa" class="inventory-tab-pane">
+                <div class="panel inventory-v31-panel">
+                    <div class="panel-header inventory-v31-header">
+                        <div>
+                            <h2>🧾 Đối chiếu hóa đơn MISA</h2>
+                            <p>
+                                Theo dõi lượng hàng đã phát hành hóa đơn. Dữ liệu MISA không được dùng để trừ tồn vật lý lần hai.
+                            </p>
+                        </div>
+                        <button type="button" id="btnInventoryOpenInvoiceV31" class="btn btn-light">
+                            Mở Thống kê hóa đơn →
+                        </button>
+                    </div>
+
+                    <div id="inventoryMisaInfoV31" class="inventory-misa-info">
+                        Chưa có file hóa đơn MISA để đối chiếu.
+                    </div>
+
+                    <div class="inventory-v31-table-wrap">
+                        <table class="inventory-misa-detail-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>SKU kho</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th>Đã giao Shopee</th>
+                                    <th>Đã xuất HĐ MISA</th>
+                                    <th>Chờ HĐ</th>
+                                    <th>Phạm vi dữ liệu</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryMisaDetailBody">
+                                <tr><td colspan="7" class="empty-table">Chưa có dữ liệu.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </section>
 
         <!-- ======================== V28 - MODAL CẬP NHẬT TỒN KHO ======================== -->
@@ -4518,14 +5223,21 @@ const state = {
 const INVENTORY_LOCAL_KEY = "rucos_inventory_v28";
 const DB_INVENTORY_ITEMS = "inventory_items";
 const DB_INVENTORY_STOCKTAKES = "inventory_stocktakes";
+const DB_INVENTORY_TRANSACTIONS = "inventory_transactions";
 
 const inventoryState = {
     items: [],
     stocktakes: [],
+    transactions: [],
     loaded: false,
     cloudReady: false,
     mode: "local",
-    movementRows: []
+    movementRows: [],
+    activeTab: "overview",
+    reconcileCounts: {},
+    currentDate: "",
+    reconcileDate: "",
+    misaAssignment: null
 };
 
 const DEFAULT_INVENTORY_ITEMS = [
@@ -4810,7 +5522,11 @@ function saveInventoryLocal() {
     try {
         localStorage.setItem(
             INVENTORY_LOCAL_KEY,
-            JSON.stringify({ items: inventoryState.items, stocktakes: inventoryState.stocktakes })
+            JSON.stringify({
+                items: inventoryState.items,
+                stocktakes: inventoryState.stocktakes,
+                transactions: inventoryState.transactions
+            })
         );
     } catch (error) {
         console.warn("Không lưu được tồn kho cục bộ", error);
@@ -4823,14 +5539,17 @@ function loadInventoryLocal() {
         if (saved && Array.isArray(saved.items) && saved.items.length) {
             inventoryState.items = saved.items;
             inventoryState.stocktakes = Array.isArray(saved.stocktakes) ? saved.stocktakes : [];
+            inventoryState.transactions = Array.isArray(saved.transactions) ? saved.transactions : [];
         } else {
             inventoryState.items = DEFAULT_INVENTORY_ITEMS.map(item => ({ ...item }));
             inventoryState.stocktakes = [];
+            inventoryState.transactions = [];
             saveInventoryLocal();
         }
     } catch (error) {
         inventoryState.items = DEFAULT_INVENTORY_ITEMS.map(item => ({ ...item }));
         inventoryState.stocktakes = [];
+        inventoryState.transactions = [];
     }
     inventoryState.loaded = true;
     inventoryState.cloudReady = false;
@@ -4845,16 +5564,34 @@ async function loadInventoryData() {
 
     try {
         const client = initSupabaseClient();
-        const [{ data: itemRows, error: itemError }, { data: stocktakeRows, error: stocktakeError }] = await Promise.all([
+        const [
+            { data: itemRows, error: itemError },
+            { data: stocktakeRows, error: stocktakeError },
+            { data: transactionRows, error: transactionError }
+        ] = await Promise.all([
             client.from(DB_INVENTORY_ITEMS).select("*").order("sort_order", { ascending: true }),
-            client.from(DB_INVENTORY_STOCKTAKES).select("*").order("created_at", { ascending: false }).limit(500)
+            client.from(DB_INVENTORY_STOCKTAKES).select("*").order("stocktake_date", { ascending: false }).limit(1200),
+            client.from(DB_INVENTORY_TRANSACTIONS).select("*").order("transaction_date", { ascending: false }).limit(3000)
         ]);
 
         if (itemError) throw itemError;
         if (stocktakeError) throw stocktakeError;
+        if (transactionError) throw transactionError;
 
         inventoryState.items = (itemRows || []).map(inventoryDbRowToState);
         inventoryState.stocktakes = stocktakeRows || [];
+        inventoryState.transactions = (transactionRows || []).map(row => ({
+            id: row.id || "",
+            transactionDate: row.transaction_date || "",
+            itemCode: row.item_code || "",
+            type: row.transaction_type || "",
+            quantity: Number(row.quantity || 0),
+            reference: row.reference || "",
+            note: row.note || "",
+            source: row.source || "manual",
+            createdBy: row.created_by || "",
+            createdAt: row.created_at || ""
+        }));
 
         if (!inventoryState.items.length) {
             inventoryState.items = DEFAULT_INVENTORY_ITEMS.map(item => ({ ...item }));
@@ -4882,28 +5619,51 @@ async function saveInventoryItems({ createStocktake = true } = {}) {
 
     saveInventoryLocal();
 
+    let stocktakePayload = [];
+
+    if (createStocktake && inventoryState.items.length) {
+        stocktakePayload = inventoryState.items.map(item => ({
+            stocktake_date: item.stocktakeDate || getLocalTodayKey(),
+            item_code: item.itemCode,
+            physical_qty: Number(item.physicalQty || 0),
+            unit_price: Number(item.unitPrice || 0),
+            note: "Cập nhật tồn thực tế từ RUCOS",
+            created_by: state.user?.id || null
+        }));
+    }
+
     if (inventoryState.cloudReady && state.user) {
         const client = initSupabaseClient();
         const payload = inventoryState.items.map(inventoryStateToDbRow);
-        const { error } = await client.from(DB_INVENTORY_ITEMS).upsert(payload, { onConflict: "item_code" });
+
+        const { error } = await client
+            .from(DB_INVENTORY_ITEMS)
+            .upsert(payload, { onConflict: "item_code" });
+
         if (error) throw error;
 
-        if (createStocktake && inventoryState.items.length) {
-            const stocktakePayload = inventoryState.items.map(item => ({
-                stocktake_date: item.stocktakeDate || getLocalTodayKey(),
-                item_code: item.itemCode,
-                physical_qty: Number(item.physicalQty || 0),
-                unit_price: Number(item.unitPrice || 0),
-                note: "Cập nhật tồn thực tế từ RUCOS",
-                created_by: state.user?.id || null
-            }));
-
-            const { error: stocktakeError } = await client
+        if (stocktakePayload.length) {
+            const { data: inserted, error: stocktakeError } = await client
                 .from(DB_INVENTORY_STOCKTAKES)
-                .insert(stocktakePayload);
+                .insert(stocktakePayload)
+                .select("*");
+
             if (stocktakeError) throw stocktakeError;
+            inventoryState.stocktakes.unshift(...(inserted || []));
         }
+    } else if (stocktakePayload.length) {
+        const now = new Date().toISOString();
+
+        inventoryState.stocktakes.unshift(
+            ...stocktakePayload.map((row, index) => ({
+                id: `local-stocktake-${Date.now()}-${index}`,
+                ...row,
+                created_at: now
+            }))
+        );
     }
+
+    saveInventoryLocal();
 }
 
 async function dbGetAll(storeName) {
@@ -8149,20 +8909,26 @@ function getInventoryItemMapByShopeeSku() {
     return map;
 }
 
-function getLatestShopeeLinesForInventory() {
+function getLatestShopeeLinesForInventory(asOfDate = "") {
     const latest = new Map();
 
     state.skuRows.forEach(row => {
+        const reportDate = row.reportDate || row.orderDate || "";
+
+        if (asOfDate && reportDate && reportDate > asOfDate) {
+            return;
+        }
+
         const orderId = String(row.orderId || "").trim();
         const sku = String(row.sku || "").trim();
         if (!sku) return;
 
         const key = `${orderId || row.rowKey || "NOORDER"}|${sku}`;
-        const reportDate = row.reportDate || row.orderDate || "";
         const slotRank = normalizeRowSlot(row) === "afternoon" ? 2 : 1;
         const rank = `${reportDate}|${slotRank}|${row.updatedAt || ""}`;
 
         const previous = latest.get(key);
+
         if (!previous || rank > previous.__rank) {
             latest.set(key, { ...row, __rank: rank });
         }
@@ -8218,9 +8984,9 @@ function expandShopeeRowToInventorySkus(row) {
     return [{ baseSku: sku, quantity }];
 }
 
-function buildInventoryMovementRows() {
+function buildInventoryMovementRows(asOfDate = "") {
     const itemMap = getInventoryItemMapByShopeeSku();
-    const latest = getLatestShopeeLinesForInventory();
+    const latest = getLatestShopeeLinesForInventory(asOfDate);
     const result = [];
 
     latest.forEach(row => {
@@ -8244,7 +9010,9 @@ function buildInventoryMovementRows() {
         });
     });
 
-    inventoryState.movementRows = result;
+    if (!asOfDate) {
+        inventoryState.movementRows = result;
+    }
     return result;
 }
 
@@ -8582,6 +9350,800 @@ function renderInventoryMisaInfo(summary) {
     `;
 }
 
+
+/* ======================== V31 - KIỂM KÊ & ĐỐI CHIẾU KHO ======================== */
+
+function inventoryTxLabel(type) {
+    return {
+        INBOUND: "Nhập kho",
+        RETURN_IN: "Hoàn nhập kho",
+        OUT_OTHER: "Xuất kho khác",
+        ADJUSTMENT: "Điều chỉnh"
+    }[type] || type || "Khác";
+}
+
+function inventorySignedTransactionEffect(tx) {
+    const qty = Number(tx.quantity || 0);
+
+    if (tx.type === "INBOUND") return qty;
+    if (tx.type === "RETURN_IN") return qty;
+    if (tx.type === "OUT_OTHER") return -Math.abs(qty);
+    if (tx.type === "ADJUSTMENT") return qty;
+
+    return 0;
+}
+
+function inventoryTransactionDbPayload(tx) {
+    return {
+        transaction_date: tx.transactionDate,
+        item_code: tx.itemCode,
+        transaction_type: tx.type,
+        quantity: Number(tx.quantity || 0),
+        reference: tx.reference || null,
+        note: tx.note || null,
+        source: tx.source || "manual",
+        created_by: state.user?.id || null
+    };
+}
+
+async function addInventoryTransactionFromForm() {
+    const transactionDate = $("inventoryTxDate")?.value || getLocalTodayKey();
+    const itemCode = $("inventoryTxItem")?.value || "";
+    const type = $("inventoryTxType")?.value || "INBOUND";
+    let quantity = Number($("inventoryTxQty")?.value || 0);
+    const reference = String($("inventoryTxReference")?.value || "").trim();
+    const note = String($("inventoryTxNote")?.value || "").trim();
+
+    if (!itemCode) {
+        alert("Hãy chọn mặt hàng.");
+        return;
+    }
+
+    if (!Number.isFinite(quantity) || quantity === 0) {
+        alert("Số lượng phải khác 0.");
+        return;
+    }
+
+    if (type !== "ADJUSTMENT") {
+        quantity = Math.abs(quantity);
+    }
+
+    const item = inventoryState.items.find(row => row.itemCode === itemCode);
+
+    const tx = {
+        id: `local-tx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        transactionDate,
+        itemCode,
+        type,
+        quantity,
+        reference,
+        note,
+        source: "manual",
+        createdBy: state.user?.id || "",
+        createdAt: new Date().toISOString()
+    };
+
+    const button = $("btnInventoryAddTransaction");
+    if (button) {
+        button.disabled = true;
+        button.textContent = "ĐANG LƯU...";
+    }
+
+    try {
+        if (inventoryState.cloudReady && state.user) {
+            const client = initSupabaseClient();
+            const { data, error } = await client
+                .from(DB_INVENTORY_TRANSACTIONS)
+                .insert(inventoryTransactionDbPayload(tx))
+                .select("*")
+                .single();
+
+            if (error) throw error;
+
+            tx.id = data.id;
+            tx.createdAt = data.created_at || tx.createdAt;
+        }
+
+        inventoryState.transactions.unshift(tx);
+        saveInventoryLocal();
+
+        if ($("inventoryTxQty")) $("inventoryTxQty").value = "";
+        if ($("inventoryTxReference")) $("inventoryTxReference").value = "";
+        if ($("inventoryTxNote")) $("inventoryTxNote").value = "";
+
+        renderInventoryTransactions();
+        renderInventoryCurrentStock();
+        renderInventoryReconciliation();
+        showToast(`Đã ghi ${inventoryTxLabel(type)} ${formatNumber(quantity)} ${item?.name || ""}.`);
+    } catch (error) {
+        console.error(error);
+        alert("Không lưu được biến động kho.\n\n" + (error?.message || ""));
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = "+ Ghi nhận biến động";
+        }
+    }
+}
+
+async function deleteInventoryTransaction(id) {
+    const tx = inventoryState.transactions.find(row => row.id === id);
+    if (!tx) return;
+
+    const item = inventoryState.items.find(row => row.itemCode === tx.itemCode);
+    const ok = confirm(
+        `Xóa biến động kho này?\n\n` +
+        `${inventoryTxLabel(tx.type)} · ${item?.name || tx.itemCode}\n` +
+        `Ngày: ${tx.transactionDate ? formatDateLabel(tx.transactionDate) : "-"}\n` +
+        `SL: ${formatNumber(tx.quantity)}`
+    );
+
+    if (!ok) return;
+
+    try {
+        if (inventoryState.cloudReady && state.user && !String(id).startsWith("local-")) {
+            const client = initSupabaseClient();
+            const { error } = await client
+                .from(DB_INVENTORY_TRANSACTIONS)
+                .delete()
+                .eq("id", id);
+
+            if (error) throw error;
+        }
+
+        inventoryState.transactions = inventoryState.transactions.filter(row => row.id !== id);
+        saveInventoryLocal();
+
+        renderInventoryTransactions();
+        renderInventoryCurrentStock();
+        renderInventoryReconciliation();
+        showToast("Đã xóa biến động kho.");
+    } catch (error) {
+        alert("Không xóa được biến động kho.\n\n" + (error?.message || ""));
+    }
+}
+
+function getLatestStocktakeForItem(item, asOfDate) {
+    const candidates = (inventoryState.stocktakes || [])
+        .filter(row =>
+            row.item_code === item.itemCode &&
+            row.stocktake_date &&
+            (!asOfDate || row.stocktake_date <= asOfDate)
+        )
+        .sort((a, b) => {
+            const dateCompare = String(b.stocktake_date).localeCompare(String(a.stocktake_date));
+            if (dateCompare) return dateCompare;
+            return String(b.created_at || "").localeCompare(String(a.created_at || ""));
+        });
+
+    if (candidates.length) {
+        return {
+            date: candidates[0].stocktake_date,
+            quantity: Number(candidates[0].physical_qty || 0),
+            unitPrice: Number(candidates[0].unit_price || item.unitPrice || 0),
+            source: "stocktake"
+        };
+    }
+
+    const fallbackDate = item.stocktakeDate || "";
+
+    if (!asOfDate || !fallbackDate || fallbackDate <= asOfDate) {
+        return {
+            date: fallbackDate || asOfDate || getLocalTodayKey(),
+            quantity: Number(item.physicalQty || 0),
+            unitPrice: Number(item.unitPrice || 0),
+            source: "item"
+        };
+    }
+
+    return {
+        date: "",
+        quantity: 0,
+        unitPrice: Number(item.unitPrice || 0),
+        source: "none"
+    };
+}
+
+function getOutboundShopeeByItemAsOf(asOfDate) {
+    const rows = buildInventoryMovementRows(asOfDate);
+    const result = new Map();
+
+    rows.forEach(row => {
+        if (!row.itemCode) return;
+
+        // Hàng được xem là đã rời kho khi đang giao / đã giao / hoàn đang về.
+        if (!["in_transit", "delivered", "returning"].includes(row.bucket)) {
+            return;
+        }
+
+        result.set(
+            row.itemCode,
+            Number(result.get(row.itemCode) || 0) + Number(row.quantity || 0)
+        );
+    });
+
+    return result;
+}
+
+function getTransactionsForItemPeriod(itemCode, afterDate, toDate) {
+    return (inventoryState.transactions || []).filter(tx =>
+        tx.itemCode === itemCode &&
+        tx.transactionDate &&
+        (!afterDate || tx.transactionDate > afterDate) &&
+        (!toDate || tx.transactionDate <= toDate)
+    );
+}
+
+function summarizeInventoryTransactions(itemCode, afterDate, toDate) {
+    const txs = getTransactionsForItemPeriod(itemCode, afterDate, toDate);
+
+    return txs.reduce((acc, tx) => {
+        const qty = Number(tx.quantity || 0);
+
+        if (tx.type === "INBOUND") acc.inbound += Math.abs(qty);
+        if (tx.type === "RETURN_IN") acc.returnIn += Math.abs(qty);
+        if (tx.type === "OUT_OTHER") acc.outOther += Math.abs(qty);
+        if (tx.type === "ADJUSTMENT") acc.adjustment += qty;
+
+        return acc;
+    }, {
+        inbound: 0,
+        returnIn: 0,
+        outOther: 0,
+        adjustment: 0
+    });
+}
+
+function buildInventoryLedgerAsOf(asOfDate) {
+    const currentOutbound = getOutboundShopeeByItemAsOf(asOfDate);
+
+    return inventoryState.items
+        .filter(item => item.active !== false)
+        .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0))
+        .map(item => {
+            const baseline = getLatestStocktakeForItem(item, asOfDate);
+            const baselineOutboundMap = baseline.date
+                ? getOutboundShopeeByItemAsOf(baseline.date)
+                : new Map();
+
+            const baselineOutbound = Number(baselineOutboundMap.get(item.itemCode) || 0);
+            const outboundNow = Number(currentOutbound.get(item.itemCode) || 0);
+            const shopeeOutDelta = outboundNow - baselineOutbound;
+
+            const tx = summarizeInventoryTransactions(
+                item.itemCode,
+                baseline.date,
+                asOfDate
+            );
+
+            const theoretical =
+                Number(baseline.quantity || 0) +
+                tx.inbound +
+                tx.returnIn -
+                shopeeOutDelta -
+                tx.outOther +
+                tx.adjustment;
+
+            return {
+                itemCode: item.itemCode,
+                name: item.name,
+                shopeeSku: item.shopeeSku,
+                unitPrice: Number(item.unitPrice || baseline.unitPrice || 0),
+                baselineDate: baseline.date,
+                baselineQty: Number(baseline.quantity || 0),
+                inbound: tx.inbound,
+                returnIn: tx.returnIn,
+                shopeeOutDelta,
+                outOther: tx.outOther,
+                adjustment: tx.adjustment,
+                theoretical,
+                theoreticalValue: theoretical * Number(item.unitPrice || baseline.unitPrice || 0)
+            };
+        });
+}
+
+function renderInventoryCurrentStock() {
+    const body = $("inventoryCurrentBody");
+    const foot = $("inventoryCurrentFoot");
+    if (!body || !foot) return;
+
+    const asOfDate = $("inventoryCurrentDate")?.value || inventoryState.currentDate || getLocalTodayKey();
+    inventoryState.currentDate = asOfDate;
+
+    if ($("inventoryCurrentDate") && !$("inventoryCurrentDate").value) {
+        $("inventoryCurrentDate").value = asOfDate;
+    }
+
+    const rows = buildInventoryLedgerAsOf(asOfDate);
+
+    const totals = rows.reduce((acc, row) => {
+        acc.baseline += row.baselineQty;
+        acc.inbound += row.inbound;
+        acc.returnIn += row.returnIn;
+        acc.shopeeOut += row.shopeeOutDelta;
+        acc.outOther += row.outOther;
+        acc.adjustment += row.adjustment;
+        acc.theoretical += row.theoretical;
+        acc.value += row.theoreticalValue;
+        return acc;
+    }, {
+        baseline:0,inbound:0,returnIn:0,shopeeOut:0,outOther:0,adjustment:0,theoretical:0,value:0
+    });
+
+    if ($("inventoryCurrentBaselineTotal")) $("inventoryCurrentBaselineTotal").textContent = formatNumber(totals.baseline);
+    if ($("inventoryCurrentInboundTotal")) $("inventoryCurrentInboundTotal").textContent = formatNumber(totals.inbound + totals.returnIn);
+    if ($("inventoryCurrentOutboundTotal")) $("inventoryCurrentOutboundTotal").textContent = formatNumber(totals.shopeeOut + totals.outOther);
+    if ($("inventoryCurrentTheoryTotal")) $("inventoryCurrentTheoryTotal").textContent = formatNumber(totals.theoretical);
+
+    body.innerHTML = rows.map((row,index) => `
+        <tr>
+            <td>${index+1}</td>
+            <td>${escapeHTML(row.itemCode)}</td>
+            <td>
+                <strong>${escapeHTML(row.name)}</strong>
+                <div class="muted">${row.shopeeSku ? `Shopee: ${escapeHTML(row.shopeeSku)}` : "Chưa map SKU Shopee"}</div>
+            </td>
+            <td>${row.baselineDate ? formatDateLabel(row.baselineDate) : "-"}</td>
+            <td><strong>${formatNumber(row.baselineQty)}</strong></td>
+            <td class="positive-col">${row.inbound ? `+${formatNumber(row.inbound)}` : "0"}</td>
+            <td class="positive-col">${row.returnIn ? `+${formatNumber(row.returnIn)}` : "0"}</td>
+            <td class="negative-col">${row.shopeeOutDelta > 0 ? `-${formatNumber(row.shopeeOutDelta)}` : row.shopeeOutDelta < 0 ? `+${formatNumber(Math.abs(row.shopeeOutDelta))}` : "0"}</td>
+            <td class="negative-col">${row.outOther ? `-${formatNumber(row.outOther)}` : "0"}</td>
+            <td>${row.adjustment > 0 ? "+" : ""}${formatNumber(row.adjustment)}</td>
+            <td class="theory-col">${formatNumber(row.theoretical)}</td>
+            <td>${inventoryMoney(row.unitPrice)}</td>
+            <td><strong>${inventoryMoney(row.theoreticalValue)}</strong></td>
+        </tr>
+    `).join("");
+
+    foot.innerHTML = `
+        <tr>
+            <td></td>
+            <td>TỔNG</td>
+            <td>${formatNumber(rows.length)} mặt hàng</td>
+            <td></td>
+            <td>${formatNumber(totals.baseline)}</td>
+            <td>${formatNumber(totals.inbound)}</td>
+            <td>${formatNumber(totals.returnIn)}</td>
+            <td>${formatNumber(totals.shopeeOut)}</td>
+            <td>${formatNumber(totals.outOther)}</td>
+            <td>${totals.adjustment > 0 ? "+" : ""}${formatNumber(totals.adjustment)}</td>
+            <td>${formatNumber(totals.theoretical)}</td>
+            <td></td>
+            <td>${inventoryMoney(totals.value)}</td>
+        </tr>
+    `;
+}
+
+function renderInventoryTransactionItemOptions() {
+    const select = $("inventoryTxItem");
+    if (!select) return;
+
+    const currentValue = select.value;
+
+    select.innerHTML = inventoryState.items
+        .filter(item => item.active !== false)
+        .sort((a,b) => Number(a.sortOrder||0)-Number(b.sortOrder||0))
+        .map(item => `
+            <option value="${escapeHTML(item.itemCode)}">
+                ${escapeHTML(item.itemCode)} · ${escapeHTML(item.name)}
+            </option>
+        `).join("");
+
+    if (currentValue && [...select.options].some(o => o.value === currentValue)) {
+        select.value = currentValue;
+    }
+}
+
+function renderInventoryTransactions() {
+    renderInventoryTransactionItemOptions();
+
+    const body = $("inventoryTxBody");
+    const filter = $("inventoryTxFilter")?.value || "all";
+    if (!body) return;
+
+    const rows = [...(inventoryState.transactions || [])]
+        .filter(tx => filter === "all" || tx.type === filter)
+        .sort((a,b) =>
+            String(b.transactionDate || "").localeCompare(String(a.transactionDate || "")) ||
+            String(b.createdAt || "").localeCompare(String(a.createdAt || ""))
+        );
+
+    const totals = (inventoryState.transactions || []).reduce((acc, tx) => {
+        const qty = Number(tx.quantity || 0);
+        if (tx.type === "INBOUND") acc.inbound += Math.abs(qty);
+        if (tx.type === "RETURN_IN") acc.returnIn += Math.abs(qty);
+        if (tx.type === "OUT_OTHER") acc.outOther += Math.abs(qty);
+        if (tx.type === "ADJUSTMENT") acc.adjustment += qty;
+        return acc;
+    }, { inbound:0, returnIn:0, outOther:0, adjustment:0 });
+
+    if ($("inventoryTxKpiSubtitle")) {
+        $("inventoryTxKpiSubtitle").textContent =
+            `${formatNumber(inventoryState.transactions.length)} giao dịch đã lưu`;
+    }
+
+    if ($("inventoryTxSummary")) {
+        $("inventoryTxSummary").innerHTML = `
+            <div class="inventory-tx-mini in">
+                <span>NHẬP KHO</span>
+                <strong>+${formatNumber(totals.inbound)}</strong>
+            </div>
+            <div class="inventory-tx-mini return">
+                <span>HOÀN NHẬP KHO</span>
+                <strong>+${formatNumber(totals.returnIn)}</strong>
+            </div>
+            <div class="inventory-tx-mini out">
+                <span>XUẤT KHÁC</span>
+                <strong>-${formatNumber(totals.outOther)}</strong>
+            </div>
+            <div class="inventory-tx-mini adjust">
+                <span>ĐIỀU CHỈNH</span>
+                <strong>${totals.adjustment > 0 ? "+" : ""}${formatNumber(totals.adjustment)}</strong>
+            </div>
+        `;
+    }
+
+    if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="10" class="empty-table">Chưa có biến động kho phù hợp.</td></tr>';
+        return;
+    }
+
+    const itemMap = new Map(inventoryState.items.map(item => [item.itemCode, item]));
+
+    body.innerHTML = rows.map((tx,index) => {
+        const item = itemMap.get(tx.itemCode);
+        return `
+            <tr>
+                <td>${index+1}</td>
+                <td>${tx.transactionDate ? formatDateLabel(tx.transactionDate) : "-"}</td>
+                <td>${escapeHTML(tx.itemCode)}</td>
+                <td>${escapeHTML(item?.name || "-")}</td>
+                <td><span class="inventory-tx-type ${escapeHTML(tx.type)}">${inventoryTxLabel(tx.type)}</span></td>
+                <td><strong>${tx.type === "ADJUSTMENT" && tx.quantity > 0 ? "+" : ""}${formatNumber(tx.quantity)}</strong></td>
+                <td>${escapeHTML(tx.reference || "-")}</td>
+                <td>${escapeHTML(tx.note || "-")}</td>
+                <td>${tx.createdBy === state.user?.id ? "Bạn" : (tx.createdBy ? "Nhân viên" : "-")}</td>
+                <td>
+                    <button type="button"
+                            class="inventory-tx-delete"
+                            data-inventory-tx-delete="${escapeHTML(tx.id)}">
+                        Xóa
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join("");
+
+    document.querySelectorAll("[data-inventory-tx-delete]").forEach(button => {
+        button.addEventListener("click", () => deleteInventoryTransaction(button.dataset.inventoryTxDelete));
+    });
+}
+
+function renderInventoryReconciliation() {
+    const body = $("inventoryReconcileBody");
+    const foot = $("inventoryReconcileFoot");
+    if (!body || !foot) return;
+
+    const dateInput = $("inventoryReconcileDate");
+    const asOfDate = dateInput?.value || inventoryState.reconcileDate || getLocalTodayKey();
+    inventoryState.reconcileDate = asOfDate;
+
+    if (dateInput && !dateInput.value) {
+        dateInput.value = asOfDate;
+    }
+
+    const rows = buildInventoryLedgerAsOf(asOfDate);
+
+    const stats = {
+        matched: 0,
+        shortage: 0,
+        surplus: 0,
+        varianceQty: 0,
+        varianceValue: 0,
+        counted: 0,
+        theoretical: 0,
+        actual: 0
+    };
+
+    body.innerHTML = rows.map((row,index) => {
+        const rawActual = inventoryState.reconcileCounts[row.itemCode];
+        const hasActual = rawActual !== undefined && rawActual !== null && rawActual !== "";
+        const actual = hasActual ? Number(rawActual) : null;
+        const variance = hasActual ? actual - row.theoretical : null;
+        const varianceValue = hasActual ? variance * row.unitPrice : null;
+
+        let status = "pending";
+        let label = "Chưa đếm";
+
+        if (hasActual) {
+            stats.counted++;
+            stats.actual += actual;
+            stats.varianceQty += variance;
+            stats.varianceValue += varianceValue;
+
+            if (variance === 0) {
+                stats.matched++;
+                status = "match";
+                label = "✓ Khớp";
+            } else if (variance < 0) {
+                stats.shortage++;
+                status = "shortage";
+                label = `Thiếu ${formatNumber(Math.abs(variance))}`;
+            } else {
+                stats.surplus++;
+                status = "surplus";
+                label = `Thừa ${formatNumber(variance)}`;
+            }
+        }
+
+        stats.theoretical += row.theoretical;
+
+        const varianceClass =
+            !hasActual ? "" :
+            variance < 0 ? "negative" :
+            variance > 0 ? "positive" : "zero";
+
+        return `
+            <tr>
+                <td>${index+1}</td>
+                <td>${escapeHTML(row.itemCode)}</td>
+                <td>${escapeHTML(row.name)}</td>
+                <td>${row.baselineDate ? formatDateLabel(row.baselineDate) : "-"}</td>
+                <td>${formatNumber(row.baselineQty)}</td>
+                <td>${formatNumber(row.inbound)}</td>
+                <td>${formatNumber(row.returnIn)}</td>
+                <td>${formatNumber(row.shopeeOutDelta)}</td>
+                <td>${formatNumber(row.outOther)}</td>
+                <td>${row.adjustment > 0 ? "+" : ""}${formatNumber(row.adjustment)}</td>
+                <td class="theory-col">${formatNumber(row.theoretical)}</td>
+                <td class="actual-col">
+                    <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        class="inventory-reconcile-input"
+                        data-reconcile-item="${escapeHTML(row.itemCode)}"
+                        value="${hasActual ? escapeHTML(String(rawActual)) : ""}"
+                        placeholder="Đếm"
+                    >
+                </td>
+                <td class="inventory-variance ${varianceClass}">
+                    ${hasActual ? (variance > 0 ? "+" : "") + formatNumber(variance) : "—"}
+                </td>
+                <td class="inventory-variance ${varianceClass}">
+                    ${hasActual ? inventoryMoney(varianceValue) : "—"}
+                </td>
+                <td>
+                    <span class="inventory-reconcile-status ${status}">${label}</span>
+                </td>
+            </tr>
+        `;
+    }).join("");
+
+    document.querySelectorAll("[data-reconcile-item]").forEach(input => {
+        input.addEventListener("change", () => {
+            const code = input.dataset.reconcileItem;
+            inventoryState.reconcileCounts[code] = input.value;
+            renderInventoryReconciliation();
+        });
+    });
+
+    if ($("reconcileMatchedCount")) $("reconcileMatchedCount").textContent = formatNumber(stats.matched);
+    if ($("reconcileShortageCount")) $("reconcileShortageCount").textContent = formatNumber(stats.shortage);
+    if ($("reconcileSurplusCount")) $("reconcileSurplusCount").textContent = formatNumber(stats.surplus);
+    if ($("reconcileVarianceQty")) {
+        $("reconcileVarianceQty").textContent =
+            `${stats.varianceQty > 0 ? "+" : ""}${formatNumber(stats.varianceQty)}`;
+    }
+    if ($("reconcileVarianceValue")) {
+        $("reconcileVarianceValue").textContent = inventoryMoney(stats.varianceValue);
+    }
+
+    foot.innerHTML = `
+        <tr>
+            <td></td>
+            <td>TỔNG</td>
+            <td>${formatNumber(rows.length)} mặt hàng · Đã đếm ${formatNumber(stats.counted)}</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td>${formatNumber(stats.theoretical)}</td>
+            <td>${stats.counted ? formatNumber(stats.actual) : "—"}</td>
+            <td>${stats.counted ? `${stats.varianceQty > 0 ? "+" : ""}${formatNumber(stats.varianceQty)}` : "—"}</td>
+            <td>${stats.counted ? inventoryMoney(stats.varianceValue) : "—"}</td>
+            <td></td>
+        </tr>
+    `;
+}
+
+async function commitInventoryReconciliation() {
+    const asOfDate = $("inventoryReconcileDate")?.value || getLocalTodayKey();
+    const rows = buildInventoryLedgerAsOf(asOfDate);
+
+    const counted = rows
+        .filter(row => {
+            const value = inventoryState.reconcileCounts[row.itemCode];
+            return value !== undefined && value !== null && value !== "";
+        })
+        .map(row => ({
+            ...row,
+            actual: Math.max(0, Number(inventoryState.reconcileCounts[row.itemCode]) || 0)
+        }));
+
+    if (!counted.length) {
+        alert("Bạn chưa nhập số kiểm thực tế cho mặt hàng nào.");
+        return;
+    }
+
+    const shortage = counted.filter(row => row.actual < row.theoretical).length;
+    const surplus = counted.filter(row => row.actual > row.theoretical).length;
+    const matched = counted.filter(row => row.actual === row.theoretical).length;
+
+    const ok = confirm(
+        `Chốt kiểm kê ngày ${formatDateLabel(asOfDate)}?\n\n` +
+        `Đã đếm: ${counted.length} mặt hàng\n` +
+        `Khớp: ${matched}\nThiếu: ${shortage}\nThừa: ${surplus}\n\n` +
+        `Sau khi chốt, số đếm thực tế sẽ trở thành mốc tính tồn mới.`
+    );
+
+    if (!ok) return;
+
+    const button = $("btnInventoryCommitReconcile");
+    if (button) {
+        button.disabled = true;
+        button.textContent = "ĐANG CHỐT...";
+    }
+
+    try {
+        const countedMap = new Map(counted.map(row => [row.itemCode, row]));
+
+        inventoryState.items = inventoryState.items.map(item => {
+            const found = countedMap.get(item.itemCode);
+            if (!found) return item;
+
+            return {
+                ...item,
+                physicalQty: found.actual,
+                stocktakeDate: asOfDate
+            };
+        });
+
+        saveInventoryLocal();
+
+        if (inventoryState.cloudReady && state.user) {
+            const client = initSupabaseClient();
+
+            const changedItems = inventoryState.items
+                .filter(item => countedMap.has(item.itemCode))
+                .map(inventoryStateToDbRow);
+
+            const { error: itemError } = await client
+                .from(DB_INVENTORY_ITEMS)
+                .upsert(changedItems, { onConflict: "item_code" });
+
+            if (itemError) throw itemError;
+
+            const payload = counted.map(row => ({
+                stocktake_date: asOfDate,
+                item_code: row.itemCode,
+                physical_qty: row.actual,
+                unit_price: Number(row.unitPrice || 0),
+                note:
+                    `Kiểm kê V31 · Lý thuyết ${row.theoretical} · ` +
+                    `Thực tế ${row.actual} · Chênh ${row.actual - row.theoretical}`,
+                created_by: state.user?.id || null
+            }));
+
+            const { data: inserted, error: stocktakeError } = await client
+                .from(DB_INVENTORY_STOCKTAKES)
+                .insert(payload)
+                .select("*");
+
+            if (stocktakeError) throw stocktakeError;
+            inventoryState.stocktakes.unshift(...(inserted || []));
+        } else {
+            const now = new Date().toISOString();
+            inventoryState.stocktakes.unshift(
+                ...counted.map((row,index) => ({
+                    id:`local-reconcile-${Date.now()}-${index}`,
+                    stocktake_date:asOfDate,
+                    item_code:row.itemCode,
+                    physical_qty:row.actual,
+                    unit_price:Number(row.unitPrice||0),
+                    note:`Kiểm kê V31 · Lý thuyết ${row.theoretical}`,
+                    created_at:now
+                }))
+            );
+        }
+
+        inventoryState.reconcileCounts = {};
+        saveInventoryLocal();
+
+        renderInventoryModule();
+        renderInventoryCurrentStock();
+        renderInventoryReconciliation();
+        showToast(`Đã chốt kiểm kê ${formatDateLabel(asOfDate)}.`);
+    } catch (error) {
+        console.error(error);
+        alert("Không chốt được kiểm kê.\n\n" + (error?.message || ""));
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = "✅ Chốt kiểm kê";
+        }
+    }
+}
+
+function clearInventoryReconcileCounts() {
+    inventoryState.reconcileCounts = {};
+    renderInventoryReconciliation();
+}
+
+function renderInventoryMisaTab() {
+    const summary = buildInventorySummary();
+
+    // Tái sử dụng nội dung đối chiếu chi tiết từ khối overview
+    const temp = $("inventoryMisaInfoV31");
+    if (temp) {
+        const original = $("inventoryMisaInfo");
+
+        if (original) {
+            renderInventoryMisaInfo(summary);
+            temp.innerHTML = original.innerHTML;
+        }
+    }
+
+    const body = $("inventoryMisaDetailBody");
+    if (!body) return;
+
+    if (!summary.length) {
+        body.innerHTML = '<tr><td colspan="7" class="empty-table">Chưa có dữ liệu.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = summary.map((item,index) => `
+        <tr>
+            <td>${index+1}</td>
+            <td>${escapeHTML(item.itemCode)}</td>
+            <td>${escapeHTML(item.name)}</td>
+            <td>${formatNumber(item.delivered || 0)}</td>
+            <td><strong>${formatNumber(item.invoiceQty || 0)}</strong></td>
+            <td>${formatNumber(item.waitingInvoice || 0)}</td>
+            <td>
+                ${item.invoiceScopeMismatch
+                    ? '<span class="inventory-reconcile-status surplus">Khác kỳ</span>'
+                    : '<span class="inventory-reconcile-status match">Ổn</span>'}
+            </td>
+        </tr>
+    `).join("");
+}
+
+function setInventoryTab(tabName) {
+    const allowed = ["overview","current","transactions","reconcile","misa"];
+    const tab = allowed.includes(tabName) ? tabName : "overview";
+    inventoryState.activeTab = tab;
+
+    document.querySelectorAll("[data-inventory-tab]").forEach(button => {
+        button.classList.toggle("active", button.dataset.inventoryTab === tab);
+    });
+
+    const panes = {
+        overview: $("inventoryTabOverview"),
+        current: $("inventoryTabCurrent"),
+        transactions: $("inventoryTabTransactions"),
+        reconcile: $("inventoryTabReconcile"),
+        misa: $("inventoryTabMisa")
+    };
+
+    Object.entries(panes).forEach(([key,pane]) => {
+        pane?.classList.toggle("active", key === tab);
+    });
+
+    if (tab === "current") renderInventoryCurrentStock();
+    if (tab === "transactions") renderInventoryTransactions();
+    if (tab === "reconcile") renderInventoryReconciliation();
+    if (tab === "misa") renderInventoryMisaTab();
+}
+
 function renderInventoryModule() {
     if (!inventoryState.loaded) loadInventoryLocal();
 
@@ -8737,6 +10299,26 @@ function renderInventoryModule() {
     renderInventoryFlowBars(summary);
     renderInventoryMisaInfo(summary);
     renderInventoryMovementTable();
+
+    if (!inventoryState.currentDate) {
+        inventoryState.currentDate = getLocalTodayKey();
+    }
+    if (!inventoryState.reconcileDate) {
+        inventoryState.reconcileDate = getLocalTodayKey();
+    }
+
+    if ($("inventoryCurrentDate") && !$("inventoryCurrentDate").value) {
+        $("inventoryCurrentDate").value = inventoryState.currentDate;
+    }
+    if ($("inventoryReconcileDate") && !$("inventoryReconcileDate").value) {
+        $("inventoryReconcileDate").value = inventoryState.reconcileDate;
+    }
+    if ($("inventoryTxDate") && !$("inventoryTxDate").value) {
+        $("inventoryTxDate").value = getLocalTodayKey();
+    }
+
+    renderInventoryTransactionItemOptions();
+    setInventoryTab(inventoryState.activeTab || "overview");
 }
 
 function renderInventoryMovementTable() {
@@ -8975,6 +10557,27 @@ async function importInventoryExcel(file) {
         if ($("inventoryStockFileInput")) $("inventoryStockFileInput").value = "";
     }
 }
+
+document.querySelectorAll("[data-inventory-tab]").forEach(button => {
+    button.addEventListener("click", () => setInventoryTab(button.dataset.inventoryTab));
+});
+
+$("inventoryCurrentDate")?.addEventListener("change", event => {
+    inventoryState.currentDate = event.target.value;
+    renderInventoryCurrentStock();
+});
+
+$("inventoryReconcileDate")?.addEventListener("change", event => {
+    inventoryState.reconcileDate = event.target.value;
+    inventoryState.reconcileCounts = {};
+    renderInventoryReconciliation();
+});
+
+$("btnInventoryAddTransaction")?.addEventListener("click", addInventoryTransactionFromForm);
+$("inventoryTxFilter")?.addEventListener("change", renderInventoryTransactions);
+$("btnInventoryClearCounts")?.addEventListener("click", clearInventoryReconcileCounts);
+$("btnInventoryCommitReconcile")?.addEventListener("click", commitInventoryReconciliation);
+$("btnInventoryOpenInvoiceV31")?.addEventListener("click", () => openView("invoice-stats"));
 
 $("btnInventoryEdit")?.addEventListener("click", openInventoryEditor);
 $("btnInventoryEditorClose")?.addEventListener("click", closeInventoryEditor);
