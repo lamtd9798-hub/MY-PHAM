@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V21: dashboard tháng/năm + lịch 1 tháng + thống kê tuần/tháng/năm + biểu đồ -->
+    <!-- ONE-FILE V22: biểu đồ cột đôi Sáng/Chiều + bảng sau quy đổi 2/3 -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1853,6 +1853,236 @@ button{cursor:pointer}
     }
 }
 
+
+/* =========================================================
+   V22 - BIỂU ĐỒ CỘT ĐÔI SÁNG / CHIỀU
+========================================================= */
+
+/* Bảng sau quy đổi: bảng ~2/3, biểu đồ ~1/3 */
+.converted-analytics-grid{
+    grid-template-columns:minmax(640px,2fr) minmax(330px,1fr)!important;
+}
+
+/* Các khối tuần/tháng/năm: bảng và biểu đồ cân hơn */
+.analytics-split{
+    grid-template-columns:minmax(430px,1fr) minmax(500px,1.35fr)!important;
+}
+
+/* Vùng biểu đồ cột */
+.grouped-column-chart{
+    position:relative;
+    display:flex;
+    align-items:flex-end;
+    gap:10px;
+    min-height:265px;
+    padding:20px 14px 34px;
+    overflow-x:auto;
+    overflow-y:hidden;
+}
+
+.grouped-column-chart.compact{
+    min-height:260px;
+}
+
+.gchart-group{
+    flex:1 0 54px;
+    min-width:54px;
+    height:215px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    align-items:center;
+}
+
+.gchart-bars{
+    width:100%;
+    height:178px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    gap:5px;
+}
+
+.gchart-bar-wrap{
+    width:18px;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    align-items:center;
+}
+
+.gchart-value{
+    min-height:15px;
+    margin-bottom:3px;
+    color:#415963;
+    font-size:7px;
+    font-weight:850;
+    white-space:nowrap;
+}
+
+.gchart-bar{
+    width:100%;
+    min-height:0;
+    border-radius:5px 5px 2px 2px;
+    transition:height .18s ease, opacity .18s ease;
+}
+
+.gchart-bar.morning{
+    background:#f2b43d;
+}
+
+.gchart-bar.afternoon{
+    background:#5aa6e6;
+}
+
+.gchart-bar.zero{
+    height:2px!important;
+    opacity:.18;
+}
+
+.gchart-label{
+    width:100%;
+    margin-top:7px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    text-align:center;
+    color:#60737d;
+    font-size:7px;
+    font-weight:750;
+}
+
+.gchart-group:hover .gchart-bar{
+    filter:brightness(.96);
+}
+
+.gchart-legend{
+    display:flex;
+    justify-content:flex-end;
+    gap:14px;
+    padding:0 14px 11px;
+    color:#80919b;
+    font-size:7px;
+}
+
+.gchart-legend span{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+}
+
+.gchart-legend i{
+    width:8px;
+    height:8px;
+    border-radius:2px;
+}
+
+.gchart-legend i.morning{background:#f2b43d}
+.gchart-legend i.afternoon{background:#5aa6e6}
+
+/* Biểu đồ SKU sau quy đổi */
+.converted-chart-card{
+    min-width:0;
+}
+.converted-chart{
+    min-height:275px!important;
+}
+.converted-chart .gchart-group{
+    flex-basis:58px;
+    min-width:58px;
+}
+
+/* Biểu đồ tuần/tháng/năm */
+.analytics-chart-card{
+    min-width:0;
+}
+.analytics-chart-card .grouped-column-chart{
+    min-height:285px;
+}
+.analytics-chart-card .gchart-group{
+    flex-basis:58px;
+    min-width:58px;
+}
+
+/* Với 12 tháng / 10 năm cho phép cuộn ngang đẹp */
+#monthlyStatsChart .gchart-group,
+#yearlyStatsChart .gchart-group{
+    flex-basis:62px;
+    min-width:62px;
+}
+
+/* Biểu đồ ngày: cũng chuyển thành 2 cột song song */
+.daily-chart{
+    display:flex!important;
+    align-items:flex-end!important;
+    gap:5px!important;
+    height:270px!important;
+    padding:18px 12px 32px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+}
+
+.daily-bar-col{
+    flex:1 0 34px!important;
+    min-width:34px!important;
+    height:220px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:flex-end!important;
+    align-items:center!important;
+}
+
+.daily-pair-bars{
+    width:100%;
+    height:185px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    gap:3px;
+}
+
+.daily-single-wrap{
+    width:11px;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    align-items:center;
+}
+
+.daily-single-value{
+    min-height:13px;
+    margin-bottom:2px;
+    color:#526a75;
+    font-size:6px;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.daily-single-bar{
+    width:100%;
+    border-radius:4px 4px 1px 1px;
+}
+
+.daily-single-bar.morning{background:#f2b43d}
+.daily-single-bar.afternoon{background:#5aa6e6}
+.daily-single-bar.zero{height:2px!important;opacity:.18}
+
+.daily-bar-label{
+    margin-top:5px!important;
+    color:#8798a2!important;
+    font-size:6.5px!important;
+    font-weight:700!important;
+}
+
+@media(max-width:1150px){
+    .converted-analytics-grid,
+    .analytics-split{
+        grid-template-columns:1fr!important;
+    }
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2261,7 +2491,7 @@ button{cursor:pointer}
                         <div class="analytics-chart-card">
                             <div class="analytics-chart-title">
                                 <strong>Biểu đồ theo tuần</strong>
-                                <span>Sáng + Chiều</span>
+                                <span>2 cột song song: Sáng / Chiều</span>
                             </div>
                             <div id="weeklyStatsChart" class="horizontal-chart"></div>
                         </div>
@@ -2298,7 +2528,7 @@ button{cursor:pointer}
                         <div class="analytics-chart-card">
                             <div class="analytics-chart-title">
                                 <strong>Biểu đồ 12 tháng</strong>
-                                <span id="monthlyChartYearLabel">Năm 2026</span>
+                                <span id="monthlyChartYearLabel">2 cột Sáng / Chiều · Năm 2026</span>
                             </div>
                             <div id="monthlyStatsChart" class="horizontal-chart"></div>
                         </div>
@@ -2335,7 +2565,7 @@ button{cursor:pointer}
                         <div class="analytics-chart-card">
                             <div class="analytics-chart-title">
                                 <strong>Biểu đồ theo năm</strong>
-                                <span>2026 → 2035</span>
+                                <span>2 cột Sáng / Chiều · 2026 → 2035</span>
                             </div>
                             <div id="yearlyStatsChart" class="horizontal-chart"></div>
                         </div>
@@ -2544,7 +2774,7 @@ button{cursor:pointer}
                         <div class="converted-chart-card">
                             <div class="analytics-chart-title">
                                 <strong>Biểu đồ sản phẩm sau quy đổi</strong>
-                                <span>Số lượng kho cần chuẩn bị</span>
+                                <span>Mỗi SKU: 2 cột Sáng / Chiều</span>
                             </div>
                             <div id="convertedTotalsChart" class="horizontal-chart converted-chart"></div>
                         </div>
@@ -4422,7 +4652,7 @@ function getYearBuckets(groups) {
     );
 }
 
-function renderHorizontalStackedChart(containerId, items, options = {}) {
+function renderGroupedColumnChart(containerId, items, options = {}) {
     const container = $(containerId);
     if (!container) return;
 
@@ -4430,35 +4660,74 @@ function renderHorizontalStackedChart(containerId, items, options = {}) {
         ? items.filter(item => Number(item.total || 0) > 0)
         : items;
 
-    if (!visibleItems.length || !visibleItems.some(item => Number(item.total || 0) > 0)) {
-        container.innerHTML = '<div class="hchart-empty">Chưa có dữ liệu để vẽ biểu đồ.</div>';
+    if (
+        !visibleItems.length ||
+        !visibleItems.some(item =>
+            Number(item.morning || 0) > 0 ||
+            Number(item.afternoon || 0) > 0
+        )
+    ) {
+        container.innerHTML =
+            '<div class="hchart-empty">Chưa có dữ liệu để vẽ biểu đồ.</div>';
         return;
     }
 
-    const maxTotal = Math.max(...visibleItems.map(item => Number(item.total || 0)), 1);
+    const maxValue = Math.max(
+        ...visibleItems.flatMap(item => [
+            Number(item.morning || 0),
+            Number(item.afternoon || 0)
+        ]),
+        1
+    );
 
-    container.innerHTML = visibleItems.map(item => {
-        const morning = Number(item.morning || 0);
-        const afternoon = Number(item.afternoon || 0);
-        const total = Number(item.total || 0);
+    const chartClass = options.compact
+        ? "grouped-column-chart compact"
+        : "grouped-column-chart";
 
-        const morningWidth = (morning / maxTotal) * 100;
-        const afternoonWidth = (afternoon / maxTotal) * 100;
+    container.innerHTML = `
+        <div class="${chartClass}">
+            ${visibleItems.map(item => {
+                const morning = Number(item.morning || 0);
+                const afternoon = Number(item.afternoon || 0);
 
-        return `
-            <div class="hchart-row">
-                <div class="hchart-label" title="${escapeHTML(item.label)}">${escapeHTML(item.label)}</div>
+                const morningHeight = (morning / maxValue) * 100;
+                const afternoonHeight = (afternoon / maxValue) * 100;
 
-                <div class="hchart-track" title="Sáng ${formatNumber(morning)} · Chiều ${formatNumber(afternoon)}">
-                    <div class="hchart-seg morning" style="width:${morningWidth}%"></div>
-                    <div class="hchart-seg afternoon" style="width:${afternoonWidth}%"></div>
-                </div>
+                return `
+                    <div class="gchart-group"
+                         title="${escapeHTML(item.label)} · Sáng ${formatNumber(morning)} · Chiều ${formatNumber(afternoon)}">
 
-                <div class="hchart-value">${formatNumber(total)}</div>
-            </div>
-        `;
-    }).join("") + `
-        <div class="hchart-legend">
+                        <div class="gchart-bars">
+                            <div class="gchart-bar-wrap">
+                                <div class="gchart-value">
+                                    ${morning ? formatNumber(morning) : ""}
+                                </div>
+                                <div
+                                    class="gchart-bar morning ${morning ? "" : "zero"}"
+                                    style="height:${morning ? morningHeight : 0}%"
+                                ></div>
+                            </div>
+
+                            <div class="gchart-bar-wrap">
+                                <div class="gchart-value">
+                                    ${afternoon ? formatNumber(afternoon) : ""}
+                                </div>
+                                <div
+                                    class="gchart-bar afternoon ${afternoon ? "" : "zero"}"
+                                    style="height:${afternoon ? afternoonHeight : 0}%"
+                                ></div>
+                            </div>
+                        </div>
+
+                        <div class="gchart-label" title="${escapeHTML(item.label)}">
+                            ${escapeHTML(item.label)}
+                        </div>
+                    </div>
+                `;
+            }).join("")}
+        </div>
+
+        <div class="gchart-legend">
             <span><i class="morning"></i>Buổi sáng</span>
             <span><i class="afternoon"></i>Buổi chiều</span>
         </div>
@@ -4481,28 +4750,49 @@ function renderDailyQuantityChart(year, monthIndex, groups) {
     const items = Array.from({ length: days }, (_, index) => {
         const day = index + 1;
         const data = dayMap.get(day) || {};
+
         return {
             day,
             morning: Number(data.morning || 0),
-            afternoon: Number(data.afternoon || 0),
-            total: Number(data.total || 0)
+            afternoon: Number(data.afternoon || 0)
         };
     });
 
-    const maxTotal = Math.max(...items.map(item => item.total), 1);
+    const maxValue = Math.max(
+        ...items.flatMap(item => [item.morning, item.afternoon]),
+        1
+    );
 
     container.innerHTML = items.map(item => {
-        const morningHeight = (item.morning / maxTotal) * 100;
-        const afternoonHeight = (item.afternoon / maxTotal) * 100;
+        const morningHeight = (item.morning / maxValue) * 100;
+        const afternoonHeight = (item.afternoon / maxValue) * 100;
 
         return `
-            <div class="daily-bar-col ${item.total ? "has-data" : ""}"
-                 title="Ngày ${item.day}: Sáng ${formatNumber(item.morning)} · Chiều ${formatNumber(item.afternoon)} · Tổng ${formatNumber(item.total)}">
-                <div class="daily-bar-value">${item.total ? formatNumber(item.total) : ""}</div>
+            <div class="daily-bar-col"
+                 title="Ngày ${item.day}: Sáng ${formatNumber(item.morning)} · Chiều ${formatNumber(item.afternoon)}">
 
-                <div class="daily-bar-track">
-                    <div class="daily-bar-segment afternoon" style="height:${afternoonHeight}%"></div>
-                    <div class="daily-bar-segment morning" style="height:${morningHeight}%"></div>
+                <div class="daily-pair-bars">
+                    <div class="daily-single-wrap">
+                        <div class="daily-single-value">
+                            ${item.morning ? formatNumber(item.morning) : ""}
+                        </div>
+
+                        <div
+                            class="daily-single-bar morning ${item.morning ? "" : "zero"}"
+                            style="height:${item.morning ? morningHeight : 0}%"
+                        ></div>
+                    </div>
+
+                    <div class="daily-single-wrap">
+                        <div class="daily-single-value">
+                            ${item.afternoon ? formatNumber(item.afternoon) : ""}
+                        </div>
+
+                        <div
+                            class="daily-single-bar afternoon ${item.afternoon ? "" : "zero"}"
+                            style="height:${item.afternoon ? afternoonHeight : 0}%"
+                        ></div>
+                    </div>
                 </div>
 
                 <div class="daily-bar-label">${item.day}</div>
@@ -4594,7 +4884,7 @@ function renderWeeklyDashboard(year, monthIndex, groups) {
         `).join("");
     }
 
-    renderHorizontalStackedChart("weeklyStatsChart", items);
+    renderGroupedColumnChart("weeklyStatsChart", items, { compact: true });
 
     if ($("weeklyStatsSubtitle")) {
         $("weeklyStatsSubtitle").textContent =
@@ -4618,14 +4908,14 @@ function renderMonthlyDashboard(year, groups) {
         `).join("");
     }
 
-    renderHorizontalStackedChart("monthlyStatsChart", items);
+    renderGroupedColumnChart("monthlyStatsChart", items);
 
     if ($("monthlyStatsSubtitle")) {
         $("monthlyStatsSubtitle").textContent = `12 tháng của năm ${year}.`;
     }
 
     if ($("monthlyChartYearLabel")) {
-        $("monthlyChartYearLabel").textContent = `Năm ${year}`;
+        $("monthlyChartYearLabel").textContent = `2 cột Sáng / Chiều · Năm ${year}`;
     }
 }
 
@@ -4645,7 +4935,7 @@ function renderYearlyDashboard(groups) {
         `).join("");
     }
 
-    renderHorizontalStackedChart("yearlyStatsChart", items);
+    renderGroupedColumnChart("yearlyStatsChart", items);
 }
 
 function renderStatsCalendar() {
@@ -5520,10 +5810,10 @@ function renderConvertedTotals() {
         </tr>
     `).join("");
 
-    renderHorizontalStackedChart(
+    renderGroupedColumnChart(
         "convertedTotalsChart",
         rows.slice(0, 12),
-        { hideZero: true }
+        { hideZero: true, compact: true }
     );
 }
 
