@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V9: thêm bộ lọc theo Ngày đặt hàng + Trạng thái -->
+    <!-- ONE-FILE V11: Supabase Cloud + đăng nhập + nhiều máy dùng chung dữ liệu -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -285,10 +285,160 @@ button{cursor:pointer}
     padding:12px!important;
 }
 
+
+/* =========================================================
+   V10 - LƯU NHIỀU FILE / DỮ LIỆU THEO NGÀY
+========================================================= */
+.saved-data-panel{margin-top:16px}
+.saved-db-badge{
+    display:inline-flex;align-items:center;height:28px;padding:0 9px;
+    border:1px solid #bfe0d9;border-radius:999px;background:#f0faf7;
+    color:#087863;font-size:9px;font-weight:700;white-space:nowrap
+}
+.saved-summary-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px
+}
+.saved-summary-card{
+    padding:12px 14px;border:1px solid var(--border);border-radius:9px;background:#fafcfd
+}
+.saved-summary-card span{
+    display:block;color:#7b8c99;font-size:8px;font-weight:700;letter-spacing:.35px
+}
+.saved-summary-card strong{
+    display:block;margin-top:6px;color:#172b34;font-size:19px;font-weight:800
+}
+.saved-summary-card strong.small-value{
+    font-size:10px;line-height:1.4;min-height:25px;display:flex;align-items:center
+}
+.btn-delete-day{
+    height:26px;padding:0 8px;border:1px solid #fecaca;border-radius:6px;
+    background:#fff6f6;color:#c83f46;font-family:inherit;font-size:8px;font-weight:650;cursor:pointer
+}
+.btn-delete-day:hover{background:#ffecec}
+.import-note{
+    margin-top:9px;padding:8px 10px;border:1px solid #d5e9e4;border-radius:7px;
+    background:#f5fbf9;color:#52706a;font-size:9px;line-height:1.5
+}
+.saved-day-date{font-weight:750;color:#233746}
+.saved-day-sub{display:block;margin-top:2px;color:#94a3b8;font-size:8px}
+@media(max-width:900px){
+    .saved-summary-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){
+    .saved-summary-grid{grid-template-columns:1fr}
+}
+
+
+/* =========================================================
+   V11 - SUPABASE CLOUD + LOGIN
+========================================================= */
+.auth-gate{
+    position:fixed;inset:0;z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+    padding:22px;background:rgba(10,31,40,.72);
+    backdrop-filter:blur(5px)
+}
+.auth-gate.hidden{display:none}
+.auth-card{
+    width:min(420px,100%);background:#fff;border:1px solid #dce5e9;
+    border-radius:16px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.26)
+}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.auth-logo-icon{
+    width:42px;height:42px;border-radius:11px;background:#12a58a;color:#fff;
+    display:grid;place-items:center;font-size:21px;font-weight:800
+}
+.auth-logo-title{font-size:19px;font-weight:800;color:#142a33}
+.auth-logo-sub{font-size:9px;color:#8da0aa;letter-spacing:1.3px;margin-top:2px}
+.auth-card h2{font-size:19px;margin-bottom:5px}
+.auth-card>p{color:#71828e;font-size:10px;line-height:1.6;margin-bottom:18px}
+.auth-field{margin-bottom:12px}
+.auth-field label{display:block;font-size:9px;font-weight:700;color:#536672;margin-bottom:5px}
+.auth-field input{
+    width:100%;height:42px;border:1px solid #d7e0e5;border-radius:8px;
+    padding:0 11px;outline:none;font-family:inherit;font-size:11px
+}
+.auth-field input:focus{border-color:#55bea9;box-shadow:0 0 0 3px rgba(15,155,129,.1)}
+.auth-submit{
+    width:100%;height:43px;border:0;border-radius:8px;background:#0f9b81;
+    color:#fff;font-family:inherit;font-weight:750;font-size:11px;cursor:pointer
+}
+.auth-submit:hover{background:#087863}
+.auth-submit:disabled{opacity:.6;cursor:wait}
+.auth-error{
+    display:none;margin-top:10px;padding:9px 10px;border:1px solid #fecaca;
+    border-radius:7px;background:#fff1f2;color:#b91c1c;font-size:9px;line-height:1.5
+}
+.auth-error.show{display:block}
+.auth-help{
+    margin-top:14px;padding-top:12px;border-top:1px solid #edf1f3;
+    color:#8a9aa4;font-size:8.5px;line-height:1.55
+}
+.cloud-user{
+    height:35px;display:flex;align-items:center;gap:7px;padding:0 10px;
+    border:1px solid #cce4de;border-radius:8px;background:#f4fbf9;
+    color:#30665b;font-size:9px;max-width:210px
+}
+.cloud-user-dot{width:7px;height:7px;border-radius:50%;background:#17a987}
+.cloud-user-email{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-logout{
+    height:35px;padding:0 10px;border:1px solid #dce4e8;border-radius:7px;
+    background:#fff;color:#64748b;font-family:inherit;font-size:9px;font-weight:650
+}
+.cloud-sync-badge{
+    display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 9px;
+    border:1px solid #bfe0d9;border-radius:999px;background:#effaf7;
+    color:#087863;font-size:9px;font-weight:700
+}
+.cloud-sync-badge.syncing{color:#9a670f;border-color:#f4d49a;background:#fff8e8}
+.cloud-sync-badge.error{color:#b91c1c;border-color:#fecaca;background:#fff1f2}
+.cloud-note{
+    margin-top:8px;padding:8px 10px;border:1px solid #cfe6e0;border-radius:7px;
+    background:#f4fbf9;color:#52706a;font-size:9px;line-height:1.5
+}
+@media(max-width:1000px){
+    .cloud-user{display:none}
+}
+
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
+
+<div id="authGate" class="auth-gate">
+    <form id="authForm" class="auth-card" autocomplete="on">
+        <div class="auth-logo">
+            <div class="auth-logo-icon">R</div>
+            <div>
+                <div class="auth-logo-title">RUCOS</div>
+                <div class="auth-logo-sub">SHOPEE CLOUD</div>
+            </div>
+        </div>
+
+        <h2>Đăng nhập hệ thống</h2>
+        <p>Dữ liệu Shopee và bảng quy đổi được lưu trên Supabase Cloud để các máy dùng chung.</p>
+
+        <div class="auth-field">
+            <label>EMAIL</label>
+            <input id="loginEmail" type="email" autocomplete="username" required placeholder="email@congty.com">
+        </div>
+
+        <div class="auth-field">
+            <label>MẬT KHẨU</label>
+            <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••">
+        </div>
+
+        <button id="btnLogin" class="auth-submit" type="submit">ĐĂNG NHẬP</button>
+        <div id="authError" class="auth-error"></div>
+
+        <div class="auth-help">
+            Tài khoản được tạo trong Supabase → Authentication → Users.
+            Không dùng Secret key/service_role trên trang web.
+        </div>
+    </form>
+</div>
+
 <div class="app-layout">
     <aside class="sidebar">
         <div class="sidebar-logo">
@@ -358,10 +508,15 @@ button{cursor:pointer}
             <div class="topbar-actions">
                 <div class="file-pill" id="topFilePill">
                     <span class="file-dot"></span>
-                    <span id="topFileText">Chưa có file Shopee</span>
+                    <span id="topFileText">Chưa có dữ liệu Shopee</span>
+                </div>
+                <div class="cloud-user" title="Tài khoản đang đăng nhập">
+                    <span class="cloud-user-dot"></span>
+                    <span class="cloud-user-email" id="cloudUserEmail">-</span>
                 </div>
                 <button class="btn btn-light" id="btnGoImport">Nhập file</button>
-                <button class="btn btn-danger-outline" id="btnReset">Xóa dữ liệu</button>
+                <button class="btn btn-danger-outline" id="btnReset">Xóa dữ liệu cloud</button>
+                <button class="btn-logout" id="btnLogout">Đăng xuất</button>
             </div>
         </header>
 
@@ -452,8 +607,8 @@ button{cursor:pointer}
                     <div class="upload-card important large-upload-card">
                         <div class="upload-step">DỮ LIỆU ĐẦU VÀO</div>
                         <div class="upload-large-icon">🛍️</div>
-                        <h3>File đơn hàng Shopee</h3>
-                        <p>Chọn file dạng <strong>Order.all....xlsx</strong>. Hệ thống sẽ tự đọc Trạng Thái Đơn Hàng, SKU sản phẩm, Tên sản phẩm và Số lượng.</p>
+                        <h3>Nhập thêm file đơn hàng Shopee</h3>
+                        <p>Chọn file dạng <strong>Order.all....xlsx</strong>. Mỗi lần upload, dữ liệu mới sẽ được <strong>cộng vào kho dữ liệu đã lưu</strong> và tự loại các dòng đơn trùng.</p>
 
                         <label class="upload-button primary">
                             Chọn file Shopee
@@ -472,21 +627,69 @@ button{cursor:pointer}
                             <div class="check-item"><span>✓</span><div><strong>Lọc 3 trạng thái mặc định</strong><small>Đang giao, Đã giao, Người mua xác nhận đã nhận hàng.</small></div></div>
                             <div class="check-item"><span>✓</span><div><strong>Thống kê số lượng SKU</strong><small>Mặc định đếm số lần SKU xuất hiện.</small></div></div>
                             <div class="check-item"><span>✓</span><div><strong>Quy đổi combo / quà tặng</strong><small>Hệ số quy đổi được lưu trên trình duyệt.</small></div></div>
+                            <div class="check-item"><span>✓</span><div><strong>Lưu nhiều lần upload</strong><small>File sáng + file chiều được gộp, cập nhật dòng trùng và lưu lại theo ngày.</small></div></div>
                         </div>
                     </div>
                 </div>
 
                 <div class="panel import-result-panel">
                     <div class="panel-header">
-                        <div><h2>Kết quả đọc file</h2><p>Kiểm tra nhanh trước khi xem bảng SKU</p></div>
+                        <div><h2>Kho dữ liệu đang lưu</h2><p>Tổng hợp tất cả file Shopee đã nhập từ mọi máy</p></div>
                     </div>
                     <div class="import-status-grid three">
-                        <div class="import-status-box"><span>Tổng dòng SKU đọc được</span><strong id="importOrderCount">0</strong></div>
+                        <div class="import-status-box"><span>Tổng dòng SKU đang lưu</span><strong id="importOrderCount">0</strong></div>
                         <div class="import-status-box"><span>Trạng thái khác nhau</span><strong id="importStatusCount">0</strong></div>
-                        <div class="import-status-box"><span>SKU khác nhau trong file</span><strong id="importRawSkuCount">0</strong></div>
+                        <div class="import-status-box"><span>SKU khác nhau đã lưu</span><strong id="importRawSkuCount">0</strong></div>
                     </div>
                     <div class="reconcile-actions">
                         <button id="btnOpenSkuStats" class="btn btn-primary btn-large">🧮 XEM THỐNG KÊ & QUY ĐỔI SKU</button>
+                    </div>
+                </div>
+
+                <div class="panel saved-data-panel">
+                    <div class="panel-header table-toolbar">
+                        <div>
+                            <h2>Dữ liệu đã lưu theo ngày</h2>
+                            <p>Mỗi ngày là một nhóm dữ liệu. Bảng thống kê SKU có thể chọn 1 ngày hoặc cộng nhiều ngày.</p>
+                        </div>
+                        <div class="saved-db-badge">☁️ Supabase Cloud</div>
+                    </div>
+
+                    <div class="saved-summary-grid">
+                        <div class="saved-summary-card">
+                            <span>NGÀY ĐÃ LƯU</span>
+                            <strong id="savedDayCount">0</strong>
+                        </div>
+                        <div class="saved-summary-card">
+                            <span>MÃ ĐƠN</span>
+                            <strong id="savedOrderCount">0</strong>
+                        </div>
+                        <div class="saved-summary-card">
+                            <span>LẦN UPLOAD</span>
+                            <strong id="savedImportCount">0</strong>
+                        </div>
+                        <div class="saved-summary-card">
+                            <span>CẬP NHẬT GẦN NHẤT</span>
+                            <strong class="small-value" id="savedLastImport">-</strong>
+                        </div>
+                    </div>
+
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ngày đặt hàng</th>
+                                    <th class="center">Dòng SKU</th>
+                                    <th class="center">Mã đơn</th>
+                                    <th class="center">SKU khác nhau</th>
+                                    <th>Cập nhật gần nhất</th>
+                                    <th class="center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="savedDaysBody">
+                                <tr><td colspan="6" class="empty-table">Chưa có dữ liệu được lưu.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -519,7 +722,7 @@ button{cursor:pointer}
                     <div class="filter-section-title">
                         <div>
                             <strong>📅 Ngày đặt hàng</strong>
-                            <span>File có 2-3 ngày thì có thể chọn riêng từng ngày hoặc nhiều ngày cùng lúc.</span>
+                            <span>Chọn 1 ngày để xem riêng; chọn nhiều ngày để hệ thống tự cộng thành một bảng tổng.</span>
                         </div>
                     </div>
 
@@ -548,7 +751,7 @@ button{cursor:pointer}
                 <div class="panel-header table-toolbar">
                     <div>
                         <h2>Bảng thống kê & quy đổi SKU</h2>
-                        <p>Ô hệ số bằng 0 được để trống. Chỉ nhập số từ 1 trở lên ở những sản phẩm có quy đổi.</p>
+                        <p id="skuTableScopeText">Bảng dưới là tổng của các ngày và trạng thái đang chọn. Ô hệ số bằng 0 được để trống.</p>
                     </div>
                     <div class="toolbar">
                         <button id="btnAddBaseSku" class="btn btn-light">+ Thêm SKU quy đổi</button>
@@ -692,8 +895,12 @@ window.addEventListener("error", event => {
 ========================================================= */
 
 const state = {
+    // File nhập gần nhất
     fileName: "",
+
+    // Toàn bộ dữ liệu đã lưu từ nhiều lần upload
     skuRows: [],
+    imports: [],
     skuStats: [],
 
     // Bộ lọc trạng thái
@@ -706,7 +913,11 @@ const state = {
 
     countMode: "rows",
     baseSkus: [],
-    conversionRules: {}
+    conversionRules: {},
+
+    // Supabase Cloud
+    user: null,
+    cloudReady: false
 };
 
 const DEFAULT_BASE_SKUS = [
@@ -740,8 +951,6 @@ const DEFAULT_CONVERSION_RULES = {
     RHBS: { RHBS: 1 }
 };
 
-const STORAGE_BASE_SKUS = "rucos_v4_base_skus";
-const STORAGE_CONVERSION_RULES = "rucos_v4_conversion_rules";
 
 const PAGE_INFO = {
     overview: {
@@ -789,6 +998,410 @@ const ALIASES = {
     product: ["Tên sản phẩm", "Sản phẩm", "Product Name", "Tên hàng"],
     quantity: ["Số lượng", "Quantity", "SL"]
 };
+
+
+/* ======================== SUPABASE CLOUD ======================== */
+const SUPABASE_URL = "https://mnqwnnxmemegruwtyyox.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fmlR3AtJuEiqqNMLp7nCMQ_0FNiyBIr";
+
+const DB_ROWS = "shopee_rows";
+const DB_IMPORTS = "imports";
+const DB_TARGETS = "conversion_targets";
+const DB_RULES = "conversion_rules";
+
+let supabaseClient = null;
+
+function initSupabaseClient() {
+    if (!window.supabase?.createClient) {
+        throw new Error("Không tải được thư viện Supabase.");
+    }
+
+    if (!supabaseClient) {
+        supabaseClient = window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_PUBLISHABLE_KEY,
+            {
+                auth: {
+                    persistSession: true,
+                    autoRefreshToken: true,
+                    detectSessionInUrl: true
+                }
+            }
+        );
+    }
+
+    return supabaseClient;
+}
+
+function setCloudStatus(message, mode = "ok") {
+    const badge = document.querySelector(".saved-db-badge");
+    if (!badge) return;
+
+    badge.textContent = message;
+    badge.classList.remove("syncing", "error");
+
+    if (mode === "syncing") badge.classList.add("syncing");
+    if (mode === "error") badge.classList.add("error");
+}
+
+async function cloudSelectAll(tableName, orderColumn = null) {
+    const client = initSupabaseClient();
+    const pageSize = 1000;
+    let from = 0;
+    const result = [];
+
+    while (true) {
+        let query = client
+            .from(tableName)
+            .select("*")
+            .range(from, from + pageSize - 1);
+
+        if (orderColumn) {
+            query = query.order(orderColumn, { ascending: true });
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        const batch = data || [];
+        result.push(...batch);
+
+        if (batch.length < pageSize) break;
+        from += pageSize;
+    }
+
+    return result;
+}
+
+function cloudRowToState(row) {
+    return {
+        rowKey: row.row_key,
+        orderDate: row.order_date || "",
+        orderDateRaw: row.order_date || "",
+        orderId: row.order_id || "",
+        status: row.status || "",
+        sku: row.sku || "",
+        product: row.product || "",
+        quantity: Number(row.quantity || 0),
+        sourceFile: row.source_file || "",
+        updatedAt: row.updated_at || ""
+    };
+}
+
+function cloudImportToState(info) {
+    return {
+        hash: info.file_hash,
+        fileName: info.file_name || "",
+        fileSize: Number(info.file_size || 0),
+        importedAt: info.imported_at || "",
+        rowCount: Number(info.row_count || 0),
+        added: Number(info.added || 0),
+        updated: Number(info.updated || 0),
+        unchanged: Number(info.unchanged || 0),
+        dates: Array.isArray(info.dates) ? info.dates : []
+    };
+}
+
+async function dbGetAll(storeName) {
+    if (storeName === DB_ROWS) {
+        return (await cloudSelectAll(DB_ROWS, "order_date")).map(cloudRowToState);
+    }
+
+    if (storeName === DB_IMPORTS) {
+        return (await cloudSelectAll(DB_IMPORTS, "imported_at")).map(cloudImportToState);
+    }
+
+    return await cloudSelectAll(storeName);
+}
+
+async function dbGet(storeName, key) {
+    const client = initSupabaseClient();
+    const keyColumn =
+        storeName === DB_ROWS ? "row_key" :
+        storeName === DB_IMPORTS ? "file_hash" :
+        storeName === DB_TARGETS ? "target_sku" :
+        null;
+
+    if (!keyColumn) return null;
+
+    const { data, error } = await client
+        .from(storeName)
+        .select("*")
+        .eq(keyColumn, key)
+        .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    if (storeName === DB_ROWS) return cloudRowToState(data);
+    if (storeName === DB_IMPORTS) return cloudImportToState(data);
+    return data;
+}
+
+async function dbPutManyRows(rows) {
+    if (!rows.length) return;
+
+    const client = initSupabaseClient();
+    const chunkSize = 400;
+
+    for (let i = 0; i < rows.length; i += chunkSize) {
+        const chunk = rows.slice(i, i + chunkSize).map(row => ({
+            row_key: row.rowKey,
+            order_date: row.orderDate || null,
+            order_id: row.orderId || null,
+            status: row.status || null,
+            sku: row.sku,
+            product: row.product || null,
+            quantity: Number(row.quantity || 0),
+            source_file: row.sourceFile || null,
+            updated_at: row.updatedAt || new Date().toISOString()
+        }));
+
+        const { error } = await client
+            .from(DB_ROWS)
+            .upsert(chunk, { onConflict: "row_key" });
+
+        if (error) throw error;
+    }
+}
+
+async function dbPutImport(importInfo) {
+    const client = initSupabaseClient();
+
+    const payload = {
+        file_hash: importInfo.hash,
+        file_name: importInfo.fileName,
+        file_size: importInfo.fileSize,
+        imported_at: importInfo.importedAt,
+        row_count: importInfo.rowCount,
+        added: importInfo.added,
+        updated: importInfo.updated,
+        unchanged: importInfo.unchanged,
+        dates: importInfo.dates || []
+    };
+
+    const { error } = await client
+        .from(DB_IMPORTS)
+        .upsert(payload, { onConflict: "file_hash" });
+
+    if (error) throw error;
+}
+
+async function dbClearAllSavedData() {
+    const client = initSupabaseClient();
+
+    const { error: rowsError } = await client
+        .from(DB_ROWS)
+        .delete()
+        .neq("row_key", "__never__");
+
+    if (rowsError) throw rowsError;
+
+    const { error: importsError } = await client
+        .from(DB_IMPORTS)
+        .delete()
+        .neq("file_hash", "__never__");
+
+    if (importsError) throw importsError;
+}
+
+async function dbDeleteSavedDate(dateKey) {
+    const client = initSupabaseClient();
+
+    const { error: rowError } = await client
+        .from(DB_ROWS)
+        .delete()
+        .eq("order_date", dateKey);
+
+    if (rowError) throw rowError;
+
+    // Cho phép upload lại các file từng chứa ngày vừa xóa.
+    const { error: importError } = await client
+        .from(DB_IMPORTS)
+        .delete()
+        .contains("dates", [dateKey]);
+
+    if (importError) throw importError;
+}
+
+function createPersistentRowKey(row) {
+    const order = normalizeText(row.orderId || "");
+    const sku = normalizeText(row.sku || "");
+    const product = normalizeText(row.product || "");
+
+    if (order) return `${order}|${sku}|${product}`;
+    return `noorder|${row.orderDate || ""}|${sku}|${product}|${row.quantity || 0}`;
+}
+
+async function createFileFingerprint(file) {
+    try {
+        if (window.crypto?.subtle) {
+            const buffer = await file.arrayBuffer();
+            const digest = await crypto.subtle.digest("SHA-256", buffer);
+
+            return [...new Uint8Array(digest)]
+                .map(byte => byte.toString(16).padStart(2, "0"))
+                .join("");
+        }
+    } catch (error) {
+        console.warn("Không tạo được SHA-256, dùng fingerprint dự phòng.", error);
+    }
+
+    return `${file.name}|${file.size}|${file.lastModified}`;
+}
+
+function rowsAreDifferent(oldRow, newRow) {
+    if (!oldRow) return true;
+
+    return (
+        oldRow.orderDate !== newRow.orderDate ||
+        oldRow.status !== newRow.status ||
+        oldRow.sku !== newRow.sku ||
+        oldRow.product !== newRow.product ||
+        Number(oldRow.quantity || 0) !== Number(newRow.quantity || 0)
+    );
+}
+
+async function loadSavedDataFromDb({ resetFilters = false } = {}) {
+    try {
+        setCloudStatus("☁️ Đang đồng bộ...", "syncing");
+
+        const [rows, imports] = await Promise.all([
+            dbGetAll(DB_ROWS),
+            dbGetAll(DB_IMPORTS)
+        ]);
+
+        state.skuRows = rows.sort((a, b) => {
+            const dateCompare = String(a.orderDate || "").localeCompare(String(b.orderDate || ""));
+            if (dateCompare !== 0) return dateCompare;
+            return String(a.orderId || "").localeCompare(String(b.orderId || ""));
+        });
+
+        state.imports = imports.sort((a, b) =>
+            String(b.importedAt || "").localeCompare(String(a.importedAt || ""))
+        );
+
+        state.fileName = state.imports[0]?.fileName || "";
+        state.cloudReady = true;
+
+        if (resetFilters) {
+            state.selectedStatuses.clear();
+            state.statusFilterInitialized = false;
+            state.selectedDates.clear();
+            state.dateFilterInitialized = false;
+        }
+
+        setCloudStatus("☁️ Supabase Cloud");
+    } catch (error) {
+        console.error("Không tải được dữ liệu cloud:", error);
+        state.cloudReady = false;
+        setCloudStatus("☁️ Lỗi đồng bộ", "error");
+        throw error;
+    }
+}
+
+/* ======================== AUTHENTICATION ======================== */
+function showAuthError(message = "") {
+    const box = $("authError");
+    if (!box) return;
+
+    box.textContent = message;
+    box.classList.toggle("show", Boolean(message));
+}
+
+function setAuthGateVisible(visible) {
+    $("authGate")?.classList.toggle("hidden", !visible);
+}
+
+function updateUserUi() {
+    const email = state.user?.email || "-";
+    if ($("cloudUserEmail")) $("cloudUserEmail").textContent = email;
+}
+
+async function signInUser(email, password) {
+    const client = initSupabaseClient();
+
+    const { data, error } = await client.auth.signInWithPassword({
+        email,
+        password
+    });
+
+    if (error) throw error;
+    return data.session;
+}
+
+async function signOutUser() {
+    const client = initSupabaseClient();
+    const { error } = await client.auth.signOut();
+    if (error) throw error;
+}
+
+async function enterAuthenticatedApp(session) {
+    state.user = session?.user || null;
+
+    if (!state.user) {
+        setAuthGateVisible(true);
+        return;
+    }
+
+    updateUserUi();
+    setAuthGateVisible(false);
+
+    await Promise.all([
+        loadSavedDataFromDb({ resetFilters: true }),
+        loadConversionConfigFromCloud()
+    ]);
+
+    renderAll();
+    openView("overview");
+}
+
+$("authForm")?.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const email = $("loginEmail").value.trim();
+    const password = $("loginPassword").value;
+    const button = $("btnLogin");
+
+    showAuthError("");
+    button.disabled = true;
+    button.textContent = "ĐANG ĐĂNG NHẬP...";
+
+    try {
+        const session = await signInUser(email, password);
+        await enterAuthenticatedApp(session);
+        $("loginPassword").value = "";
+    } catch (error) {
+        console.error(error);
+        showAuthError(
+            error?.message === "Invalid login credentials"
+                ? "Email hoặc mật khẩu không đúng."
+                : (error?.message || "Không đăng nhập được.")
+        );
+    } finally {
+        button.disabled = false;
+        button.textContent = "ĐĂNG NHẬP";
+    }
+});
+
+$("btnLogout")?.addEventListener("click", async () => {
+    try {
+        await signOutUser();
+
+        state.user = null;
+        state.skuRows = [];
+        state.imports = [];
+        state.skuStats = [];
+
+        renderAll();
+        setAuthGateVisible(true);
+        $("loginPassword").value = "";
+    } catch (error) {
+        console.error(error);
+        alert("Không đăng xuất được.");
+    }
+});
+
 
 /* ======================== DOM HELPERS ======================== */
 function $(id) {
@@ -1000,50 +1613,104 @@ $("orderFile").addEventListener("change", async event => {
     if (!file) return;
 
     try {
-        showToast("Đang đọc file Shopee...");
+        showToast("Đang đọc và lưu file Shopee...");
+
+        const fingerprint = await createFileFingerprint(file);
+        const existingImport = await dbGet(DB_IMPORTS, fingerprint);
+
+        if (existingImport) {
+            const importedTime = existingImport.importedAt
+                ? new Date(existingImport.importedAt).toLocaleString("vi-VN")
+                : "";
+
+            $("orderFileStatus").textContent = "ℹ File này đã được nhập trước đó.";
+            $("orderFileStatus").className = "upload-file-status";
+            event.target.value = "";
+
+            alert(
+                `File này đã được lưu trước đó${importedTime ? " lúc " + importedTime : ""}. ` +
+                "Hệ thống không nhập lại để tránh cộng trùng dữ liệu."
+            );
+            return;
+        }
+
         const rows = await readExcelFile(file);
         const parsedRows = parseShopeeRows(rows);
         const validationError = validateShopeeFile(rows, parsedRows, file.name);
 
         if (validationError) {
-            state.fileName = "";
-            state.skuRows = [];
-            state.skuStats = [];
-            state.selectedStatuses.clear();
-            state.statusFilterInitialized = false;
-            state.selectedDates.clear();
-            state.dateFilterInitialized = false;
             $("orderFileStatus").textContent = "✕ " + validationError;
             $("orderFileStatus").className = "upload-file-status error";
             event.target.value = "";
-            renderAll();
             alert(validationError);
             return;
         }
 
-        state.fileName = file.name;
-        state.skuRows = parsedRows;
-        state.skuStats = [];
-        state.selectedStatuses.clear();
-        state.statusFilterInitialized = false;
-        state.selectedDates.clear();
-        state.dateFilterInitialized = false;
+        // Lấy bản cloud mới nhất trước khi so sánh để tránh cộng trùng
+        // khi nhiều máy cùng thao tác.
+        await loadSavedDataFromDb({ resetFilters: false });
 
-        $("orderFileStatus").textContent = "✓ " + file.name;
+        const nowIso = new Date().toISOString();
+        const currentMap = new Map(
+            state.skuRows.map(row => [row.rowKey || createPersistentRowKey(row), row])
+        );
+
+        let added = 0;
+        let updated = 0;
+        let unchanged = 0;
+
+        const rowsToSave = parsedRows.map(row => {
+            const rowKey = createPersistentRowKey(row);
+            const oldRow = currentMap.get(rowKey);
+
+            if (!oldRow) added++;
+            else if (rowsAreDifferent(oldRow, row)) updated++;
+            else unchanged++;
+
+            return {
+                ...row,
+                rowKey,
+                updatedAt: nowIso,
+                sourceFile: file.name
+            };
+        });
+
+        await dbPutManyRows(rowsToSave);
+
+        const dates = [...new Set(
+            parsedRows.map(row => row.orderDate).filter(Boolean)
+        )].sort();
+
+        await dbPutImport({
+            hash: fingerprint,
+            fileName: file.name,
+            fileSize: file.size,
+            importedAt: nowIso,
+            rowCount: parsedRows.length,
+            added,
+            updated,
+            unchanged,
+            dates
+        });
+
+        await loadSavedDataFromDb({ resetFilters: true });
+
+        $("orderFileStatus").textContent =
+            `✓ Đã lưu ${file.name} · +${formatNumber(added)} mới · ${formatNumber(updated)} cập nhật`;
         $("orderFileStatus").className = "upload-file-status success";
+        event.target.value = "";
 
-        renderDateFilters();
-        renderStatusFilters();
-        rebuildSkuStatistics();
-        renderImportSummary();
-        renderTopFileState();
+        renderAll();
+        openView("sku-stats");
 
-        showToast(`Đã đọc ${formatNumber(parsedRows.length)} dòng SKU từ Shopee.`);
+        showToast(
+            `Đã lưu file: ${formatNumber(added)} dòng mới, ${formatNumber(updated)} dòng cập nhật.`
+        );
     } catch (error) {
         console.error(error);
-        $("orderFileStatus").textContent = "✕ Không đọc được file.";
+        $("orderFileStatus").textContent = "✕ Không đọc/lưu được file.";
         $("orderFileStatus").className = "upload-file-status error";
-        alert("Không đọc được file Excel. Hãy kiểm tra lại file Shopee.");
+        alert("Không đọc hoặc lưu được file Excel. Hãy kiểm tra lại file Shopee.");
     }
 });
 
@@ -1252,6 +1919,20 @@ function rebuildSkuStatistics() {
 
     $("navSkuCount").textContent = state.skuStats.length;
 
+    const scopeText = $("skuTableScopeText");
+    if (scopeText) {
+        const selectedDateLabels = [...state.selectedDates]
+            .sort()
+            .map(formatDateLabel);
+
+        const dateText = selectedDateLabels.length
+            ? selectedDateLabels.join(" + ")
+            : "chưa chọn ngày";
+
+        scopeText.textContent =
+            `BẢNG TỔNG: ${dateText} · ${formatNumber(filteredRows)} dòng SKU sau khi lọc trạng thái.`;
+    }
+
     renderConversionTable();
     renderConvertedTotals();
     renderOverviewSkuTable();
@@ -1264,67 +1945,208 @@ function deepClone(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-function loadConversionConfig() {
-    try {
-        const savedBase = JSON.parse(localStorage.getItem(STORAGE_BASE_SKUS) || "null");
-        const savedRules = JSON.parse(localStorage.getItem(STORAGE_CONVERSION_RULES) || "null");
+function flattenDefaultRules() {
+    const rows = [];
 
-        state.baseSkus = Array.isArray(savedBase) && savedBase.length
-            ? savedBase
-            : [...DEFAULT_BASE_SKUS];
+    Object.entries(DEFAULT_CONVERSION_RULES).forEach(([sourceSku, rule]) => {
+        Object.entries(rule).forEach(([targetSku, factor]) => {
+            const number = Number(factor) || 0;
 
-        state.conversionRules = savedRules && typeof savedRules === "object"
-            ? savedRules
-            : deepClone(DEFAULT_CONVERSION_RULES);
-    } catch (error) {
-        state.baseSkus = [...DEFAULT_BASE_SKUS];
-        state.conversionRules = deepClone(DEFAULT_CONVERSION_RULES);
+            if (number > 0) {
+                rows.push({
+                    source_sku: sourceSku,
+                    target_sku: targetSku,
+                    factor: number,
+                    updated_at: new Date().toISOString()
+                });
+            }
+        });
+    });
+
+    return rows;
+}
+
+async function seedDefaultConversionCloud() {
+    const client = initSupabaseClient();
+
+    const targetRows = DEFAULT_BASE_SKUS.map((sku, index) => ({
+        target_sku: sku,
+        sort_order: index,
+        updated_at: new Date().toISOString()
+    }));
+
+    const { error: targetError } = await client
+        .from(DB_TARGETS)
+        .upsert(targetRows, { onConflict: "target_sku" });
+
+    if (targetError) throw targetError;
+
+    const ruleRows = flattenDefaultRules();
+
+    if (ruleRows.length) {
+        const { error: ruleError } = await client
+            .from(DB_RULES)
+            .upsert(ruleRows, { onConflict: "source_sku,target_sku" });
+
+        if (ruleError) throw ruleError;
     }
 }
 
-function applyOfficialConversionUpdateV8() {
-    DEFAULT_BASE_SKUS.forEach(baseSku => {
-        if (!state.baseSkus.includes(baseSku)) {
-            state.baseSkus.push(baseSku);
+async function loadConversionConfigFromCloud() {
+    const client = initSupabaseClient();
+
+    let { data: targets, error: targetError } = await client
+        .from(DB_TARGETS)
+        .select("*")
+        .order("sort_order", { ascending: true });
+
+    if (targetError) throw targetError;
+
+    let { data: rules, error: rulesError } = await client
+        .from(DB_RULES)
+        .select("*");
+
+    if (rulesError) throw rulesError;
+
+    if (!targets?.length) {
+        await seedDefaultConversionCloud();
+
+        const targetReload = await client
+            .from(DB_TARGETS)
+            .select("*")
+            .order("sort_order", { ascending: true });
+
+        if (targetReload.error) throw targetReload.error;
+        targets = targetReload.data || [];
+    }
+
+    if (!rules?.length) {
+        await seedDefaultConversionCloud();
+
+        const rulesReload = await client
+            .from(DB_RULES)
+            .select("*");
+
+        if (rulesReload.error) throw rulesReload.error;
+        rules = rulesReload.data || [];
+    }
+
+    state.baseSkus = (targets || []).map(row => row.target_sku);
+
+    state.conversionRules = {};
+
+    (rules || []).forEach(row => {
+        if (!state.conversionRules[row.source_sku]) {
+            state.conversionRules[row.source_sku] = {};
         }
+
+        state.conversionRules[row.source_sku][row.target_sku] =
+            Number(row.factor) || 0;
     });
-
-    const officialRules = {
-        RTB: { RTB: 1, REWD: 1 },
-        "2REWD": { REWD: 3 },
-        "2RCS": { RCS: 3 },
-        ROE: { ROE: 1 },
-        CROE: { ROE: 1, "OBM-100326-2": 1 },
-        REWGS: { REWGS: 1 },
-        RKN: { RKN: 1 },
-        REWS: { REWS: 1 },
-        REWD: { REWD: 1 },
-        RCS: { RCS: 1 },
-        "R-CB06": { ROE: 1, RCS: 1 },
-        RHBS: { RHBS: 1 }
-    };
-
-    Object.entries(officialRules).forEach(([sourceSku, rule]) => {
-        state.conversionRules[sourceSku] = { ...rule };
-    });
-
-    saveConversionConfig();
-}
-
-function saveConversionConfig() {
-    localStorage.setItem(STORAGE_BASE_SKUS, JSON.stringify(state.baseSkus));
-    localStorage.setItem(STORAGE_CONVERSION_RULES, JSON.stringify(state.conversionRules));
 }
 
 function getConversionFactor(sourceSku, baseSku) {
     return Number(state.conversionRules?.[sourceSku]?.[baseSku]) || 0;
 }
 
-function setConversionFactor(sourceSku, baseSku, value) {
-    if (!state.conversionRules[sourceSku]) state.conversionRules[sourceSku] = {};
+async function setConversionFactor(sourceSku, baseSku, value) {
+    const client = initSupabaseClient();
     const number = Math.max(0, Number(value) || 0);
+
+    if (!state.conversionRules[sourceSku]) {
+        state.conversionRules[sourceSku] = {};
+    }
+
+    if (number <= 0) {
+        delete state.conversionRules[sourceSku][baseSku];
+
+        const { error } = await client
+            .from(DB_RULES)
+            .delete()
+            .eq("source_sku", sourceSku)
+            .eq("target_sku", baseSku);
+
+        if (error) throw error;
+        return;
+    }
+
     state.conversionRules[sourceSku][baseSku] = number;
-    saveConversionConfig();
+
+    const { error } = await client
+        .from(DB_RULES)
+        .upsert({
+            source_sku: sourceSku,
+            target_sku: baseSku,
+            factor: number,
+            updated_at: new Date().toISOString()
+        }, { onConflict: "source_sku,target_sku" });
+
+    if (error) throw error;
+}
+
+async function addConversionTargetCloud(sku) {
+    const client = initSupabaseClient();
+
+    const { error } = await client
+        .from(DB_TARGETS)
+        .upsert({
+            target_sku: sku,
+            sort_order: state.baseSkus.length,
+            updated_at: new Date().toISOString()
+        }, { onConflict: "target_sku" });
+
+    if (error) throw error;
+
+    if (!state.baseSkus.includes(sku)) {
+        state.baseSkus.push(sku);
+    }
+}
+
+async function removeConversionTargetCloud(sku) {
+    const client = initSupabaseClient();
+
+    const { error: ruleError } = await client
+        .from(DB_RULES)
+        .delete()
+        .eq("target_sku", sku);
+
+    if (ruleError) throw ruleError;
+
+    const { error: targetError } = await client
+        .from(DB_TARGETS)
+        .delete()
+        .eq("target_sku", sku);
+
+    if (targetError) throw targetError;
+
+    state.baseSkus = state.baseSkus.filter(item => item !== sku);
+
+    Object.values(state.conversionRules).forEach(rule => {
+        if (rule && typeof rule === "object") {
+            delete rule[sku];
+        }
+    });
+}
+
+async function resetConversionCloud() {
+    const client = initSupabaseClient();
+
+    const { error: ruleError } = await client
+        .from(DB_RULES)
+        .delete()
+        .neq("source_sku", "__never__");
+
+    if (ruleError) throw ruleError;
+
+    const { error: targetError } = await client
+        .from(DB_TARGETS)
+        .delete()
+        .neq("target_sku", "__never__");
+
+    if (targetError) throw targetError;
+
+    await seedDefaultConversionCloud();
+    await loadConversionConfigFromCloud();
 }
 
 function hasAnyConversion(sourceSku) {
@@ -1438,11 +2260,28 @@ function renderConversionTable() {
     document.querySelectorAll(".conversion-input").forEach(input => {
         input.addEventListener("focus", () => input.select());
 
-        input.addEventListener("change", () => {
+        input.addEventListener("change", async () => {
             const raw = String(input.value || "").trim();
             const finalValue = raw === "" ? 0 : Math.max(0, Number(raw) || 0);
-            setConversionFactor(input.dataset.sourceSku, input.dataset.baseSku, finalValue);
-            rebuildSkuStatistics();
+
+            try {
+                setCloudStatus("☁️ Đang lưu quy đổi...", "syncing");
+
+                await setConversionFactor(
+                    input.dataset.sourceSku,
+                    input.dataset.baseSku,
+                    finalValue
+                );
+
+                rebuildSkuStatistics();
+                setCloudStatus("☁️ Supabase Cloud");
+            } catch (error) {
+                console.error(error);
+                setCloudStatus("☁️ Lỗi lưu quy đổi", "error");
+                alert("Không lưu được hệ số quy đổi lên cloud.");
+                await loadConversionConfigFromCloud();
+                rebuildSkuStatistics();
+            }
         });
     });
 
@@ -1451,22 +2290,25 @@ function renderConversionTable() {
 
 function bindRemoveBaseSkuButtons() {
     document.querySelectorAll(".remove-base-sku").forEach(button => {
-        button.addEventListener("click", () => {
+        button.addEventListener("click", async () => {
             const sku = button.dataset.baseSku;
-            if (!confirm(`Xóa cột quy đổi ${sku}?`)) return;
+            if (!confirm(`Xóa cột quy đổi ${sku} khỏi dữ liệu cloud?`)) return;
 
-            state.baseSkus = state.baseSkus.filter(item => item !== sku);
-            Object.values(state.conversionRules).forEach(rule => {
-                if (rule && typeof rule === "object") delete rule[sku];
-            });
-
-            saveConversionConfig();
-            rebuildSkuStatistics();
+            try {
+                setCloudStatus("☁️ Đang cập nhật...", "syncing");
+                await removeConversionTargetCloud(sku);
+                rebuildSkuStatistics();
+                setCloudStatus("☁️ Supabase Cloud");
+            } catch (error) {
+                console.error(error);
+                setCloudStatus("☁️ Lỗi đồng bộ", "error");
+                alert("Không xóa được SKU quy đổi trên cloud.");
+            }
         });
     });
 }
 
-$("btnAddBaseSku").addEventListener("click", () => {
+$("btnAddBaseSku").addEventListener("click", async () => {
     const value = prompt("Nhập SKU kho / SKU quy đổi muốn thêm:");
     if (!value) return;
 
@@ -1478,19 +2320,32 @@ $("btnAddBaseSku").addEventListener("click", () => {
         return;
     }
 
-    state.baseSkus.push(sku);
-    saveConversionConfig();
-    rebuildSkuStatistics();
+    try {
+        setCloudStatus("☁️ Đang cập nhật...", "syncing");
+        await addConversionTargetCloud(sku);
+        rebuildSkuStatistics();
+        setCloudStatus("☁️ Supabase Cloud");
+    } catch (error) {
+        console.error(error);
+        setCloudStatus("☁️ Lỗi đồng bộ", "error");
+        alert("Không thêm được SKU quy đổi lên cloud.");
+    }
 });
 
-$("btnResetConversions").addEventListener("click", () => {
-    if (!confirm("Khôi phục bảng quy đổi mẫu ban đầu?")) return;
+$("btnResetConversions").addEventListener("click", async () => {
+    if (!confirm("Khôi phục bảng quy đổi mẫu trên CLOUD? Thay đổi quy đổi hiện tại sẽ bị ghi lại.")) return;
 
-    state.baseSkus = [...DEFAULT_BASE_SKUS];
-    state.conversionRules = deepClone(DEFAULT_CONVERSION_RULES);
-    saveConversionConfig();
-    rebuildSkuStatistics();
-    showToast("Đã khôi phục bảng quy đổi mẫu.");
+    try {
+        setCloudStatus("☁️ Đang khôi phục...", "syncing");
+        await resetConversionCloud();
+        rebuildSkuStatistics();
+        setCloudStatus("☁️ Supabase Cloud");
+        showToast("Đã khôi phục bảng quy đổi mẫu trên cloud.");
+    } catch (error) {
+        console.error(error);
+        setCloudStatus("☁️ Lỗi đồng bộ", "error");
+        alert("Không khôi phục được bảng quy đổi.");
+    }
 });
 
 function renderConvertedTotals() {
@@ -1540,20 +2395,27 @@ function renderOverviewSkuTable() {
 }
 
 function renderOverviewFileSummary() {
-    $("overviewFileName").textContent = state.fileName || "Chưa nhập file";
+    const dates = new Set(state.skuRows.map(row => row.orderDate).filter(Boolean));
+    $("overviewFileName").textContent = state.skuRows.length
+        ? `${formatNumber(dates.size)} ngày dữ liệu đã lưu`
+        : "Chưa có dữ liệu";
 
     if (!state.skuRows.length) {
-        $("overviewFileSummary").innerHTML = '<div class="empty-box">Chọn file đơn hàng gốc Shopee để bắt đầu.</div>';
+        $("overviewFileSummary").innerHTML =
+            '<div class="empty-box">Nhập file đơn hàng Shopee để bắt đầu. Dữ liệu sẽ được lưu lên Supabase Cloud và dùng chung trên các máy.</div>';
         return;
     }
 
     const statuses = new Set(state.skuRows.map(row => row.status));
     const rawSkus = new Set(state.skuRows.map(row => row.sku));
+    const orders = new Set(state.skuRows.map(row => row.orderId).filter(Boolean));
 
     $("overviewFileSummary").innerHTML = `
-        <div class="summary-row"><span>Dòng SKU đọc được</span><strong>${formatNumber(state.skuRows.length)}</strong></div>
-        <div class="summary-row"><span>Trạng thái khác nhau</span><strong>${formatNumber(statuses.size)}</strong></div>
-        <div class="summary-row"><span>SKU khác nhau trong file</span><strong>${formatNumber(rawSkus.size)}</strong></div>
+        <div class="summary-row"><span>Ngày đã lưu</span><strong>${formatNumber(dates.size)}</strong></div>
+        <div class="summary-row"><span>Dòng SKU đang lưu</span><strong>${formatNumber(state.skuRows.length)}</strong></div>
+        <div class="summary-row"><span>Mã đơn khác nhau</span><strong>${formatNumber(orders.size)}</strong></div>
+        <div class="summary-row"><span>SKU khác nhau</span><strong>${formatNumber(rawSkus.size)}</strong></div>
+        <div class="summary-row"><span>Lần upload đã lưu</span><strong>${formatNumber(state.imports.length)}</strong></div>
     `;
 }
 
@@ -1566,16 +2428,123 @@ function renderImportSummary() {
     $("importRawSkuCount").textContent = formatNumber(rawSkus.size);
 }
 
+function formatDateTimeVi(isoText) {
+    if (!isoText) return "-";
+    const date = new Date(isoText);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+function renderSavedDays() {
+    const body = $("savedDaysBody");
+    if (!body) return;
+
+    const groups = new Map();
+
+    state.skuRows.forEach(row => {
+        const key = row.orderDate || "";
+
+        if (!groups.has(key)) {
+            groups.set(key, {
+                dateKey: key,
+                rows: 0,
+                orders: new Set(),
+                skus: new Set(),
+                lastUpdated: ""
+            });
+        }
+
+        const group = groups.get(key);
+        group.rows++;
+        if (row.orderId) group.orders.add(row.orderId);
+        if (row.sku) group.skus.add(row.sku);
+
+        if (String(row.updatedAt || "") > String(group.lastUpdated || "")) {
+            group.lastUpdated = row.updatedAt || "";
+        }
+    });
+
+    const days = [...groups.values()]
+        .sort((a, b) => String(b.dateKey).localeCompare(String(a.dateKey)));
+
+    const allOrders = new Set(
+        state.skuRows.map(row => row.orderId).filter(Boolean)
+    );
+
+    $("savedDayCount").textContent = formatNumber(days.filter(x => x.dateKey).length);
+    $("savedOrderCount").textContent = formatNumber(allOrders.size);
+    $("savedImportCount").textContent = formatNumber(state.imports.length);
+    $("savedLastImport").textContent =
+        state.imports[0]?.importedAt
+            ? formatDateTimeVi(state.imports[0].importedAt)
+            : "-";
+
+    if (!days.length) {
+        body.innerHTML =
+            '<tr><td colspan="6" class="empty-table">Chưa có dữ liệu được lưu.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = days.map(group => `
+        <tr>
+            <td>
+                <span class="saved-day-date">${group.dateKey ? formatDateLabel(group.dateKey) : "(Không có ngày)"}</span>
+                <span class="saved-day-sub">${escapeHTML(group.dateKey || "")}</span>
+            </td>
+            <td class="center"><strong>${formatNumber(group.rows)}</strong></td>
+            <td class="center">${formatNumber(group.orders.size)}</td>
+            <td class="center">${formatNumber(group.skus.size)}</td>
+            <td>${formatDateTimeVi(group.lastUpdated)}</td>
+            <td class="center">
+                ${group.dateKey
+                    ? `<button class="btn-delete-day" data-delete-date="${escapeHTML(group.dateKey)}">Xóa ngày</button>`
+                    : ""}
+            </td>
+        </tr>
+    `).join("");
+
+    document.querySelectorAll("[data-delete-date]").forEach(button => {
+        button.addEventListener("click", async () => {
+            const dateKey = button.dataset.deleteDate;
+            if (!dateKey) return;
+
+            if (!confirm(
+                `Xóa toàn bộ dữ liệu ngày ${formatDateLabel(dateKey)} khỏi SUPABASE CLOUD? ` +
+                "Bảng hệ số quy đổi vẫn được giữ nguyên."
+            )) return;
+
+            try {
+                await dbDeleteSavedDate(dateKey);
+                await loadSavedDataFromDb({ resetFilters: true });
+                renderAll();
+                showToast(`Đã xóa dữ liệu ngày ${formatDateLabel(dateKey)}.`);
+            } catch (error) {
+                console.error(error);
+                alert("Không xóa được dữ liệu ngày này.");
+            }
+        });
+    });
+}
+
+
 function renderTopFileState() {
     const pill = $("topFilePill");
     const text = $("topFileText");
 
-    if (state.fileName) {
+    if (state.skuRows.length) {
+        const days = new Set(state.skuRows.map(row => row.orderDate).filter(Boolean));
         pill.classList.add("loaded");
-        text.textContent = state.fileName;
+        text.textContent =
+            `Đã lưu ${formatNumber(days.size)} ngày · ${formatNumber(state.skuRows.length)} dòng`;
     } else {
         pill.classList.remove("loaded");
-        text.textContent = "Chưa có file Shopee";
+        text.textContent = "Chưa có dữ liệu Shopee";
     }
 }
 
@@ -1751,23 +2720,35 @@ $("btnOpenSkuStats").addEventListener("click", () => {
     openView("sku-stats");
 });
 
-$("btnReset").addEventListener("click", () => {
-    if (!confirm("Xóa file và toàn bộ dữ liệu đang thống kê? Bảng hệ số quy đổi vẫn được giữ lại.")) return;
+$("btnReset").addEventListener("click", async () => {
+    if (!confirm(
+        "Xóa TOÀN BỘ dữ liệu Shopee trên SUPABASE CLOUD? Dữ liệu sẽ mất trên tất cả máy. " +
+        "Bảng hệ số quy đổi SKU vẫn được giữ lại."
+    )) return;
 
-    state.fileName = "";
-    state.skuRows = [];
-    state.skuStats = [];
-    state.selectedStatuses.clear();
-    state.statusFilterInitialized = false;
-    state.selectedDates.clear();
-    state.dateFilterInitialized = false;
-    $("orderFile").value = "";
-    $("orderFileStatus").textContent = "Chưa có file";
-    $("orderFileStatus").className = "upload-file-status";
+    try {
+        await dbClearAllSavedData();
 
-    renderAll();
-    openView("overview");
-    showToast("Đã xóa dữ liệu đang nhập.");
+        state.fileName = "";
+        state.skuRows = [];
+        state.imports = [];
+        state.skuStats = [];
+        state.selectedStatuses.clear();
+        state.statusFilterInitialized = false;
+        state.selectedDates.clear();
+        state.dateFilterInitialized = false;
+
+        $("orderFile").value = "";
+        $("orderFileStatus").textContent = "Chưa có file";
+        $("orderFileStatus").className = "upload-file-status";
+
+        renderAll();
+        openView("overview");
+        showToast("Đã xóa toàn bộ dữ liệu Shopee đã lưu.");
+    } catch (error) {
+        console.error(error);
+        alert("Không xóa được dữ liệu đã lưu.");
+    }
 });
 
 /* ======================== TOAST ======================== */
@@ -1784,6 +2765,7 @@ function showToast(message) {
 function renderAll() {
     renderTopFileState();
     renderImportSummary();
+    renderSavedDays();
     renderDateFilters();
     renderStatusFilters();
     rebuildSkuStatistics();
@@ -1793,10 +2775,53 @@ function renderAll() {
     refreshNavCounts();
 }
 
-loadConversionConfig();
-applyOfficialConversionUpdateV8();
-renderAll();
-openView("overview");
+async function initApp() {
+    try {
+        const client = initSupabaseClient();
+
+        const { data, error } = await client.auth.getSession();
+        if (error) throw error;
+
+        const session = data?.session || null;
+
+        if (!session) {
+            state.user = null;
+            updateUserUi();
+            renderAll();
+            setAuthGateVisible(true);
+        } else {
+            await enterAuthenticatedApp(session);
+        }
+
+        client.auth.onAuthStateChange((event, session) => {
+            if (event === "SIGNED_OUT") {
+                state.user = null;
+                updateUserUi();
+                setAuthGateVisible(true);
+                return;
+            }
+
+            if (event === "SIGNED_IN" && session?.user) {
+                // Tránh chạy trực tiếp truy vấn DB ngay trong callback auth.
+                setTimeout(() => {
+                    enterAuthenticatedApp(session).catch(error => {
+                        console.error("Lỗi tải dữ liệu sau đăng nhập:", error);
+                        showAuthError("Đăng nhập được nhưng không tải được database. Kiểm tra SQL/RLS.");
+                    });
+                }, 0);
+            }
+        });
+    } catch (error) {
+        console.error("Lỗi khởi động ứng dụng:", error);
+        renderAll();
+        setAuthGateVisible(true);
+        showAuthError(
+            "Không kết nối được Supabase. Kiểm tra Project URL, Publishable key và kết nối Internet."
+        );
+    }
+}
+
+initApp();
 
 </script>
 </body>
