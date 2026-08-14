@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V14: lưu TOÀN BỘ file, lọc động SÁNG/CHIỀU, bảng quy đổi SÁNG/CHIỀU/TỔNG -->
+    <!-- ONE-FILE V15: nhập file gọn, chuyển bộ lọc SÁNG/CHIỀU sang tab THỐNG KÊ -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -652,6 +652,209 @@ button{cursor:pointer}
 .converted-shift-value{font-weight:750;color:#334b55}
 .converted-total-value{font-weight:850;color:#087863;font-size:11px}
 
+
+/* =========================================================
+   V15 - BỘ LỌC SÁNG/CHIỀU ĐƯA SANG THỐNG KÊ
+========================================================= */
+
+/* Trang nhập dữ liệu gọn hơn */
+.compact-upload-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-bottom:14px;
+}
+.compact-upload-card{
+    border:1px solid #dce5e9;
+    border-radius:10px;
+    background:#fff;
+    padding:15px;
+    min-height:145px;
+}
+.compact-upload-card.morning{
+    border-top:3px solid #f2b43d;
+}
+.compact-upload-card.afternoon{
+    border-top:3px solid #5aa6e6;
+}
+.compact-upload-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+}
+.compact-upload-head strong{
+    font-size:11px;
+    color:#253a44;
+}
+.compact-upload-card p{
+    color:#80919c;
+    font-size:8.5px;
+    line-height:1.45;
+    margin-bottom:10px;
+}
+.compact-upload-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+.compact-upload-status{
+    flex:1;
+    min-height:34px;
+    padding:7px 9px;
+    border:1px solid #e0e7eb;
+    border-radius:7px;
+    background:#fafcfd;
+    color:#7b8d98;
+    font-size:8px;
+    line-height:1.35;
+}
+.compact-upload-status.loaded{
+    border-color:#b9e0d7;
+    background:#f1faf8;
+    color:#356f63;
+}
+
+/* Khu vực bộ lọc trên Thống kê */
+.stats-shift-filter-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    padding:0 16px 14px;
+}
+.stats-shift-filter-card{
+    border:1px solid #dfe7eb;
+    border-radius:10px;
+    background:#fff;
+    overflow:hidden;
+}
+.stats-shift-filter-card.morning{
+    border-top:3px solid #f2b43d;
+}
+.stats-shift-filter-card.afternoon{
+    border-top:3px solid #5aa6e6;
+}
+.stats-shift-filter-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:10px 11px;
+    border-bottom:1px solid #edf1f3;
+    background:#fafcfd;
+}
+.stats-shift-filter-header strong{
+    font-size:10px;
+    color:#263c46;
+}
+.stats-shift-filter-header span{
+    font-size:8px;
+    color:#8a9ba5;
+}
+.stats-shift-filter-body{
+    padding:10px 11px;
+}
+.stats-filter-date-row{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    margin-bottom:9px;
+}
+.stats-filter-date-label{
+    min-width:78px;
+    padding-top:7px;
+    font-size:8px;
+    font-weight:750;
+    color:#607580;
+}
+.stats-filter-date-control{
+    flex:1;
+}
+.stats-filter-date-control input[type="date"]{
+    width:100%;
+    height:32px;
+    padding:0 8px;
+    border:1px solid #d3dde2;
+    border-radius:6px;
+    background:#fff;
+    font-family:inherit;
+    font-size:9px;
+    font-weight:650;
+    outline:none;
+}
+.stats-filter-date-control input[type="date"]:focus{
+    border-color:#66c7b5;
+    box-shadow:0 0 0 2px rgba(15,155,129,.07);
+}
+.stats-filter-date-buttons{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    margin-top:5px;
+}
+.stats-filter-date-buttons .available-date-btn{
+    min-height:22px;
+    padding:3px 6px;
+    font-size:7.5px;
+}
+.stats-filter-status-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+    margin-bottom:6px;
+}
+.stats-filter-status-title strong{
+    font-size:8px;
+    color:#607580;
+}
+.stats-filter-status-actions{
+    display:flex;
+    gap:4px;
+}
+.stats-filter-status-actions .shift-status-action{
+    height:22px;
+    font-size:7.5px;
+    padding:0 6px;
+}
+.stats-filter-status-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+}
+.stats-filter-status-grid .shift-status-check{
+    padding:5px 6px;
+    max-width:260px;
+}
+.stats-filter-status-grid .shift-status-check span{
+    font-size:7.5px;
+}
+.stats-shift-filter-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px dashed #e5eaed;
+}
+.stats-shift-filter-footer span{
+    color:#768893;
+    font-size:8px;
+}
+.stats-shift-filter-footer strong{
+    color:#087863;
+    font-size:10px;
+}
+
+@media(max-width:1000px){
+    .stats-shift-filter-grid,
+    .compact-upload-grid{
+        grid-template-columns:1fr;
+    }
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -878,87 +1081,50 @@ button{cursor:pointer}
                 <div class="panel">
                     <div class="panel-header">
                         <div>
-                            <h2>2. Nhập file theo ca</h2>
-                            <p>Mỗi file được đọc và lưu TOÀN BỘ. Ngày + trạng thái bên dưới chỉ dùng để lọc thống kê và có thể đổi bất kỳ lúc nào.</p>
+                            <h2>2. Upload file theo ca</h2>
+                            <p>Mỗi file được lưu TOÀN BỘ. Việc chọn ngày + trạng thái sẽ thực hiện ở tab Thống kê SKU.</p>
                         </div>
                     </div>
 
-                    <div class="shift-tabs">
-                        <button type="button" class="shift-tab-btn active" data-shift-tab="morning">🌤️ BUỔI SÁNG</button>
-                        <button type="button" class="shift-tab-btn" data-shift-tab="afternoon">🌇 BUỔI CHIỀU</button>
-                    </div>
-
-                    <div id="shiftPaneMorning" class="shift-pane active">
-                        <div class="shift-config-grid">
-                            <div class="shift-config-box">
-                                <label>📅 NGÀY ĐƠN HÀNG CẦN LẤY</label>
-                                <input id="morningSourceDate" type="date">
-                                <div class="available-date-list" id="morningAvailableDates"></div>
+                    <div class="compact-upload-grid" style="padding:14px 16px 0">
+                        <div class="compact-upload-card morning">
+                            <div class="compact-upload-head">
+                                <strong>🌤️ BUỔI SÁNG</strong>
+                                <span class="full-import-badge">Lưu toàn bộ file</span>
                             </div>
 
-                            <div class="shift-config-box">
-                                <div class="shift-status-title">
-                                    <strong>📦 TRẠNG THÁI ĐƠN HÀNG BUỔI SÁNG</strong>
-                                    <div class="shift-status-actions">
-                                        <button type="button" class="shift-status-action" data-status-all="morning">Chọn tất cả</button>
-                                        <button type="button" class="shift-status-action" data-status-clear="morning">Bỏ chọn</button>
-                                    </div>
+                            <p>Upload file Excel buổi sáng. Không cần chọn ngày hay trạng thái tại đây.</p>
+
+                            <div class="compact-upload-actions">
+                                <label class="upload-button primary">
+                                    Chọn file SÁNG
+                                    <input type="file" id="morningFile" accept=".xlsx,.xls,.csv">
+                                </label>
+
+                                <div id="morningFileStatus" class="compact-upload-status">
+                                    Chưa có file.
                                 </div>
-                                <div id="morningStatusFilters" class="shift-status-grid"></div>
                             </div>
                         </div>
 
-                        <div class="shift-upload-zone">
-                            <div class="shift-upload-zone-left">
-                                <strong>Upload file Excel buổi sáng</strong>
-                                <small>Hệ thống đọc TOÀN BỘ file vào ca sáng. Ngày + trạng thái ở trên chỉ quyết định phần nào được đưa vào bảng thống kê.</small>
+                        <div class="compact-upload-card afternoon">
+                            <div class="compact-upload-head">
+                                <strong>🌇 BUỔI CHIỀU</strong>
+                                <span class="full-import-badge">Lưu toàn bộ file</span>
                             </div>
 
-                            <label class="upload-button primary">
-                                Chọn file BUỔI SÁNG
-                                <input type="file" id="morningFile" accept=".xlsx,.xls,.csv">
-                            </label>
-                        </div>
+                            <p>Upload file Excel buổi chiều. Không cần chọn ngày hay trạng thái tại đây.</p>
 
-                        <div id="morningFileStatus" class="shift-import-result">
-                            Chưa có dữ liệu buổi sáng cho ngày báo cáo này.
-                        </div>
-                    </div>
+                            <div class="compact-upload-actions">
+                                <label class="upload-button primary">
+                                    Chọn file CHIỀU
+                                    <input type="file" id="afternoonFile" accept=".xlsx,.xls,.csv">
+                                </label>
 
-                    <div id="shiftPaneAfternoon" class="shift-pane">
-                        <div class="shift-config-grid">
-                            <div class="shift-config-box">
-                                <label>📅 NGÀY ĐƠN HÀNG CẦN LẤY</label>
-                                <input id="afternoonSourceDate" type="date">
-                                <div class="available-date-list" id="afternoonAvailableDates"></div>
-                            </div>
-
-                            <div class="shift-config-box">
-                                <div class="shift-status-title">
-                                    <strong>📦 TRẠNG THÁI ĐƠN HÀNG BUỔI CHIỀU</strong>
-                                    <div class="shift-status-actions">
-                                        <button type="button" class="shift-status-action" data-status-all="afternoon">Chọn tất cả</button>
-                                        <button type="button" class="shift-status-action" data-status-clear="afternoon">Bỏ chọn</button>
-                                    </div>
+                                <div id="afternoonFileStatus" class="compact-upload-status">
+                                    Chưa có file.
                                 </div>
-                                <div id="afternoonStatusFilters" class="shift-status-grid"></div>
                             </div>
-                        </div>
-
-                        <div class="shift-upload-zone">
-                            <div class="shift-upload-zone-left">
-                                <strong>Upload file Excel buổi chiều</strong>
-                                <small>Hệ thống đọc TOÀN BỘ file vào ca chiều. Ngày + trạng thái ở trên chỉ quyết định phần nào được đưa vào bảng thống kê.</small>
-                            </div>
-
-                            <label class="upload-button primary">
-                                Chọn file BUỔI CHIỀU
-                                <input type="file" id="afternoonFile" accept=".xlsx,.xls,.csv">
-                            </label>
-                        </div>
-
-                        <div id="afternoonFileStatus" class="shift-import-result">
-                            Chưa có dữ liệu buổi chiều cho ngày báo cáo này.
                         </div>
                     </div>
                 </div>
@@ -971,7 +1137,7 @@ button{cursor:pointer}
                         <div class="check-item"><span>1</span><div><strong>Chọn ngày thống kê</strong><small>Ngày này quyết định dữ liệu được lưu vào ngày nào.</small></div></div>
                         <div class="check-item"><span>2</span><div><strong>Upload file sáng</strong><small>Lưu lần dữ liệu thứ nhất của ngày.</small></div></div>
                         <div class="check-item"><span>3</span><div><strong>Upload file chiều</strong><small>Đơn cũ được cập nhật, đơn mới được thêm vào cùng ngày.</small></div></div>
-                        <div class="check-item"><span>4</span><div><strong>Chọn nhiều ngày ở Thống kê SKU</strong><small>Hệ thống cộng các ngày đang tích thành một BẢNG TỔNG.</small></div></div>
+                        <div class="check-item"><span>4</span><div><strong>Chọn nhiều ngày ở Thống kê SKU</strong><small>Chọn ngày + trạng thái riêng cho Sáng và Chiều, hệ thống tự tính lại bảng.</small></div></div>
                     </div>
                 </div>
 
@@ -1072,14 +1238,69 @@ button{cursor:pointer}
                     <button type="button" class="btn btn-light" id="btnOpenHistory">🗓️ Xem lịch sử thống kê</button>
                 </div>
 
-                <div class="shift-summary-grid">
-                    <div class="shift-summary-card morning">
-                        <strong>🌤️ Buổi sáng</strong>
-                        <span id="morningConfigSummary">Chưa có dữ liệu.</span>
+                <div class="stats-shift-filter-grid">
+                    <div class="stats-shift-filter-card morning">
+                        <div class="stats-shift-filter-header">
+                            <strong>🌤️ BUỔI SÁNG</strong>
+                            <span id="morningConfigSummary">Chưa có dữ liệu.</span>
+                        </div>
+
+                        <div class="stats-shift-filter-body">
+                            <div class="stats-filter-date-row">
+                                <div class="stats-filter-date-label">NGÀY ĐƠN</div>
+                                <div class="stats-filter-date-control">
+                                    <input id="morningSourceDate" type="date">
+                                    <div id="morningAvailableDates" class="stats-filter-date-buttons"></div>
+                                </div>
+                            </div>
+
+                            <div class="stats-filter-status-title">
+                                <strong>TRẠNG THÁI</strong>
+                                <div class="stats-filter-status-actions">
+                                    <button type="button" class="shift-status-action" data-status-all="morning">Chọn tất cả</button>
+                                    <button type="button" class="shift-status-action" data-status-clear="morning">Bỏ chọn</button>
+                                </div>
+                            </div>
+
+                            <div id="morningStatusFilters" class="stats-filter-status-grid"></div>
+
+                            <div class="stats-shift-filter-footer">
+                                <span>Kết quả sau lọc</span>
+                                <strong id="morningFilteredCount">0</strong>
+                            </div>
+                        </div>
                     </div>
-                    <div class="shift-summary-card afternoon">
-                        <strong>🌇 Buổi chiều</strong>
-                        <span id="afternoonConfigSummary">Chưa có dữ liệu.</span>
+
+                    <div class="stats-shift-filter-card afternoon">
+                        <div class="stats-shift-filter-header">
+                            <strong>🌇 BUỔI CHIỀU</strong>
+                            <span id="afternoonConfigSummary">Chưa có dữ liệu.</span>
+                        </div>
+
+                        <div class="stats-shift-filter-body">
+                            <div class="stats-filter-date-row">
+                                <div class="stats-filter-date-label">NGÀY ĐƠN</div>
+                                <div class="stats-filter-date-control">
+                                    <input id="afternoonSourceDate" type="date">
+                                    <div id="afternoonAvailableDates" class="stats-filter-date-buttons"></div>
+                                </div>
+                            </div>
+
+                            <div class="stats-filter-status-title">
+                                <strong>TRẠNG THÁI</strong>
+                                <div class="stats-filter-status-actions">
+                                    <button type="button" class="shift-status-action" data-status-all="afternoon">Chọn tất cả</button>
+                                    <button type="button" class="shift-status-action" data-status-clear="afternoon">Bỏ chọn</button>
+                                </div>
+                            </div>
+
+                            <div id="afternoonStatusFilters" class="stats-filter-status-grid"></div>
+
+                            <div class="stats-shift-filter-footer">
+                                <span>Kết quả sau lọc</span>
+                                <strong id="afternoonFilteredCount">0</strong>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2066,6 +2287,17 @@ function openView(viewName) {
     if (viewName === "orders") renderOrdersTab();
     if (viewName === "returns") renderReturnsTab();
     if (viewName === "history") renderHistory();
+
+    if (viewName === "sku-stats") {
+        const reportDate = [...state.selectedDates][0] || getSelectedReportDate();
+
+        if (reportDate) {
+            if ($("reportDateInput")) $("reportDateInput").value = reportDate;
+            loadShiftConfigurationForReportDate(reportDate);
+            renderDateFilters();
+            rebuildSkuStatistics();
+        }
+    }
 }
 
 /* ======================== EXCEL ======================== */
@@ -2402,13 +2634,6 @@ function renderShiftStatusFilters(slot) {
 
 function setShiftTab(slot) {
     state.activeShiftTab = slot;
-
-    document.querySelectorAll("[data-shift-tab]").forEach(button => {
-        button.classList.toggle("active", button.dataset.shiftTab === slot);
-    });
-
-    $("shiftPaneMorning")?.classList.toggle("active", slot === "morning");
-    $("shiftPaneAfternoon")?.classList.toggle("active", slot === "afternoon");
 }
 
 function renderReportDateUi({ reloadShiftConfig = false } = {}) {
@@ -2450,29 +2675,17 @@ function renderUploadSlotStatuses() {
 
         const latest = getLatestImportForSlot(reportDate, slot);
         const rawRows = getRawRowsForReportSlot(reportDate, slot);
-        const filteredRows = getFilteredRowsForReportSlot(reportDate, slot);
 
         if (!latest) {
-            element.className = "shift-import-result";
-            element.innerHTML = `
-                <strong>${slotLabel(slot)} · ${formatDateLabel(reportDate)}</strong><br>
-                Chưa upload file cho ca này.
-            `;
+            element.className = "compact-upload-status";
+            element.innerHTML = `Chưa upload file ${slot === "morning" ? "sáng" : "chiều"}.`;
             return;
         }
 
-        const badge = latest.savedAllRows
-            ? '<span class="full-import-badge">✓ Đã lưu toàn bộ file</span>'
-            : '<span class="legacy-import-badge">⚠ Dữ liệu V13 cũ - nên upload lại file</span>';
-
-        element.className = "shift-import-result loaded";
+        element.className = "compact-upload-status loaded";
         element.innerHTML = `
-            <strong>✓ ${escapeHTML(latest.fileName)}</strong> ${badge}<br>
-            Đã đọc: <strong>${formatNumber(rawRows.length)}</strong> dòng toàn file ·
-            Bộ lọc hiện tại: <strong>${formatNumber(filteredRows.length)}</strong> dòng /
-            <strong>${formatNumber(uniqueSkuCountForRows(filteredRows))}</strong> SKU<br>
-            Ngày lọc: ${formatDateLabel(getShiftFilter(slot).sourceDate || reportDate)}
-            · ${formatStatusList([...getShiftFilter(slot).statuses])}
+            <strong>✓ ${escapeHTML(latest.fileName)}</strong><br>
+            ${formatNumber(rawRows.length)} dòng · ${formatDateTimeVi(latest.importedAt)}
         `;
     });
 }
@@ -2582,7 +2795,7 @@ async function processShopeeUpload(file, slot, inputElement) {
 
         renderAll();
         setShiftTab(slot);
-        openView("import");
+        openView("sku-stats");
 
         setCloudStatus("☁️ Supabase Cloud");
 
@@ -2736,18 +2949,24 @@ function renderStatsShiftSummaries(reportDate) {
 
     if (morningEl) {
         morningEl.textContent = morning
-            ? `Ngày lọc: ${formatDateLabel(getShiftFilter("morning").sourceDate || reportDate)} · ` +
-              `${formatStatusList([...getShiftFilter("morning").statuses])} · ` +
-              `${formatNumber(morningRows.length)} dòng / ${formatNumber(uniqueSkuCountForRows(morningRows))} SKU`
-            : "Chưa có dữ liệu buổi sáng.";
+            ? `${formatDateLabel(getShiftFilter("morning").sourceDate || reportDate)} · ${formatNumber(morningRows.length)} dòng`
+            : "Chưa có dữ liệu";
     }
 
     if (afternoonEl) {
         afternoonEl.textContent = afternoon
-            ? `Ngày lọc: ${formatDateLabel(getShiftFilter("afternoon").sourceDate || reportDate)} · ` +
-              `${formatStatusList([...getShiftFilter("afternoon").statuses])} · ` +
-              `${formatNumber(afternoonRows.length)} dòng / ${formatNumber(uniqueSkuCountForRows(afternoonRows))} SKU`
-            : "Chưa có dữ liệu buổi chiều.";
+            ? `${formatDateLabel(getShiftFilter("afternoon").sourceDate || reportDate)} · ${formatNumber(afternoonRows.length)} dòng`
+            : "Chưa có dữ liệu";
+    }
+
+    if ($("morningFilteredCount")) {
+        $("morningFilteredCount").textContent =
+            `${formatNumber(morningRows.length)} dòng / ${formatNumber(uniqueSkuCountForRows(morningRows))} SKU`;
+    }
+
+    if ($("afternoonFilteredCount")) {
+        $("afternoonFilteredCount").textContent =
+            `${formatNumber(afternoonRows.length)} dòng / ${formatNumber(uniqueSkuCountForRows(afternoonRows))} SKU`;
     }
 }
 
