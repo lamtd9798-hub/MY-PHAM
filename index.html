@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V27: thêm lịch sử thống kê hóa đơn + xem chi tiết + xóa từng bản -->
+    <!-- ONE-FILE V28: thêm module Tồn kho & luân chuyển + kiểm kê + Shopee + MISA -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2914,6 +2914,21 @@ button{cursor:pointer}
     }
 }
 
+
+/* =========================================================
+   V28 - TỒN KHO & LUÂN CHUYỂN
+========================================================= */
+.inventory-hero-panel{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 16px;margin-bottom:11px}
+.inventory-hero-copy{display:flex;align-items:flex-start;gap:11px;min-width:0}.inventory-hero-icon{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:11px;background:#eef8f5;font-size:22px}.inventory-hero-copy h2{font-size:15px;margin:0 0 5px;color:#19343e}.inventory-hero-copy p{max-width:760px;margin:0;color:#7d8f99;font-size:8.6px;line-height:1.5}.inventory-hero-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}.inventory-cloud-badge{display:inline-flex;align-items:center;height:34px;padding:0 9px;border:1px solid #cfe1dd;border-radius:7px;background:#f5faf9;color:#5f7771;font-size:8px;font-weight:750}.inventory-cloud-badge.cloud{border-color:#b9ddd5;background:#eff9f6;color:#087863}.inventory-cloud-badge.local{border-color:#efd9a5;background:#fff9eb;color:#976812}.inventory-file-button{height:34px;display:inline-flex;align-items:center;justify-content:center;padding:0 10px;border:1px solid #cfdce1;border-radius:7px;background:#fff;color:#3d5964;font-size:8.5px;font-weight:800;cursor:pointer}.inventory-file-button input{display:none}
+.inventory-warning-box{margin:0 0 11px;padding:10px 12px;border:1px solid #f0d79f;border-radius:8px;background:#fff9ed;color:#895f12;font-size:8.5px;line-height:1.5}.inventory-warning-box.hidden{display:none}
+.inventory-kpi-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin-bottom:11px}.inventory-kpi-card{min-height:87px;padding:12px 13px;border:1px solid #dfe7ea;border-radius:9px;background:#fff}.inventory-kpi-card span{display:block;color:#6e818a;font-size:7.2px;font-weight:850}.inventory-kpi-card strong{display:block;margin-top:7px;color:#18323c;font-size:18px}.inventory-kpi-card small{display:block;margin-top:5px;color:#96a3ab;font-size:6.8px;line-height:1.35}.inventory-kpi-card.primary{border-color:#a6dacf;background:#f2fbf8}.inventory-kpi-card.primary strong,.inventory-kpi-card.green strong,.inventory-kpi-card.value strong{color:#087863}.inventory-kpi-card.blue{border-color:#c8ddf2;background:#f6faff}.inventory-kpi-card.blue strong{color:#327fc2}.inventory-kpi-card.purple{border-color:#ddd1ef;background:#faf7ff}.inventory-kpi-card.purple strong{color:#7351a6}.inventory-kpi-card.green{border-color:#bee0d8;background:#f5fbf9}.inventory-kpi-card.value{border-color:#b9ddd5;background:#eef9f6}
+.inventory-summary-panel{margin-bottom:11px;overflow:hidden}.inventory-summary-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px}.inventory-summary-toolbar h2{font-size:12px}.inventory-summary-toolbar p{font-size:8px}.inventory-search-box{width:235px;height:34px;display:flex;align-items:center;gap:6px;padding:0 9px;border:1px solid #d7e1e5;border-radius:7px;background:#fff}.inventory-search-box input{width:100%;border:0;outline:0;background:transparent;font:inherit;color:#334b55;font-size:8.5px}.inventory-table-wrap{overflow:auto;max-height:600px}.inventory-summary-table{width:100%;min-width:1600px;border-collapse:collapse;table-layout:auto}.inventory-summary-table th{position:sticky;top:0;z-index:3;padding:9px 8px;background:#f8fafb;border-bottom:1px solid #dfe7ea;color:#5d727c;font-size:7.5px;text-align:left;white-space:nowrap}.inventory-summary-table td{padding:10px 8px;border-bottom:1px solid #edf1f3;color:#405761;font-size:9px;vertical-align:middle}.inventory-summary-table th.center,.inventory-summary-table td.center{text-align:center}.inventory-summary-table th.right,.inventory-summary-table td.right{text-align:right}.inventory-summary-table td:nth-child(1){text-align:center;color:#71838c}.inventory-summary-table td:nth-child(2){font-weight:850;white-space:nowrap}.inventory-summary-table td:nth-child(3){min-width:190px}.inventory-summary-table .inventory-num{text-align:center;font-weight:750;font-variant-numeric:tabular-nums}.inventory-summary-table .inventory-col-physical,.inventory-summary-table td.inventory-col-physical{background:#f0faf7;color:#087863;font-weight:900}.inventory-summary-table .inventory-col-transit,.inventory-summary-table td.inventory-col-transit{background:#f5f9fd;color:#327fc2;font-weight:900}.inventory-summary-table .inventory-col-available,.inventory-summary-table td.inventory-col-available{background:#f2fbf8;color:#087863;font-weight:900}.inventory-summary-table tfoot td{position:sticky;bottom:0;z-index:2;padding:10px 8px;border-top:2px solid #83cfbe;background:#eaf8f5;color:#075f50;font-size:9px;font-weight:900}.inventory-table-note{padding:9px 13px;border-top:1px solid #edf1f3;background:#fbfcfd;color:#84949d;font-size:7.6px;line-height:1.45}.inventory-alert-pill{display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 7px;border-radius:999px;font-size:7px;font-weight:850;white-space:nowrap}.inventory-alert-pill.ok{background:#eaf8f4;color:#087863}.inventory-alert-pill.low{background:#fff3d6;color:#9a660e}.inventory-alert-pill.out{background:#ffeded;color:#c43c42}.inventory-unmapped{color:#b27613;font-size:7px;font-weight:800}
+.inventory-two-column-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:11px;margin-bottom:11px}.inventory-flow-panel,.inventory-misa-panel{overflow:hidden}.inventory-flow-bars{padding:13px}.inventory-flow-row{display:grid;grid-template-columns:125px minmax(0,1fr) 70px;gap:9px;align-items:center;margin-bottom:10px}.inventory-flow-row:last-child{margin-bottom:0}.inventory-flow-label{color:#546a74;font-size:8px;font-weight:800}.inventory-flow-track{height:15px;border-radius:999px;background:#edf1f3;overflow:hidden}.inventory-flow-fill{height:100%;border-radius:999px;min-width:0}.inventory-flow-fill.reserved{background:#efb348}.inventory-flow-fill.in_transit{background:#58a4e2}.inventory-flow-fill.delivered{background:#8d72c7}.inventory-flow-fill.invoiced{background:#1fa989}.inventory-flow-fill.returning{background:#ed8f51}.inventory-flow-value{text-align:right;color:#203d47;font-size:9px;font-weight:900}.inventory-misa-info{padding:14px;color:#6f828c;font-size:8.5px;line-height:1.55}.inventory-misa-info strong{color:#203d47}.inventory-misa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}.inventory-misa-stat{padding:9px;border:1px solid #e0e7ea;border-radius:7px;background:#fafcfd}.inventory-misa-stat span{display:block;color:#8b99a1;font-size:6.5px}.inventory-misa-stat strong{display:block;margin-top:4px;color:#087863;font-size:11px}
+.inventory-movement-panel{overflow:hidden}.inventory-movement-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px}.inventory-movement-scroll{max-height:520px}.inventory-movement-table{min-width:1280px}.inventory-movement-table th{font-size:7.5px}.inventory-movement-table td{font-size:8.5px}.inventory-movement-table td:nth-child(1){text-align:center}.inventory-movement-table td:nth-child(8){text-align:center;font-weight:850}.inventory-bucket-pill{display:inline-flex;align-items:center;height:21px;padding:0 7px;border-radius:999px;font-size:6.9px;font-weight:850;white-space:nowrap}.inventory-bucket-pill.reserved{background:#fff3d6;color:#95620c}.inventory-bucket-pill.in_transit{background:#eaf4fd;color:#337fbf}.inventory-bucket-pill.delivered{background:#f0ebfb;color:#7452a7}.inventory-bucket-pill.returning{background:#fff0e5;color:#aa5c24}.inventory-bucket-pill.cancelled{background:#ffeded;color:#c33d43}.inventory-bucket-pill.other{background:#edf1f3;color:#6c7c84}
+.inventory-editor-overlay{position:fixed;inset:0;z-index:12600;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(10,29,37,.64);backdrop-filter:blur(4px)}.inventory-editor-overlay.hidden{display:none!important}.inventory-editor-modal{width:min(1500px,97vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;border:1px solid #dae4e7;border-radius:14px;background:#fff;box-shadow:0 30px 100px rgba(0,0,0,.3)}.inventory-editor-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px 13px;border-bottom:1px solid #e9eef0}.inventory-editor-header h2{font-size:15px;margin:0 0 4px;color:#18323c}.inventory-editor-header p{margin:0;color:#8797a0;font-size:8px}.inventory-editor-close{width:31px;height:31px;border:1px solid #dbe4e7;border-radius:7px;background:#fff;color:#6f818a;font-size:20px;cursor:pointer}.inventory-editor-topbar{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:11px 18px;border-bottom:1px solid #edf1f3;background:#fbfcfd}.inventory-editor-topbar label{display:flex;flex-direction:column;gap:5px;color:#637984;font-size:7.5px;font-weight:850}.inventory-editor-topbar input[type=date]{height:34px;border:1px solid #d6e1e5;border-radius:7px;padding:0 9px;font-family:inherit;font-size:9px}.inventory-editor-table-wrap{flex:1;overflow:auto}.inventory-editor-table{width:100%;min-width:1280px;border-collapse:collapse}.inventory-editor-table th{position:sticky;top:0;z-index:2;padding:9px;background:#f8fafb;border-bottom:1px solid #dfe7ea;color:#5d727c;font-size:7.5px;white-space:nowrap}.inventory-editor-table td{padding:7px;border-bottom:1px solid #edf1f3}.inventory-editor-table td:first-child{text-align:center;color:#71838c;font-size:8px}.inventory-editor-input{width:100%;height:32px;border:1px solid #d8e2e6;border-radius:6px;padding:0 8px;font-family:inherit;font-size:8.5px;color:#314952;outline:0}.inventory-editor-input:focus{border-color:#75c5b4;box-shadow:0 0 0 2px rgba(13,156,130,.07)}.inventory-editor-input.number{text-align:right}.inventory-editor-help{padding:9px 18px;border-top:1px solid #edf1f3;background:#fbfcfd;color:#82939c;font-size:7.5px;line-height:1.45}.inventory-editor-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid #e9eef0}
+@media(max-width:1350px){.inventory-kpi-grid{grid-template-columns:repeat(3,1fr)}.inventory-two-column-grid{grid-template-columns:1fr}.inventory-hero-panel{align-items:flex-start;flex-direction:column}.inventory-hero-actions{justify-content:flex-start}}
+@media(max-width:800px){.inventory-kpi-grid{grid-template-columns:repeat(2,1fr)}.inventory-summary-toolbar,.inventory-movement-toolbar{align-items:flex-start;flex-direction:column}.inventory-search-box{width:100%}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3052,6 +3067,11 @@ button{cursor:pointer}
                 <span class="nav-icon">🧾</span>
                 <span>Thống kê hóa đơn</span>
                 <span class="nav-badge" id="navInvoiceCount">0</span>
+            </button>
+            <button class="nav-item" data-view="inventory-flow">
+                <span class="nav-icon">📦</span>
+                <span>Tồn kho & luân chuyển</span>
+                <span class="nav-badge" id="navInventoryCount">0</span>
             </button>
             <button class="nav-item" data-view="history">
                 <span class="nav-icon">🗓️</span>
@@ -3620,6 +3640,251 @@ button{cursor:pointer}
             </div>
         </section>
 
+
+        <!-- ======================== V28 - TỒN KHO & LUÂN CHUYỂN ======================== -->
+        <section id="view-inventory-flow" class="view">
+            <div class="panel inventory-hero-panel">
+                <div class="inventory-hero-copy">
+                    <div class="inventory-hero-icon">📦</div>
+                    <div>
+                        <h2>Quản lý tồn kho & luân chuyển</h2>
+                        <p>
+                            <strong>Tồn thực tế</strong> là số đếm tại kho. Dữ liệu Shopee chỉ dùng để theo dõi
+                            hàng đã giữ cho đơn / đang giao / đã giao. Dữ liệu MISA dùng để theo dõi lượng đã xuất hóa đơn.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="inventory-hero-actions">
+                    <span id="inventoryCloudBadge" class="inventory-cloud-badge">Đang tải tồn kho...</span>
+
+                    <label class="inventory-file-button">
+                        📥 Nhập Excel tồn kho
+                        <input id="inventoryStockFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv">
+                    </label>
+
+                    <button type="button" id="btnInventoryEdit" class="btn btn-primary">
+                        ✏️ Cập nhật tồn thực tế
+                    </button>
+
+                    <button type="button" id="btnInventoryRefresh" class="btn btn-light">
+                        🔄 Đồng bộ lại
+                    </button>
+                </div>
+            </div>
+
+            <div id="inventoryWarningBox" class="inventory-warning-box hidden"></div>
+
+            <div class="inventory-kpi-grid">
+                <div class="inventory-kpi-card primary">
+                    <span>TỒN THỰC TẾ TẠI KHO</span>
+                    <strong id="inventoryPhysicalTotal">0</strong>
+                    <small>Số lượng đếm/kiểm kê gần nhất</small>
+                </div>
+
+                <div class="inventory-kpi-card">
+                    <span>ĐÃ GIỮ CHO ĐƠN</span>
+                    <strong id="inventoryReservedTotal">0</strong>
+                    <small>Chờ xác nhận + Chờ giao hàng</small>
+                </div>
+
+                <div class="inventory-kpi-card blue">
+                    <span>ĐANG GIAO</span>
+                    <strong id="inventoryTransitTotal">0</strong>
+                    <small>Hàng đã đi khỏi kho, đang vận chuyển</small>
+                </div>
+
+                <div class="inventory-kpi-card purple">
+                    <span>ĐÃ GIAO</span>
+                    <strong id="inventoryDeliveredTotal">0</strong>
+                    <small>Khách đã nhận / chờ đối chiếu hóa đơn</small>
+                </div>
+
+                <div class="inventory-kpi-card green">
+                    <span>ĐÃ XUẤT HĐ (MISA)</span>
+                    <strong id="inventoryInvoicedTotal">0</strong>
+                    <small id="inventoryInvoiceSourceLabel">Theo file hóa đơn đang xem</small>
+                </div>
+
+                <div class="inventory-kpi-card value">
+                    <span>GIÁ TRỊ TỒN THỰC TẾ</span>
+                    <strong id="inventoryStockValue">0 đ</strong>
+                    <small>Tồn thực tế × đơn giá</small>
+                </div>
+            </div>
+
+            <div class="panel inventory-summary-panel">
+                <div class="panel-header inventory-summary-toolbar">
+                    <div>
+                        <h2>Bảng tồn kho vận hành</h2>
+                        <p id="inventorySummarySubtitle">Đang tổng hợp dữ liệu...</p>
+                    </div>
+
+                    <div class="inventory-toolbar-right">
+                        <div class="inventory-search-box">
+                            🔎
+                            <input id="inventorySearchInput" type="text" placeholder="Tìm SKU / tên sản phẩm...">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="inventory-table-wrap">
+                    <table class="inventory-summary-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>SKU kho</th>
+                                <th>Tên sản phẩm</th>
+                                <th class="center">Tồn đầu</th>
+                                <th class="center inventory-col-physical">Tồn thực tế</th>
+                                <th class="center">Giữ đơn</th>
+                                <th class="center inventory-col-transit">Đang giao</th>
+                                <th class="center">Đã giao</th>
+                                <th class="center">Đã xuất HĐ</th>
+                                <th class="center">Chờ HĐ*</th>
+                                <th class="center">Hoàn đang về</th>
+                                <th class="center inventory-col-available">Khả dụng</th>
+                                <th class="right">Đơn giá</th>
+                                <th class="right">Giá trị tồn</th>
+                                <th class="center">Cảnh báo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventorySummaryBody">
+                            <tr><td colspan="15" class="empty-table">Chưa có dữ liệu tồn kho.</td></tr>
+                        </tbody>
+                        <tfoot id="inventorySummaryFoot"></tfoot>
+                    </table>
+                </div>
+
+                <div class="inventory-table-note">
+                    <strong>* Chờ HĐ</strong> = Đã giao − số lượng đã xuất hóa đơn theo <strong>file MISA đang xem</strong>.
+                    Đây là chỉ số vận hành ước tính theo SKU; để đối chiếu chính xác từng đơn cần file MISA có <strong>Mã đơn Shopee</strong>.
+                </div>
+            </div>
+
+            <div class="inventory-two-column-grid">
+                <div class="panel inventory-flow-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Luồng hàng hiện tại</h2>
+                            <p>Phân tách hàng theo trạng thái Shopee mới nhất của từng Mã đơn + SKU.</p>
+                        </div>
+                    </div>
+
+                    <div id="inventoryFlowBars" class="inventory-flow-bars"></div>
+                </div>
+
+                <div class="panel inventory-misa-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Đối chiếu hóa đơn MISA</h2>
+                            <p>Dùng bảng hóa đơn hiện đang mở để xác định số lượng đã xuất hóa đơn theo sản phẩm.</p>
+                        </div>
+                        <button type="button" id="btnInventoryOpenInvoice" class="text-button">Mở Thống kê hóa đơn →</button>
+                    </div>
+
+                    <div id="inventoryMisaInfo" class="inventory-misa-info">
+                        Chưa có file hóa đơn MISA để đối chiếu.
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel inventory-movement-panel">
+                <div class="panel-header inventory-movement-toolbar">
+                    <div>
+                        <h2>Chi tiết hàng đang luân chuyển</h2>
+                        <p id="inventoryMovementSummary">0 dòng</p>
+                    </div>
+
+                    <div class="toolbar">
+                        <select id="inventoryMovementFilter" class="select-control">
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="reserved">Đã giữ cho đơn</option>
+                            <option value="in_transit">Đang giao</option>
+                            <option value="delivered">Đã giao</option>
+                            <option value="returning">Hoàn đang về</option>
+                            <option value="cancelled">Đã hủy</option>
+                            <option value="other">Khác</option>
+                        </select>
+
+                        <input id="inventoryMovementSearch" type="text" class="search-input" placeholder="Tìm mã đơn, SKU, sản phẩm...">
+                    </div>
+                </div>
+
+                <div class="table-scroll inventory-movement-scroll">
+                    <table class="inventory-movement-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã đơn</th>
+                                <th>Ngày báo cáo</th>
+                                <th>Ngày đơn</th>
+                                <th>SKU Shopee</th>
+                                <th>SKU kho</th>
+                                <th>Tên sản phẩm</th>
+                                <th class="center">SL</th>
+                                <th>Trạng thái Shopee</th>
+                                <th>Nhóm luân chuyển</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryMovementBody">
+                            <tr><td colspan="10" class="empty-table">Chưa có dữ liệu Shopee.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================== V28 - MODAL CẬP NHẬT TỒN KHO ======================== -->
+        <div id="inventoryEditorModal" class="inventory-editor-overlay hidden">
+            <div class="inventory-editor-modal">
+                <div class="inventory-editor-header">
+                    <div>
+                        <h2>📦 Cập nhật tồn kho thực tế</h2>
+                        <p>Nhập số đếm thực tế tại kho. Khi lưu, hệ thống tạo một mốc kiểm kê mới.</p>
+                    </div>
+                    <button type="button" id="btnInventoryEditorClose" class="inventory-editor-close">×</button>
+                </div>
+
+                <div class="inventory-editor-topbar">
+                    <label>
+                        NGÀY KIỂM KÊ
+                        <input id="inventoryStocktakeDate" type="date">
+                    </label>
+                    <button type="button" id="btnInventoryAddItem" class="btn btn-light">+ Thêm mặt hàng</button>
+                </div>
+
+                <div class="inventory-editor-table-wrap">
+                    <table class="inventory-editor-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã kho</th>
+                                <th>Tên sản phẩm</th>
+                                <th>SKU Shopee quy đổi</th>
+                                <th>Từ khóa MISA</th>
+                                <th>Tồn đầu</th>
+                                <th>Tồn thực tế</th>
+                                <th>Tồn an toàn</th>
+                                <th>Đơn giá</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryEditorBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="inventory-editor-help">
+                    <strong>SKU Shopee quy đổi</strong> nên điền theo SKU kho cơ bản như REWD, RCS, RTB, ROE...
+                    để hệ thống ghép với bảng quy đổi SKU hiện tại. Các mặt hàng chưa xác định SKU có thể để trống và cập nhật sau.
+                </div>
+
+                <div class="inventory-editor-footer">
+                    <button type="button" id="btnInventoryEditorCancel" class="btn btn-light">Hủy</button>
+                    <button type="button" id="btnInventoryEditorSave" class="btn btn-primary">💾 Lưu kiểm kê</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ======================== LỊCH SỬ ======================== -->
         
 
@@ -4026,6 +4291,34 @@ const state = {
     cloudReady: false
 };
 
+const INVENTORY_LOCAL_KEY = "rucos_inventory_v28";
+const DB_INVENTORY_ITEMS = "inventory_items";
+const DB_INVENTORY_STOCKTAKES = "inventory_stocktakes";
+
+const inventoryState = {
+    items: [],
+    stocktakes: [],
+    loaded: false,
+    cloudReady: false,
+    mode: "local",
+    movementRows: []
+};
+
+const DEFAULT_INVENTORY_ITEMS = [
+    { itemCode: "WH-REWD", name: "Kem nách", shopeeSku: "REWD", invoiceKeyword: "Extra White & Deodorant Cream 35g", openingQty: 5248, physicalQty: 1246, safetyStock: 200, unitPrice: 178000, stocktakeDate: "2026-08-13", sortOrder: 1 },
+    { itemCode: "WH-REWS", name: "Smooth", shopeeSku: "REWS", invoiceKeyword: "Extra White & Smooth Cream 80g", openingQty: 0, physicalQty: 550, safetyStock: 100, unitPrice: 178000, stocktakeDate: "2026-08-13", sortOrder: 2 },
+    { itemCode: "WH-RTB", name: "Tranex Brightening", shopeeSku: "RTB", invoiceKeyword: "Tranex Brightening Body Cream 200g", openingQty: 706, physicalQty: 801, safetyStock: 150, unitPrice: 360000, stocktakeDate: "2026-08-13", sortOrder: 3 },
+    { itemCode: "WH-RHBS", name: "TDC đường đen mật ong", shopeeSku: "RHBS", invoiceKeyword: "Honey Black Sugar Body Scrub 450g", openingQty: 493, physicalQty: 398, safetyStock: 80, unitPrice: 157000, stocktakeDate: "2026-08-13", sortOrder: 4 },
+    { itemCode: "WH-RKN", name: "Kem nghệ", shopeeSku: "RKN", invoiceKeyword: "Curcumin Cream 80g", openingQty: 110, physicalQty: 442, safetyStock: 100, unitPrice: 105000, stocktakeDate: "2026-08-13", sortOrder: 5 },
+    { itemCode: "WH-SER120", name: "Serum 120ml", shopeeSku: "", invoiceKeyword: "", openingQty: 23, physicalQty: 23, safetyStock: 10, unitPrice: 206000, stocktakeDate: "2026-08-13", sortOrder: 6 },
+    { itemCode: "WH-REWGS", name: "Serum 250ml", shopeeSku: "REWGS", invoiceKeyword: "Extra White & Glow Serum 250ml", openingQty: 84, physicalQty: 39, safetyStock: 20, unitPrice: 395000, stocktakeDate: "2026-08-13", sortOrder: 7 },
+    { itemCode: "WH-LOT120", name: "Lotion 120ml", shopeeSku: "", invoiceKeyword: "", openingQty: 0, physicalQty: 0, safetyStock: 10, unitPrice: 206000, stocktakeDate: "2026-08-13", sortOrder: 8 },
+    { itemCode: "WH-LOT250", name: "Lotion 250ml", shopeeSku: "", invoiceKeyword: "", openingQty: 0, physicalQty: 0, safetyStock: 10, unitPrice: 395000, stocktakeDate: "2026-08-13", sortOrder: 9 },
+    { itemCode: "WH-RCS", name: "Lăn nách", shopeeSku: "RCS", invoiceKeyword: "Confidence Stick 25ml", openingQty: 4995, physicalQty: 1513, safetyStock: 250, unitPrice: 198000, stocktakeDate: "2026-08-13", sortOrder: 10 },
+    { itemCode: "WH-ROE", name: "Body oil", shopeeSku: "ROE", invoiceKeyword: "Retinol Oil Essence 160ml", openingQty: 706, physicalQty: 516, safetyStock: 100, unitPrice: 378000, stocktakeDate: "2026-08-13", sortOrder: 11 },
+    { itemCode: "WH-COMBO", name: "Combo oil + mist", shopeeSku: "", invoiceKeyword: "", openingQty: 285, physicalQty: 151, safetyStock: 50, unitPrice: 520000, stocktakeDate: "2026-08-13", sortOrder: 12 }
+];
+
 const DEFAULT_BASE_SKUS = [
     "RTB",
     "REWD",
@@ -4074,6 +4367,10 @@ const PAGE_INFO = {
     "invoice-stats": {
         title: "Thống kê hóa đơn",
         subtitle: "Upload bảng kê hóa đơn → gom theo tên hàng → tổng hợp số lượng và giá trị"
+    },
+    "inventory-flow": {
+        title: "Tồn kho & luân chuyển",
+        subtitle: "Theo dõi tồn kho thực tế → hàng giữ đơn → đang giao → đã giao → hóa đơn MISA"
     },
     history: {
         title: "Lịch sử thống kê",
@@ -4247,6 +4544,142 @@ function cloudImportToState(info) {
         selectedStatuses: Array.isArray(info.selected_statuses) ? info.selected_statuses : [],
         savedAllRows: Boolean(info.saved_all_rows)
     };
+}
+
+
+function inventoryDbRowToState(row) {
+    return {
+        itemCode: row.item_code || "",
+        name: row.name || "",
+        shopeeSku: row.shopee_sku || "",
+        invoiceKeyword: row.invoice_keyword || "",
+        openingQty: Number(row.opening_qty || 0),
+        physicalQty: Number(row.physical_qty || 0),
+        safetyStock: Number(row.safety_stock || 0),
+        unitPrice: Number(row.unit_price || 0),
+        stocktakeDate: row.stocktake_date || "",
+        sortOrder: Number(row.sort_order || 0),
+        active: row.is_active !== false,
+        updatedAt: row.updated_at || ""
+    };
+}
+
+function inventoryStateToDbRow(item) {
+    return {
+        item_code: item.itemCode,
+        name: item.name,
+        shopee_sku: item.shopeeSku || null,
+        invoice_keyword: item.invoiceKeyword || null,
+        opening_qty: Number(item.openingQty || 0),
+        physical_qty: Number(item.physicalQty || 0),
+        safety_stock: Number(item.safetyStock || 0),
+        unit_price: Number(item.unitPrice || 0),
+        stocktake_date: item.stocktakeDate || null,
+        sort_order: Number(item.sortOrder || 0),
+        is_active: item.active !== false,
+        updated_by: state.user?.id || null,
+        updated_at: new Date().toISOString()
+    };
+}
+
+function saveInventoryLocal() {
+    try {
+        localStorage.setItem(
+            INVENTORY_LOCAL_KEY,
+            JSON.stringify({ items: inventoryState.items, stocktakes: inventoryState.stocktakes })
+        );
+    } catch (error) {
+        console.warn("Không lưu được tồn kho cục bộ", error);
+    }
+}
+
+function loadInventoryLocal() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(INVENTORY_LOCAL_KEY) || "null");
+        if (saved && Array.isArray(saved.items) && saved.items.length) {
+            inventoryState.items = saved.items;
+            inventoryState.stocktakes = Array.isArray(saved.stocktakes) ? saved.stocktakes : [];
+        } else {
+            inventoryState.items = DEFAULT_INVENTORY_ITEMS.map(item => ({ ...item }));
+            inventoryState.stocktakes = [];
+            saveInventoryLocal();
+        }
+    } catch (error) {
+        inventoryState.items = DEFAULT_INVENTORY_ITEMS.map(item => ({ ...item }));
+        inventoryState.stocktakes = [];
+    }
+    inventoryState.loaded = true;
+    inventoryState.cloudReady = false;
+    inventoryState.mode = "local";
+}
+
+async function loadInventoryData() {
+    if (!state.user) {
+        loadInventoryLocal();
+        return;
+    }
+
+    try {
+        const client = initSupabaseClient();
+        const [{ data: itemRows, error: itemError }, { data: stocktakeRows, error: stocktakeError }] = await Promise.all([
+            client.from(DB_INVENTORY_ITEMS).select("*").order("sort_order", { ascending: true }),
+            client.from(DB_INVENTORY_STOCKTAKES).select("*").order("created_at", { ascending: false }).limit(500)
+        ]);
+
+        if (itemError) throw itemError;
+        if (stocktakeError) throw stocktakeError;
+
+        inventoryState.items = (itemRows || []).map(inventoryDbRowToState);
+        inventoryState.stocktakes = stocktakeRows || [];
+
+        if (!inventoryState.items.length) {
+            inventoryState.items = DEFAULT_INVENTORY_ITEMS.map(item => ({ ...item }));
+            const { error } = await client.from(DB_INVENTORY_ITEMS).upsert(
+                inventoryState.items.map(inventoryStateToDbRow),
+                { onConflict: "item_code" }
+            );
+            if (error) throw error;
+        }
+
+        inventoryState.loaded = true;
+        inventoryState.cloudReady = true;
+        inventoryState.mode = "cloud";
+        saveInventoryLocal();
+    } catch (error) {
+        console.warn("Inventory Cloud chưa sẵn sàng, dùng LocalStorage:", error);
+        loadInventoryLocal();
+    }
+}
+
+async function saveInventoryItems({ createStocktake = true } = {}) {
+    inventoryState.items = inventoryState.items
+        .filter(item => item.name && item.itemCode)
+        .map((item, index) => ({ ...item, sortOrder: index + 1 }));
+
+    saveInventoryLocal();
+
+    if (inventoryState.cloudReady && state.user) {
+        const client = initSupabaseClient();
+        const payload = inventoryState.items.map(inventoryStateToDbRow);
+        const { error } = await client.from(DB_INVENTORY_ITEMS).upsert(payload, { onConflict: "item_code" });
+        if (error) throw error;
+
+        if (createStocktake && inventoryState.items.length) {
+            const stocktakePayload = inventoryState.items.map(item => ({
+                stocktake_date: item.stocktakeDate || getLocalTodayKey(),
+                item_code: item.itemCode,
+                physical_qty: Number(item.physicalQty || 0),
+                unit_price: Number(item.unitPrice || 0),
+                note: "Cập nhật tồn thực tế từ RUCOS",
+                created_by: state.user?.id || null
+            }));
+
+            const { error: stocktakeError } = await client
+                .from(DB_INVENTORY_STOCKTAKES)
+                .insert(stocktakePayload);
+            if (stocktakeError) throw stocktakeError;
+        }
+    }
 }
 
 async function dbGetAll(storeName) {
@@ -4605,6 +5038,8 @@ async function enterAuthenticatedApp(session) {
         loadConversionConfigFromCloud()
     ]);
 
+    await loadInventoryData();
+
     const savedUi = readUiStateV17();
 
     const reportDates = [...new Set(
@@ -4663,6 +5098,7 @@ async function enterAuthenticatedApp(session) {
         "overview",
         "sku-stats",
         "invoice-stats",
+        "inventory-flow",
         "history",
         "orders",
         "fees",
@@ -4945,6 +5381,7 @@ function openView(viewName) {
     if (viewName === "returns") renderReturnsTab();
     if (viewName === "history") renderHistory();
     if (viewName === "invoice-stats") renderInvoiceStats();
+    if (viewName === "inventory-flow") renderInventoryModule();
 
     if (viewName === "sku-stats") {
         // Chỉ cập nhật dữ liệu; sidebar sẽ quyết định hiện lịch hay chi tiết.
@@ -7460,6 +7897,642 @@ $("btnConfirmAdminDelete")?.addEventListener("click", async () => {
 
 
 
+
+/* ======================== V28 - TỒN KHO & LUÂN CHUYỂN ======================== */
+function inventoryMoney(value) {
+    return `${formatNumber(Math.round(Number(value) || 0))} đ`;
+}
+
+function getInventoryItemMapByShopeeSku() {
+    const map = new Map();
+    inventoryState.items.forEach(item => {
+        const sku = String(item.shopeeSku || "").trim();
+        if (sku) map.set(sku, item);
+    });
+    return map;
+}
+
+function getLatestShopeeLinesForInventory() {
+    const latest = new Map();
+
+    state.skuRows.forEach(row => {
+        const orderId = String(row.orderId || "").trim();
+        const sku = String(row.sku || "").trim();
+        if (!sku) return;
+
+        const key = `${orderId || row.rowKey || "NOORDER"}|${sku}`;
+        const reportDate = row.reportDate || row.orderDate || "";
+        const slotRank = normalizeRowSlot(row) === "afternoon" ? 2 : 1;
+        const rank = `${reportDate}|${slotRank}|${row.updatedAt || ""}`;
+
+        const previous = latest.get(key);
+        if (!previous || rank > previous.__rank) {
+            latest.set(key, { ...row, __rank: rank });
+        }
+    });
+
+    return [...latest.values()];
+}
+
+function classifyInventoryShopeeStatus(status) {
+    const textValue = normalizeText(status);
+
+    // Trạng thái "người mua đã nhận nhưng vẫn có thể yêu cầu trả hàng" vẫn là ĐÃ GIAO.
+    if (textValue.includes("nguoimuaxacnhandanhanduochang")) return "delivered";
+    if (textValue.includes("dagiao") || textValue.includes("delivered")) return "delivered";
+    if (textValue.includes("danggiao") || textValue.includes("shipping") || textValue.includes("intransit")) return "in_transit";
+    if (textValue.includes("chogiaohang") || textValue.includes("choxacnhan") || textValue.includes("topickup")) return "reserved";
+    if (textValue.includes("dahuy") || textValue.includes("cancel")) return "cancelled";
+    if (
+        textValue.includes("dangtrahang") ||
+        textValue.includes("yeucautrahang") ||
+        textValue.includes("trahangthanhcong") ||
+        textValue.includes("returning")
+    ) return "returning";
+    return "other";
+}
+
+function inventoryBucketLabel(bucket) {
+    return {
+        reserved: "Đã giữ cho đơn",
+        in_transit: "Đang giao",
+        delivered: "Đã giao",
+        returning: "Hoàn đang về",
+        cancelled: "Đã hủy",
+        other: "Khác"
+    }[bucket] || "Khác";
+}
+
+function expandShopeeRowToInventorySkus(row) {
+    const sku = String(row.sku || "").trim();
+    const quantity = Number(row.quantity || 0);
+    if (!sku || quantity <= 0) return [];
+
+    const rule = state.conversionRules?.[sku];
+    if (rule && Object.keys(rule).length) {
+        return Object.entries(rule)
+            .map(([baseSku, factor]) => ({
+                baseSku,
+                quantity: quantity * Number(factor || 0)
+            }))
+            .filter(item => item.quantity > 0);
+    }
+
+    return [{ baseSku: sku, quantity }];
+}
+
+function buildInventoryMovementRows() {
+    const itemMap = getInventoryItemMapByShopeeSku();
+    const latest = getLatestShopeeLinesForInventory();
+    const result = [];
+
+    latest.forEach(row => {
+        const bucket = classifyInventoryShopeeStatus(row.status);
+        const expanded = expandShopeeRowToInventorySkus(row);
+
+        expanded.forEach(part => {
+            const item = itemMap.get(part.baseSku) || null;
+            result.push({
+                orderId: row.orderId || "-",
+                reportDate: row.reportDate || row.orderDate || "",
+                sourceOrderDate: row.sourceOrderDate || "",
+                rawSku: row.sku || "",
+                baseSku: part.baseSku,
+                itemCode: item?.itemCode || "",
+                itemName: item?.name || row.product || "",
+                quantity: Number(part.quantity || 0),
+                status: row.status || "",
+                bucket
+            });
+        });
+    });
+
+    inventoryState.movementRows = result;
+    return result;
+}
+
+function getInventoryInvoiceQty(item) {
+    if (typeof ensureInvoiceStatsLoaded === "function") {
+        ensureInvoiceStatsLoaded();
+    }
+
+    const keyword = normalizeText(item.invoiceKeyword || "");
+    if (!keyword || !window.invoiceState && typeof invoiceState === "undefined") return 0;
+
+    return (invoiceState.rows || []).reduce((sum, row) => {
+        const product = normalizeText(row.productName || "");
+        return product.includes(keyword)
+            ? sum + Number(row.quantity || 0)
+            : sum;
+    }, 0);
+}
+
+function buildInventorySummary() {
+    if (!inventoryState.loaded) loadInventoryLocal();
+
+    const movementRows = buildInventoryMovementRows();
+    const bySku = new Map();
+
+    movementRows.forEach(row => {
+        if (!bySku.has(row.baseSku)) {
+            bySku.set(row.baseSku, {
+                reserved: 0,
+                in_transit: 0,
+                delivered: 0,
+                returning: 0,
+                cancelled: 0,
+                other: 0
+            });
+        }
+        const bucket = bySku.get(row.baseSku);
+        bucket[row.bucket] = Number(bucket[row.bucket] || 0) + Number(row.quantity || 0);
+    });
+
+    return inventoryState.items
+        .filter(item => item.active !== false)
+        .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0))
+        .map(item => {
+            const movement = bySku.get(item.shopeeSku) || {
+                reserved: 0, in_transit: 0, delivered: 0, returning: 0, cancelled: 0, other: 0
+            };
+            const invoiceQty = getInventoryInvoiceQty(item);
+            const physical = Number(item.physicalQty || 0);
+            const reserved = Number(movement.reserved || 0);
+            const available = Math.max(0, physical - reserved);
+            const waitingInvoice = Math.max(0, Number(movement.delivered || 0) - invoiceQty);
+
+            return {
+                ...item,
+                ...movement,
+                invoiceQty,
+                waitingInvoice,
+                available,
+                stockValue: physical * Number(item.unitPrice || 0)
+            };
+        });
+}
+
+function getInventoryUnmappedSkus() {
+    const mapped = new Set(
+        inventoryState.items.map(item => item.shopeeSku).filter(Boolean)
+    );
+
+    return [...new Set(
+        buildInventoryMovementRows()
+            .map(row => row.baseSku)
+            .filter(sku => sku && !mapped.has(sku))
+    )].sort();
+}
+
+function renderInventoryFlowBars(summary) {
+    const box = $("inventoryFlowBars");
+    if (!box) return;
+
+    const totals = {
+        reserved: summary.reduce((s, x) => s + x.reserved, 0),
+        in_transit: summary.reduce((s, x) => s + x.in_transit, 0),
+        delivered: summary.reduce((s, x) => s + x.delivered, 0),
+        invoiced: summary.reduce((s, x) => s + x.invoiceQty, 0),
+        returning: summary.reduce((s, x) => s + x.returning, 0)
+    };
+    const maxValue = Math.max(...Object.values(totals), 1);
+    const rows = [
+        ["reserved", "Đã giữ cho đơn"],
+        ["in_transit", "Đang giao"],
+        ["delivered", "Đã giao"],
+        ["invoiced", "Đã xuất HĐ (MISA)"],
+        ["returning", "Hoàn đang về"]
+    ];
+
+    box.innerHTML = rows.map(([key, label]) => `
+        <div class="inventory-flow-row">
+            <div class="inventory-flow-label">${label}</div>
+            <div class="inventory-flow-track">
+                <div class="inventory-flow-fill ${key}" style="width:${(totals[key] / maxValue) * 100}%"></div>
+            </div>
+            <div class="inventory-flow-value">${formatNumber(totals[key])}</div>
+        </div>
+    `).join("");
+}
+
+function renderInventoryMisaInfo(summary) {
+    const box = $("inventoryMisaInfo");
+    if (!box) return;
+    if (typeof ensureInvoiceStatsLoaded === "function") ensureInvoiceStatsLoaded();
+
+    if (!invoiceState.rows?.length) {
+        box.innerHTML = `
+            <strong>Chưa có file hóa đơn MISA đang xem.</strong><br>
+            Vào <b>Thống kê hóa đơn</b> và upload/xem một file, module tồn kho sẽ tự ghép số lượng theo từ khóa MISA đã cấu hình.
+        `;
+        return;
+    }
+
+    const totalMapped = summary.reduce((s, x) => s + Number(x.invoiceQty || 0), 0);
+    const dateText = invoiceState.dateFrom
+        ? (invoiceState.dateFrom === invoiceState.dateTo
+            ? formatDateLabel(invoiceState.dateFrom)
+            : `${formatDateLabel(invoiceState.dateFrom)} → ${formatDateLabel(invoiceState.dateTo)}`)
+        : "Không xác định";
+
+    box.innerHTML = `
+        <strong>✓ ${escapeHTML(invoiceState.fileName || "File MISA")}</strong><br>
+        Ngày hóa đơn: <b>${escapeHTML(dateText)}</b> · ${formatNumber(invoiceState.invoiceCount || 0)} hóa đơn.
+
+        <div class="inventory-misa-grid">
+            <div class="inventory-misa-stat"><span>SL ĐÃ GHÉP SKU</span><strong>${formatNumber(totalMapped)}</strong></div>
+            <div class="inventory-misa-stat"><span>NHÓM MẶT HÀNG</span><strong>${formatNumber(invoiceState.rows.length)}</strong></div>
+            <div class="inventory-misa-stat"><span>TỔNG TIỀN TT</span><strong>${inventoryMoney(getInvoiceTotals().payment)}</strong></div>
+        </div>
+    `;
+}
+
+function renderInventoryModule() {
+    if (!inventoryState.loaded) loadInventoryLocal();
+
+    const summary = buildInventorySummary();
+    const search = normalizeText($("inventorySearchInput")?.value || "");
+    const filtered = summary.filter(item =>
+        !search ||
+        normalizeText(item.itemCode).includes(search) ||
+        normalizeText(item.name).includes(search) ||
+        normalizeText(item.shopeeSku).includes(search)
+    );
+
+    const totals = summary.reduce((acc, item) => {
+        acc.physical += Number(item.physicalQty || 0);
+        acc.reserved += Number(item.reserved || 0);
+        acc.transit += Number(item.in_transit || 0);
+        acc.delivered += Number(item.delivered || 0);
+        acc.invoiced += Number(item.invoiceQty || 0);
+        acc.value += Number(item.stockValue || 0);
+        acc.waitingInvoice += Number(item.waitingInvoice || 0);
+        acc.returning += Number(item.returning || 0);
+        return acc;
+    }, { physical:0,reserved:0,transit:0,delivered:0,invoiced:0,value:0,waitingInvoice:0,returning:0 });
+
+    if ($("inventoryPhysicalTotal")) $("inventoryPhysicalTotal").textContent = formatNumber(totals.physical);
+    if ($("inventoryReservedTotal")) $("inventoryReservedTotal").textContent = formatNumber(totals.reserved);
+    if ($("inventoryTransitTotal")) $("inventoryTransitTotal").textContent = formatNumber(totals.transit);
+    if ($("inventoryDeliveredTotal")) $("inventoryDeliveredTotal").textContent = formatNumber(totals.delivered);
+    if ($("inventoryInvoicedTotal")) $("inventoryInvoicedTotal").textContent = formatNumber(totals.invoiced);
+    if ($("inventoryStockValue")) $("inventoryStockValue").textContent = inventoryMoney(totals.value);
+    if ($("navInventoryCount")) $("navInventoryCount").textContent = formatNumber(summary.length);
+
+    const latestStocktake = summary.map(x => x.stocktakeDate).filter(Boolean).sort().reverse()[0] || "";
+    if ($("inventorySummarySubtitle")) {
+        $("inventorySummarySubtitle").textContent =
+            `${formatNumber(summary.length)} mặt hàng · Kiểm kê gần nhất ${latestStocktake ? formatDateLabel(latestStocktake) : "chưa có"} · ` +
+            `Đang giao ${formatNumber(totals.transit)} · Đã giao ${formatNumber(totals.delivered)}`;
+    }
+
+    const badge = $("inventoryCloudBadge");
+    if (badge) {
+        badge.className = `inventory-cloud-badge ${inventoryState.cloudReady ? "cloud" : "local"}`;
+        badge.textContent = inventoryState.cloudReady
+            ? "☁️ Tồn kho đã lưu Cloud"
+            : "💻 Tồn kho đang lưu trên máy";
+    }
+
+    const unmapped = getInventoryUnmappedSkus();
+    const warning = $("inventoryWarningBox");
+    if (warning) {
+        if (unmapped.length) {
+            warning.classList.remove("hidden");
+            warning.innerHTML = `⚠ Có <strong>${unmapped.length} SKU quy đổi chưa được gắn với mặt hàng tồn kho</strong>: ${unmapped.map(escapeHTML).join(", ")}. ` +
+                `Bấm <b>Cập nhật tồn thực tế</b> để điền cột “SKU Shopee quy đổi”.`;
+        } else {
+            warning.classList.add("hidden");
+            warning.innerHTML = "";
+        }
+    }
+
+    const body = $("inventorySummaryBody");
+    const foot = $("inventorySummaryFoot");
+    if (body && foot) {
+        if (!filtered.length) {
+            body.innerHTML = '<tr><td colspan="15" class="empty-table">Không có mặt hàng phù hợp.</td></tr>';
+            foot.innerHTML = "";
+        } else {
+            body.innerHTML = filtered.map((item, index) => {
+                const safety = Number(item.safetyStock || 0);
+                const alertClass = item.available <= 0 ? "out" : item.available <= safety ? "low" : "ok";
+                const alertText = item.available <= 0 ? "Hết khả dụng" : item.available <= safety ? "Sắp hết" : "Ổn";
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${escapeHTML(item.itemCode)}</td>
+                        <td>
+                            <strong>${escapeHTML(item.name)}</strong>
+                            <div>${item.shopeeSku ? `Shopee: ${escapeHTML(item.shopeeSku)}` : '<span class="inventory-unmapped">Chưa map SKU Shopee</span>'}</div>
+                        </td>
+                        <td class="inventory-num">${formatNumber(item.openingQty || 0)}</td>
+                        <td class="inventory-num inventory-col-physical">${formatNumber(item.physicalQty || 0)}</td>
+                        <td class="inventory-num">${formatNumber(item.reserved || 0)}</td>
+                        <td class="inventory-num inventory-col-transit">${formatNumber(item.in_transit || 0)}</td>
+                        <td class="inventory-num">${formatNumber(item.delivered || 0)}</td>
+                        <td class="inventory-num">${formatNumber(item.invoiceQty || 0)}</td>
+                        <td class="inventory-num">${formatNumber(item.waitingInvoice || 0)}</td>
+                        <td class="inventory-num">${formatNumber(item.returning || 0)}</td>
+                        <td class="inventory-num inventory-col-available">${formatNumber(item.available || 0)}</td>
+                        <td class="right">${inventoryMoney(item.unitPrice || 0)}</td>
+                        <td class="right"><strong>${inventoryMoney(item.stockValue || 0)}</strong></td>
+                        <td class="center"><span class="inventory-alert-pill ${alertClass}">${alertText}</span></td>
+                    </tr>
+                `;
+            }).join("");
+
+            foot.innerHTML = `
+                <tr>
+                    <td></td>
+                    <td>TỔNG</td>
+                    <td>${formatNumber(summary.length)} mặt hàng</td>
+                    <td></td>
+                    <td class="center">${formatNumber(totals.physical)}</td>
+                    <td class="center">${formatNumber(totals.reserved)}</td>
+                    <td class="center">${formatNumber(totals.transit)}</td>
+                    <td class="center">${formatNumber(totals.delivered)}</td>
+                    <td class="center">${formatNumber(totals.invoiced)}</td>
+                    <td class="center">${formatNumber(totals.waitingInvoice)}</td>
+                    <td class="center">${formatNumber(totals.returning)}</td>
+                    <td></td><td></td>
+                    <td class="right">${inventoryMoney(totals.value)}</td>
+                    <td></td>
+                </tr>
+            `;
+        }
+    }
+
+    if ($("inventoryInvoiceSourceLabel")) {
+        $("inventoryInvoiceSourceLabel").textContent = invoiceState?.rows?.length
+            ? `Theo ${invoiceState.fileName || "file MISA đang xem"}`
+            : "Chưa có file hóa đơn MISA";
+    }
+
+    renderInventoryFlowBars(summary);
+    renderInventoryMisaInfo(summary);
+    renderInventoryMovementTable();
+}
+
+function renderInventoryMovementTable() {
+    const body = $("inventoryMovementBody");
+    const summary = $("inventoryMovementSummary");
+    if (!body || !summary) return;
+
+    const filter = $("inventoryMovementFilter")?.value || "all";
+    const search = normalizeText($("inventoryMovementSearch")?.value || "");
+    let rows = inventoryState.movementRows?.length ? [...inventoryState.movementRows] : buildInventoryMovementRows();
+
+    rows = rows.filter(row => {
+        const statusOk = filter === "all" || row.bucket === filter;
+        const searchOk = !search || normalizeText([
+            row.orderId,row.rawSku,row.baseSku,row.itemName,row.status
+        ].join(" ")).includes(search);
+        return statusOk && searchOk;
+    }).sort((a,b) => String(b.reportDate).localeCompare(String(a.reportDate)));
+
+    summary.textContent = `${formatNumber(rows.length)} dòng sau khi lấy trạng thái mới nhất theo Mã đơn + SKU`;
+
+    if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="10" class="empty-table">Không có dữ liệu phù hợp.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = rows.slice(0, 600).map((row,index) => `
+        <tr>
+            <td>${index+1}</td>
+            <td><strong>${escapeHTML(row.orderId)}</strong></td>
+            <td>${row.reportDate ? formatDateLabel(row.reportDate) : "-"}</td>
+            <td>${row.sourceOrderDate ? formatDateLabel(row.sourceOrderDate) : "-"}</td>
+            <td>${escapeHTML(row.rawSku)}</td>
+            <td>${escapeHTML(row.baseSku)}</td>
+            <td>${escapeHTML(row.itemName || "-")}</td>
+            <td>${formatNumber(row.quantity)}</td>
+            <td title="${escapeHTML(row.status)}">${escapeHTML(row.status)}</td>
+            <td><span class="inventory-bucket-pill ${row.bucket}">${inventoryBucketLabel(row.bucket)}</span></td>
+        </tr>
+    `).join("");
+}
+
+function openInventoryEditor() {
+    if (!inventoryState.loaded) loadInventoryLocal();
+    renderInventoryEditor();
+    $("inventoryEditorModal")?.classList.remove("hidden");
+}
+
+function closeInventoryEditor() {
+    $("inventoryEditorModal")?.classList.add("hidden");
+}
+
+function renderInventoryEditor() {
+    const body = $("inventoryEditorBody");
+    if (!body) return;
+
+    const latestDate = inventoryState.items.map(x => x.stocktakeDate).filter(Boolean).sort().reverse()[0] || getLocalTodayKey();
+    if ($("inventoryStocktakeDate")) $("inventoryStocktakeDate").value = latestDate;
+
+    body.innerHTML = inventoryState.items.map((item,index) => `
+        <tr data-inventory-editor-row="${index}">
+            <td>${index+1}</td>
+            <td><input class="inventory-editor-input" data-field="itemCode" value="${escapeHTML(item.itemCode || "")}"></td>
+            <td><input class="inventory-editor-input" data-field="name" value="${escapeHTML(item.name || "")}"></td>
+            <td><input class="inventory-editor-input" data-field="shopeeSku" value="${escapeHTML(item.shopeeSku || "")}" placeholder="VD: REWD"></td>
+            <td><input class="inventory-editor-input" data-field="invoiceKeyword" value="${escapeHTML(item.invoiceKeyword || "")}" placeholder="Từ khóa tên hàng MISA"></td>
+            <td><input class="inventory-editor-input number" type="number" min="0" step="1" data-field="openingQty" value="${Number(item.openingQty || 0)}"></td>
+            <td><input class="inventory-editor-input number" type="number" min="0" step="1" data-field="physicalQty" value="${Number(item.physicalQty || 0)}"></td>
+            <td><input class="inventory-editor-input number" type="number" min="0" step="1" data-field="safetyStock" value="${Number(item.safetyStock || 0)}"></td>
+            <td><input class="inventory-editor-input number" type="number" min="0" step="1000" data-field="unitPrice" value="${Number(item.unitPrice || 0)}"></td>
+        </tr>
+    `).join("");
+}
+
+function collectInventoryEditorItems() {
+    const stocktakeDate = $("inventoryStocktakeDate")?.value || getLocalTodayKey();
+    return [...document.querySelectorAll("[data-inventory-editor-row]")].map((row,index) => {
+        const get = field => row.querySelector(`[data-field="${field}"]`)?.value ?? "";
+        return {
+            itemCode: String(get("itemCode")).trim() || `WH-CUSTOM-${Date.now()}-${index}`,
+            name: String(get("name")).trim(),
+            shopeeSku: String(get("shopeeSku")).trim(),
+            invoiceKeyword: String(get("invoiceKeyword")).trim(),
+            openingQty: Math.max(0, Number(get("openingQty")) || 0),
+            physicalQty: Math.max(0, Number(get("physicalQty")) || 0),
+            safetyStock: Math.max(0, Number(get("safetyStock")) || 0),
+            unitPrice: Math.max(0, Number(get("unitPrice")) || 0),
+            stocktakeDate,
+            sortOrder: index + 1,
+            active: true
+        };
+    }).filter(item => item.name);
+}
+
+function addInventoryEditorItem() {
+    inventoryState.items.push({
+        itemCode: `WH-CUSTOM-${Date.now()}`,
+        name: "",
+        shopeeSku: "",
+        invoiceKeyword: "",
+        openingQty: 0,
+        physicalQty: 0,
+        safetyStock: 0,
+        unitPrice: 0,
+        stocktakeDate: $("inventoryStocktakeDate")?.value || getLocalTodayKey(),
+        sortOrder: inventoryState.items.length + 1,
+        active: true
+    });
+    renderInventoryEditor();
+}
+
+async function saveInventoryEditor() {
+    const button = $("btnInventoryEditorSave");
+    const items = collectInventoryEditorItems();
+    if (!items.length) {
+        alert("Hãy giữ ít nhất 1 mặt hàng tồn kho.");
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "ĐANG LƯU...";
+    try {
+        inventoryState.items = items;
+        await saveInventoryItems({ createStocktake: true });
+        closeInventoryEditor();
+        renderInventoryModule();
+        showToast("Đã lưu tồn kho thực tế và tạo mốc kiểm kê.");
+    } catch (error) {
+        console.error(error);
+        alert("Không lưu được tồn kho.\n\n" + (error?.message || ""));
+    } finally {
+        button.disabled = false;
+        button.textContent = "💾 Lưu kiểm kê";
+    }
+}
+
+async function readInventoryWorkbook(file) {
+    if (typeof XLSX === "undefined") throw new Error("Không tải được thư viện Excel.");
+    return new Promise((resolve,reject) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const wb = XLSX.read(new Uint8Array(e.target.result), { type:"array", cellDates:true });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                resolve(XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:true}));
+            } catch(err){ reject(err); }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+function parseInventoryWorkbook(matrix) {
+    const headerIndex = matrix.findIndex(row => {
+        const cells = (row || []).map(v => normalizeText(v));
+        return cells.includes("tensp") && (cells.includes("toncuoi") || cells.includes("tonthucte"));
+    });
+    if (headerIndex < 0) throw new Error("Không tìm thấy dòng tiêu đề TÊN SP / TỒN CUỐI.");
+
+    const headers = matrix[headerIndex].map(v => normalizeText(v));
+    const cName = headers.findIndex(v => v === "tensp" || v === "tensanpham");
+    const cOpening = headers.findIndex(v => v === "tondau");
+    const cPhysical = headers.findIndex(v => v === "toncuoi" || v === "tonthucte");
+    const cPrice = headers.findIndex(v => v === "dongia");
+
+    let stocktakeDate = "";
+    matrix.slice(0, headerIndex + 2).forEach((row, rIndex) => {
+        (row || []).forEach((cell, cIndex) => {
+            if (normalizeText(cell) === "tinhtoingay") {
+                for (let j=cIndex+1;j<row.length;j++) {
+                    if (row[j] !== "" && row[j] != null) {
+                        stocktakeDate = normalizeOrderDate(row[j]);
+                        break;
+                    }
+                }
+                if (!stocktakeDate && matrix[rIndex+1]) {
+                    for (const value of matrix[rIndex+1]) {
+                        const d = normalizeOrderDate(value);
+                        if (d) { stocktakeDate = d; break; }
+                    }
+                }
+            }
+        });
+    });
+    stocktakeDate = stocktakeDate || getLocalTodayKey();
+
+    const rows = [];
+    for (let i=headerIndex+1;i<matrix.length;i++) {
+        const row = matrix[i] || [];
+        const name = String(row[cName] ?? "").trim();
+        if (!name || normalizeText(name).includes("tongkho")) continue;
+        const physical = Math.max(0, Number(String(row[cPhysical] ?? 0).replace(/\./g, "").replace(/,/g, ".")) || 0);
+        const opening = cOpening >= 0 ? Math.max(0, Number(String(row[cOpening] ?? 0).replace(/\./g, "").replace(/,/g, ".")) || 0) : 0;
+        const price = cPrice >= 0 ? Math.max(0, Number(String(row[cPrice] ?? 0).replace(/\./g, "").replace(/,/g, ".")) || 0) : 0;
+        rows.push({ name, openingQty: opening, physicalQty: physical, unitPrice: price, stocktakeDate });
+    }
+    if (!rows.length) throw new Error("Không đọc được mặt hàng tồn kho nào.");
+    return { rows, stocktakeDate };
+}
+
+async function importInventoryExcel(file) {
+    try {
+        const matrix = await readInventoryWorkbook(file);
+        const parsed = parseInventoryWorkbook(matrix);
+        const existingByName = new Map(inventoryState.items.map(item => [normalizeText(item.name), item]));
+
+        parsed.rows.forEach((row,index) => {
+            const key = normalizeText(row.name);
+            const existing = existingByName.get(key);
+            if (existing) {
+                existing.openingQty = row.openingQty;
+                existing.physicalQty = row.physicalQty;
+                if (row.unitPrice) existing.unitPrice = row.unitPrice;
+                existing.stocktakeDate = parsed.stocktakeDate;
+            } else {
+                inventoryState.items.push({
+                    itemCode: `WH-IMP-${Date.now()}-${index+1}`,
+                    name: row.name, shopeeSku:"", invoiceKeyword:"",
+                    openingQty:row.openingQty, physicalQty:row.physicalQty,
+                    safetyStock:0, unitPrice:row.unitPrice, stocktakeDate:parsed.stocktakeDate,
+                    sortOrder:inventoryState.items.length+1, active:true
+                });
+            }
+        });
+
+        const ok = confirm(`Đã đọc ${parsed.rows.length} mặt hàng, ngày kiểm kê ${formatDateLabel(parsed.stocktakeDate)}.\n\nLưu các số tồn này vào hệ thống?`);
+        if (!ok) return;
+
+        await saveInventoryItems({ createStocktake:true });
+        renderInventoryModule();
+        showToast(`Đã cập nhật tồn kho từ ${file.name}.`);
+    } catch(error) {
+        console.error(error);
+        alert("Không đọc được file tồn kho.\n\n" + (error?.message || ""));
+    } finally {
+        if ($("inventoryStockFileInput")) $("inventoryStockFileInput").value = "";
+    }
+}
+
+$("btnInventoryEdit")?.addEventListener("click", openInventoryEditor);
+$("btnInventoryEditorClose")?.addEventListener("click", closeInventoryEditor);
+$("btnInventoryEditorCancel")?.addEventListener("click", closeInventoryEditor);
+$("btnInventoryAddItem")?.addEventListener("click", addInventoryEditorItem);
+$("btnInventoryEditorSave")?.addEventListener("click", saveInventoryEditor);
+$("inventoryEditorModal")?.addEventListener("click", e => { if (e.target === $("inventoryEditorModal")) closeInventoryEditor(); });
+$("inventorySearchInput")?.addEventListener("input", renderInventoryModule);
+$("inventoryMovementFilter")?.addEventListener("change", renderInventoryMovementTable);
+$("inventoryMovementSearch")?.addEventListener("input", renderInventoryMovementTable);
+$("btnInventoryOpenInvoice")?.addEventListener("click", () => openView("invoice-stats"));
+$("btnInventoryRefresh")?.addEventListener("click", async () => {
+    try {
+        if (state.user) await loadInventoryData();
+        renderInventoryModule();
+        showToast("Đã làm mới tồn kho và trạng thái luân chuyển.");
+    } catch(error){ alert(error?.message || "Không làm mới được dữ liệu."); }
+});
+$("inventoryStockFileInput")?.addEventListener("change", e => {
+    const file = e.target.files?.[0];
+    if (file) importInventoryExcel(file);
+});
+
 /* ======================== V23 - THỐNG KÊ HÓA ĐƠN ======================== */
 const INVOICE_STATS_STORAGE_KEY = "rucos_invoice_stats_v23";
 const INVOICE_HISTORY_STORAGE_KEY = "rucos_invoice_history_v27";
@@ -8495,6 +9568,7 @@ function clearInvoiceStats() {
     }
 
     renderInvoiceStats();
+    renderInventoryModule();
 }
 
 function exportInvoiceStatsExcel() {
@@ -8809,6 +9883,7 @@ async function initApp() {
         if (!session) {
             state.user = null;
             updateUserUi();
+            loadInventoryLocal();
             renderAll();
             setAuthGateVisible(true);
         } else {
