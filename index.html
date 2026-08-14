@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V32: upload MISA trực tiếp trong tồn kho + tự cập nhật đối chiếu hóa đơn -->
+    <!-- ONE-FILE V33: snapshot đơn luân chuyển Shopee riêng + nguồn vận hành tách biệt -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3588,6 +3588,150 @@ button{cursor:pointer}
     .inventory-misa-upload-effect{grid-column:1/-1;border-left:0;border-top:1px solid #d6e8e3;padding:8px 0 0}
 }
 
+
+/* =========================================================
+   V33 - SNAPSHOT ĐƠN LUÂN CHUYỂN SHOPEE
+========================================================= */
+.inventory-transit-upload-button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:35px;
+    padding:0 11px;
+    border:1px solid #a8cfee;
+    border-radius:7px;
+    background:#f0f7fd;
+    color:#2478b6;
+    font-size:8.5px;
+    font-weight:850;
+    cursor:pointer;
+    white-space:nowrap
+}
+.inventory-transit-upload-button:hover{
+    background:#e6f2fb;
+    border-color:#79b6e4
+}
+.inventory-transit-upload-button input{display:none}
+
+.inventory-transit-source-card{
+    display:grid;
+    grid-template-columns:42px minmax(0,1fr) auto;
+    gap:11px;
+    align-items:center;
+    margin-bottom:10px;
+    padding:11px 12px;
+    border:1px solid #cfdfe9;
+    border-radius:9px;
+    background:#f7fbfe
+}
+.inventory-transit-source-card.loaded{
+    border-color:#8dc4e8;
+    background:#f0f8fd
+}
+.inventory-transit-source-card.warning{
+    border-color:#efd6a5;
+    background:#fffaf0
+}
+.inventory-transit-source-icon{
+    width:38px;
+    height:38px;
+    display:grid;
+    place-items:center;
+    border-radius:9px;
+    background:#e8f3fb;
+    font-size:18px
+}
+.inventory-transit-source-copy{
+    min-width:0
+}
+.inventory-transit-source-copy strong{
+    display:block;
+    color:#294754;
+    font-size:9.8px;
+    line-height:1.35
+}
+.inventory-transit-source-copy span{
+    display:block;
+    margin-top:3px;
+    color:#768b95;
+    font-size:7.8px;
+    line-height:1.55
+}
+.inventory-transit-source-actions{
+    display:flex;
+    align-items:center;
+    gap:6px
+}
+.inventory-transit-statuses{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    margin-top:7px
+}
+.inventory-transit-status-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    min-height:22px;
+    padding:0 7px;
+    border:1px solid #d9e7ef;
+    border-radius:999px;
+    background:#fff;
+    color:#58707d;
+    font-size:7.1px;
+    font-weight:800
+}
+.inventory-transit-status-chip strong{
+    display:inline;
+    color:#2478b6;
+    font-size:7.4px
+}
+.inventory-transit-source-badge{
+    display:inline-flex;
+    align-items:center;
+    min-height:20px;
+    padding:0 6px;
+    border-radius:999px;
+    background:#e9f5fc;
+    color:#2478b6;
+    font-size:6.8px;
+    font-weight:850
+}
+.inventory-transit-no-delivered{
+    color:#9a650d!important;
+    font-weight:800
+}
+
+.inventory-transit-uploading{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color:#2478b6!important;
+    font-weight:800
+}
+.inventory-transit-uploading:before{
+    content:"";
+    width:8px;
+    height:8px;
+    border:2px solid #bfdbed;
+    border-top-color:#2478b6;
+    border-radius:50%;
+    animation:inventoryTransitSpin .75s linear infinite
+}
+@keyframes inventoryTransitSpin{
+    to{transform:rotate(360deg)}
+}
+
+@media(max-width:900px){
+    .inventory-transit-source-card{
+        grid-template-columns:38px 1fr
+    }
+    .inventory-transit-source-actions{
+        grid-column:1/-1;
+        justify-content:flex-end
+    }
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -4322,6 +4466,11 @@ button{cursor:pointer}
                         <input id="inventoryStockFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv">
                     </label>
 
+                    <label class="inventory-transit-upload-button">
+                        🚚 Upload đơn luân chuyển
+                        <input id="inventoryTransitFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv">
+                    </label>
+
                     <label class="inventory-misa-upload-button">
                         🧾 Upload MISA đã xuất HĐ
                         <input id="inventoryMisaFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv">
@@ -4346,6 +4495,21 @@ button{cursor:pointer}
             </div>
 
             <div id="inventoryTabOverview" class="inventory-tab-pane active">
+
+            <div id="inventoryTransitSourceCard" class="inventory-transit-source-card">
+                <div class="inventory-transit-source-icon">🚚</div>
+                <div class="inventory-transit-source-copy">
+                    <strong>Chưa có file đơn luân chuyển Shopee</strong>
+                    <span>
+                        Các cột Giữ đơn / Đang giao / Đã giao / Hoàn đang về sẽ bằng 0 cho đến khi upload snapshot hiện tại.
+                    </span>
+                </div>
+                <div class="inventory-transit-source-actions">
+                    <button type="button" id="btnInventoryTransitChooseFile" class="btn btn-primary">
+                        Upload file luân chuyển
+                    </button>
+                </div>
+            </div>
 
             <div id="inventoryWarningBox" class="inventory-warning-box hidden"></div>
 
@@ -4411,12 +4575,12 @@ button{cursor:pointer}
                                 <th>Tên sản phẩm</th>
                                 <th class="center">Tồn đầu</th>
                                 <th class="center inventory-col-physical">Tồn thực tế</th>
-                                <th class="center">Giữ đơn</th>
-                                <th class="center inventory-col-transit">Đang giao</th>
-                                <th class="center">Đã giao</th>
+                                <th class="center" title="Nguồn: file đơn luân chuyển Shopee mới nhất">Giữ đơn 🚚</th>
+                                <th class="center inventory-col-transit" title="Nguồn: file đơn luân chuyển Shopee mới nhất">Đang giao 🚚</th>
+                                <th class="center" title="Nguồn: file đơn luân chuyển Shopee mới nhất, nếu file có trạng thái đã giao">Đã giao 🚚</th>
                                 <th class="center">Đã xuất HĐ (MISA)</th>
                                 <th class="center">Chờ HĐ*</th>
-                                <th class="center">Hoàn đang về</th>
+                                <th class="center" title="Nguồn: file đơn luân chuyển Shopee mới nhất">Hoàn đang về 🚚</th>
                                 <th class="center inventory-col-available">Khả dụng</th>
                                 <th class="right">Đơn giá</th>
                                 <th class="right">Giá trị tồn</th>
@@ -4431,9 +4595,12 @@ button{cursor:pointer}
                 </div>
 
                 <div class="inventory-table-note">
-                    <strong>* Chờ HĐ</strong> = Đã giao − số lượng <strong>đã phát hành hóa đơn</strong> trong file MISA đang xem.
-                    V30 chỉ tính các dòng có <strong>Số hóa đơn</strong> và không có trạng thái hủy/không hợp lệ.
-                    Chỉ số này vẫn là ước tính theo SKU nếu file MISA chưa có <strong>Mã đơn Shopee</strong>.
+                    <strong>🚚 Nguồn luân chuyển:</strong>
+                    Giữ đơn / Đang giao / Đã giao / Hoàn đang về lấy từ <strong>snapshot Shopee mới nhất</strong> mà bạn upload tại module này.
+                    Mỗi lần upload file mới sẽ <strong>thay snapshot đang dùng</strong>, không cộng chồng lên file cũ.
+                    <br>
+                    <strong>* Chờ HĐ</strong> = Đã giao trong snapshot − số lượng <strong>đã phát hành hóa đơn</strong> trong file MISA đang xem.
+                    Nếu file snapshot không chứa trạng thái Đã giao thì cột Đã giao = 0 và hệ thống sẽ cảnh báo.
                 </div>
             </div>
 
@@ -4442,7 +4609,7 @@ button{cursor:pointer}
                     <div class="panel-header">
                         <div>
                             <h2>Luồng hàng hiện tại</h2>
-                            <p>Phân tách hàng theo trạng thái Shopee mới nhất của từng Mã đơn + SKU.</p>
+                            <p>Phân tách theo file snapshot đơn luân chuyển Shopee mới nhất.</p>
                         </div>
                     </div>
 
@@ -4503,7 +4670,7 @@ button{cursor:pointer}
                             </tr>
                         </thead>
                         <tbody id="inventoryMovementBody">
-                            <tr><td colspan="10" class="empty-table">Chưa có dữ liệu Shopee.</td></tr>
+                            <tr><td colspan="10" class="empty-table">Chưa upload snapshot đơn luân chuyển Shopee.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -5314,6 +5481,8 @@ const INVENTORY_LOCAL_KEY = "rucos_inventory_v28";
 const DB_INVENTORY_ITEMS = "inventory_items";
 const DB_INVENTORY_STOCKTAKES = "inventory_stocktakes";
 const DB_INVENTORY_TRANSACTIONS = "inventory_transactions";
+const DB_INVENTORY_TRANSIT_SNAPSHOTS = "inventory_transit_snapshots";
+const DB_INVENTORY_TRANSIT_ROWS = "inventory_transit_rows";
 
 const inventoryState = {
     items: [],
@@ -5327,7 +5496,9 @@ const inventoryState = {
     reconcileCounts: {},
     currentDate: "",
     reconcileDate: "",
-    misaAssignment: null
+    misaAssignment: null,
+    transitSnapshot: null,
+    transitCloudReady: false
 };
 
 const DEFAULT_INVENTORY_ITEMS = [
@@ -5615,7 +5786,8 @@ function saveInventoryLocal() {
             JSON.stringify({
                 items: inventoryState.items,
                 stocktakes: inventoryState.stocktakes,
-                transactions: inventoryState.transactions
+                transactions: inventoryState.transactions,
+                transitSnapshot: inventoryState.transitSnapshot
             })
         );
     } catch (error) {
@@ -5630,20 +5802,84 @@ function loadInventoryLocal() {
             inventoryState.items = saved.items;
             inventoryState.stocktakes = Array.isArray(saved.stocktakes) ? saved.stocktakes : [];
             inventoryState.transactions = Array.isArray(saved.transactions) ? saved.transactions : [];
+            inventoryState.transitSnapshot = saved.transitSnapshot || null;
         } else {
             inventoryState.items = DEFAULT_INVENTORY_ITEMS.map(item => ({ ...item }));
             inventoryState.stocktakes = [];
             inventoryState.transactions = [];
+            inventoryState.transitSnapshot = null;
             saveInventoryLocal();
         }
     } catch (error) {
         inventoryState.items = DEFAULT_INVENTORY_ITEMS.map(item => ({ ...item }));
         inventoryState.stocktakes = [];
         inventoryState.transactions = [];
+        inventoryState.transitSnapshot = null;
     }
     inventoryState.loaded = true;
     inventoryState.cloudReady = false;
     inventoryState.mode = "local";
+}
+
+
+async function loadLatestInventoryTransitSnapshot(client) {
+    inventoryState.transitCloudReady = false;
+
+    try {
+        const { data: snapshots, error: snapshotError } = await client
+            .from(DB_INVENTORY_TRANSIT_SNAPSHOTS)
+            .select("*")
+            .order("imported_at", { ascending: false })
+            .limit(1);
+
+        if (snapshotError) throw snapshotError;
+
+        const snapshot = snapshots?.[0];
+
+        if (!snapshot) {
+            inventoryState.transitSnapshot = null;
+            inventoryState.transitCloudReady = true;
+            return;
+        }
+
+        const { data: rows, error: rowError } = await client
+            .from(DB_INVENTORY_TRANSIT_ROWS)
+            .select("*")
+            .eq("snapshot_id", snapshot.id)
+            .order("row_no", { ascending: true });
+
+        if (rowError) throw rowError;
+
+        inventoryState.transitSnapshot = {
+            id: snapshot.id,
+            snapshotDate: snapshot.snapshot_date || "",
+            importedAt: snapshot.imported_at || "",
+            fileName: snapshot.file_name || "",
+            rowCount: Number(snapshot.row_count || 0),
+            orderCount: Number(snapshot.order_count || 0),
+            statusCounts: snapshot.status_counts || {},
+            rows: (rows || []).map(row => ({
+                rowNumber: Number(row.row_no || 0),
+                orderId: row.order_id || "",
+                orderDate: row.order_date || "",
+                orderDateRaw: row.order_date || "",
+                status: row.status || "",
+                sku: row.sku || "",
+                product: row.product || "",
+                quantity: Number(row.quantity || 0),
+                sourceFile: snapshot.file_name || "",
+                snapshotDate: snapshot.snapshot_date || "",
+                updatedAt: snapshot.imported_at || ""
+            }))
+        };
+
+        inventoryState.transitCloudReady = true;
+        saveInventoryLocal();
+    } catch (error) {
+        console.warn("Transit snapshot Cloud chưa sẵn sàng:", error);
+        inventoryState.transitCloudReady = false;
+        // Giữ snapshot local cũ nếu có, tránh làm hỏng toàn bộ module tồn kho.
+    }
 }
 
 async function loadInventoryData() {
@@ -5695,6 +5931,8 @@ async function loadInventoryData() {
         inventoryState.loaded = true;
         inventoryState.cloudReady = true;
         inventoryState.mode = "cloud";
+
+        await loadLatestInventoryTransitSnapshot(client);
         saveInventoryLocal();
     } catch (error) {
         console.warn("Inventory Cloud chưa sẵn sàng, dùng LocalStorage:", error);
@@ -8999,7 +9237,7 @@ function getInventoryItemMapByShopeeSku() {
     return map;
 }
 
-function getLatestShopeeLinesForInventory(asOfDate = "") {
+function getLatestDailyShopeeLinesForInventory(asOfDate = "") {
     const latest = new Map();
 
     state.skuRows.forEach(row => {
@@ -9025,6 +9263,20 @@ function getLatestShopeeLinesForInventory(asOfDate = "") {
     });
 
     return [...latest.values()];
+}
+
+function getTransitSnapshotRowsForInventory() {
+    if (!inventoryState.transitSnapshot?.rows?.length) {
+        return [];
+    }
+
+    return inventoryState.transitSnapshot.rows.map(row => ({
+        ...row,
+        reportDate: inventoryState.transitSnapshot.snapshotDate || "",
+        sourceOrderDate: row.orderDate || "",
+        sourceFile: inventoryState.transitSnapshot.fileName || "",
+        updatedAt: inventoryState.transitSnapshot.importedAt || ""
+    }));
 }
 
 function classifyInventoryShopeeStatus(status) {
@@ -9076,26 +9328,40 @@ function expandShopeeRowToInventorySkus(row) {
 
 function buildInventoryMovementRows(asOfDate = "") {
     const itemMap = getInventoryItemMapByShopeeSku();
-    const latest = getLatestShopeeLinesForInventory(asOfDate);
+
+    // V33:
+    // - Không truyền ngày => Dashboard vận hành dùng SNAPSHOT luân chuyển mới nhất.
+    // - Có asOfDate => phần tồn lý thuyết vẫn dùng lịch sử Shopee ngày/ca đã lưu,
+    //   vì snapshot hiện tại không phải là lịch sử sự kiện xuất kho.
+    const sourceRows = asOfDate
+        ? getLatestDailyShopeeLinesForInventory(asOfDate)
+        : getTransitSnapshotRowsForInventory();
+
     const result = [];
 
-    latest.forEach(row => {
+    sourceRows.forEach(row => {
         const bucket = classifyInventoryShopeeStatus(row.status);
         const expanded = expandShopeeRowToInventorySkus(row);
 
         expanded.forEach(part => {
             const item = itemMap.get(part.baseSku) || null;
+
             result.push({
                 orderId: row.orderId || "-",
-                reportDate: row.reportDate || row.orderDate || "",
-                sourceOrderDate: row.sourceOrderDate || "",
+                reportDate:
+                    row.reportDate ||
+                    inventoryState.transitSnapshot?.snapshotDate ||
+                    row.orderDate ||
+                    "",
+                sourceOrderDate: row.sourceOrderDate || row.orderDate || "",
                 rawSku: row.sku || "",
                 baseSku: part.baseSku,
                 itemCode: item?.itemCode || "",
                 itemName: item?.name || row.product || "",
                 quantity: Number(part.quantity || 0),
                 status: row.status || "",
-                bucket
+                bucket,
+                sourceType: asOfDate ? "daily-history" : "transit-snapshot"
             });
         });
     });
@@ -9103,6 +9369,7 @@ function buildInventoryMovementRows(asOfDate = "") {
     if (!asOfDate) {
         inventoryState.movementRows = result;
     }
+
     return result;
 }
 
@@ -9224,6 +9491,286 @@ function getLegacyInventoryInvoiceQty(item) {
             ? sum + Number(row.quantity || 0)
             : sum;
     }, 0);
+}
+
+
+function getInventoryTransitStatusSummary(rows = []) {
+    const summary = {
+        reserved: 0,
+        in_transit: 0,
+        delivered: 0,
+        returning: 0,
+        cancelled: 0,
+        other: 0
+    };
+
+    rows.forEach(row => {
+        const bucket = classifyInventoryShopeeStatus(row.status);
+        summary[bucket] = Number(summary[bucket] || 0) + Number(row.quantity || 0);
+    });
+
+    return summary;
+}
+
+function getInventoryTransitObservedStatuses(rows = []) {
+    const counts = new Map();
+
+    rows.forEach(row => {
+        const status = String(row.status || "").trim();
+        if (!status) return;
+        counts.set(status, Number(counts.get(status) || 0) + Number(row.quantity || 0));
+    });
+
+    return [...counts.entries()]
+        .map(([status, quantity]) => ({ status, quantity }))
+        .sort((a, b) => b.quantity - a.quantity);
+}
+
+function renderInventoryTransitSourceCard() {
+    const box = $("inventoryTransitSourceCard");
+    if (!box) return;
+
+    const snapshot = inventoryState.transitSnapshot;
+
+    if (!snapshot?.rows?.length) {
+        box.classList.remove("loaded", "warning");
+        box.innerHTML = `
+            <div class="inventory-transit-source-icon">🚚</div>
+            <div class="inventory-transit-source-copy">
+                <strong>Chưa có file đơn luân chuyển Shopee</strong>
+                <span>
+                    V33 không còn lấy Giữ đơn / Đang giao / Đã giao / Hoàn đang về từ bảng Thống kê SKU.
+                    Hãy upload file Order.all... chứa trạng thái hiện tại của các đơn cần theo dõi.
+                </span>
+            </div>
+            <div class="inventory-transit-source-actions">
+                <button type="button" class="btn btn-primary" data-trigger-transit-upload>
+                    Upload file luân chuyển
+                </button>
+            </div>
+        `;
+
+        box.querySelector("[data-trigger-transit-upload]")?.addEventListener("click", () => {
+            $("inventoryTransitFileInput")?.click();
+        });
+
+        return;
+    }
+
+    const movement = getInventoryTransitStatusSummary(snapshot.rows);
+    const statuses = getInventoryTransitObservedStatuses(snapshot.rows);
+    const hasDelivered = movement.delivered > 0;
+
+    box.classList.add("loaded");
+    box.classList.toggle("warning", !hasDelivered);
+
+    const importedText = snapshot.importedAt
+        ? formatDateTimeVi(snapshot.importedAt)
+        : (snapshot.snapshotDate ? formatDateLabel(snapshot.snapshotDate) : "-");
+
+    box.innerHTML = `
+        <div class="inventory-transit-source-icon">🚚</div>
+
+        <div class="inventory-transit-source-copy">
+            <strong>${escapeHTML(snapshot.fileName || "File luân chuyển Shopee")}</strong>
+            <span>
+                Snapshot đang dùng · ${formatNumber(snapshot.orderCount || 0)} đơn ·
+                ${formatNumber(snapshot.rowCount || snapshot.rows.length)} dòng ·
+                cập nhật ${escapeHTML(importedText)}.
+                ${!hasDelivered
+                    ? '<span class="inventory-transit-no-delivered"> File này không có trạng thái “Đã giao”, nên cột Đã giao hiện = 0.</span>'
+                    : ""}
+            </span>
+
+            <div class="inventory-transit-statuses">
+                <span class="inventory-transit-status-chip">Giữ đơn <strong>${formatNumber(movement.reserved)}</strong></span>
+                <span class="inventory-transit-status-chip">Đang giao <strong>${formatNumber(movement.in_transit)}</strong></span>
+                <span class="inventory-transit-status-chip">Đã giao <strong>${formatNumber(movement.delivered)}</strong></span>
+                <span class="inventory-transit-status-chip">Hoàn về <strong>${formatNumber(movement.returning)}</strong></span>
+                ${statuses.slice(0, 3).map(item => `
+                    <span class="inventory-transit-source-badge" title="${escapeHTML(item.status)}">
+                        ${escapeHTML(item.status.length > 28 ? item.status.slice(0, 28) + "…" : item.status)}
+                    </span>
+                `).join("")}
+            </div>
+        </div>
+
+        <div class="inventory-transit-source-actions">
+            <button type="button" class="btn btn-light" data-trigger-transit-upload>
+                Thay file snapshot
+            </button>
+        </div>
+    `;
+
+    box.querySelector("[data-trigger-transit-upload]")?.addEventListener("click", () => {
+        $("inventoryTransitFileInput")?.click();
+    });
+}
+
+async function saveInventoryTransitSnapshotCloud(snapshot) {
+    if (!inventoryState.cloudReady || !state.user) {
+        return null;
+    }
+
+    const client = initSupabaseClient();
+
+    const statusCounts = {};
+    snapshot.rows.forEach(row => {
+        const status = String(row.status || "").trim() || "(Trống)";
+        statusCounts[status] = Number(statusCounts[status] || 0) + Number(row.quantity || 0);
+    });
+
+    const { data: savedSnapshot, error: snapshotError } = await client
+        .from(DB_INVENTORY_TRANSIT_SNAPSHOTS)
+        .insert({
+            snapshot_date: snapshot.snapshotDate,
+            file_name: snapshot.fileName,
+            row_count: snapshot.rowCount,
+            order_count: snapshot.orderCount,
+            status_counts: statusCounts,
+            created_by: state.user.id
+        })
+        .select("*")
+        .single();
+
+    if (snapshotError) throw snapshotError;
+
+    const snapshotId = savedSnapshot.id;
+    const chunkSize = 500;
+
+    for (let start = 0; start < snapshot.rows.length; start += chunkSize) {
+        const batch = snapshot.rows.slice(start, start + chunkSize).map((row, index) => ({
+            snapshot_id: snapshotId,
+            row_no: Number(row.rowNumber || start + index + 1),
+            order_id: row.orderId || null,
+            order_date: row.orderDate || null,
+            status: row.status || null,
+            sku: row.sku || null,
+            product: row.product || null,
+            quantity: Number(row.quantity || 0)
+        }));
+
+        const { error: rowError } = await client
+            .from(DB_INVENTORY_TRANSIT_ROWS)
+            .insert(batch);
+
+        if (rowError) {
+            // Xóa snapshot header để tránh để lại snapshot rỗng/lỗi.
+            await client
+                .from(DB_INVENTORY_TRANSIT_SNAPSHOTS)
+                .delete()
+                .eq("id", snapshotId)
+                .catch(() => {});
+            throw rowError;
+        }
+    }
+
+    return {
+        ...snapshot,
+        id: snapshotId,
+        importedAt: savedSnapshot.imported_at || snapshot.importedAt,
+        statusCounts: savedSnapshot.status_counts || statusCounts
+    };
+}
+
+async function processInventoryTransitUpload(file) {
+    if (!file) return;
+
+    const sourceCard = $("inventoryTransitSourceCard");
+
+    try {
+        if (sourceCard) {
+            sourceCard.classList.add("loaded");
+            sourceCard.classList.remove("warning");
+            sourceCard.innerHTML = `
+                <div class="inventory-transit-source-icon">🚚</div>
+                <div class="inventory-transit-source-copy">
+                    <strong>Đang đọc ${escapeHTML(file.name)}</strong>
+                    <span class="inventory-transit-uploading">
+                        Đang kiểm tra Mã đơn, SKU, số lượng và trạng thái hiện tại...
+                    </span>
+                </div>
+                <div class="inventory-transit-source-actions"></div>
+            `;
+        }
+
+        showToast("Đang đọc file đơn luân chuyển Shopee...");
+
+        const rows = await readExcelFile(file);
+        const parsedRows = parseShopeeRows(rows);
+        const validationError = validateShopeeFile(rows, parsedRows, file.name);
+
+        if (validationError) {
+            throw new Error(validationError);
+        }
+
+        const usableRows = parsedRows.filter(row =>
+            row.sku &&
+            Number(row.quantity || 0) > 0 &&
+            String(row.status || "").trim()
+        );
+
+        if (!usableRows.length) {
+            throw new Error("File không có dòng đơn hàng hợp lệ để theo dõi luân chuyển.");
+        }
+
+        const orderCount = new Set(
+            usableRows.map(row => row.orderId).filter(Boolean)
+        ).size;
+
+        const now = new Date();
+        const nowIso = now.toISOString();
+
+        const snapshot = {
+            id: "",
+            snapshotDate: getLocalTodayKey(),
+            importedAt: nowIso,
+            fileName: file.name,
+            rowCount: usableRows.length,
+            orderCount,
+            rows: usableRows.map(row => ({
+                ...row,
+                sourceFile: file.name,
+                snapshotDate: getLocalTodayKey(),
+                updatedAt: nowIso
+            }))
+        };
+
+        let savedSnapshot = snapshot;
+
+        if (inventoryState.cloudReady && state.user) {
+            if (!inventoryState.transitCloudReady) {
+                throw new Error(
+                    "Chưa có bảng Cloud cho đơn luân chuyển. Hãy chạy SQL V33 trong Supabase trước rồi upload lại."
+                );
+            }
+
+            savedSnapshot = await saveInventoryTransitSnapshotCloud(snapshot);
+        }
+
+        inventoryState.transitSnapshot = savedSnapshot;
+        inventoryState.movementRows = [];
+        saveInventoryLocal();
+
+        renderInventoryModule();
+        renderInventoryTransitSourceCard();
+
+        const movement = getInventoryTransitStatusSummary(savedSnapshot.rows);
+
+        showToast(
+            `Đã thay snapshot luân chuyển: ${formatNumber(orderCount)} đơn · ` +
+            `Đang giao ${formatNumber(movement.in_transit)} · ` +
+            `Giữ đơn ${formatNumber(movement.reserved)}.`
+        );
+    } catch (error) {
+        console.error(error);
+        alert("Không lưu được file đơn luân chuyển.\n\n" + (error?.message || ""));
+        renderInventoryTransitSourceCard();
+    } finally {
+        if ($("inventoryTransitFileInput")) {
+            $("inventoryTransitFileInput").value = "";
+        }
+    }
 }
 
 function buildInventorySummary() {
@@ -10323,6 +10870,7 @@ function renderInventoryModule() {
     if ($("inventorySummarySubtitle")) {
         $("inventorySummarySubtitle").textContent =
             `${formatNumber(summary.length)} mặt hàng · Kiểm kê gần nhất ${latestStocktake ? formatDateLabel(latestStocktake) : "chưa có"} · ` +
+            `Snapshot luân chuyển: ${inventoryState.transitSnapshot?.fileName ? escapeHTML(inventoryState.transitSnapshot.fileName) : "chưa upload"} · ` +
             `Đang giao ${formatNumber(totals.transit)} · Đã giao ${formatNumber(totals.delivered)}`;
     }
 
@@ -10341,6 +10889,13 @@ function renderInventoryModule() {
     if (warning) {
         const messages = [];
 
+        if (!inventoryState.transitSnapshot?.rows?.length) {
+            messages.push(
+                `<strong>Chưa có snapshot đơn luân chuyển Shopee.</strong> ` +
+                `Các cột Giữ đơn / Đang giao / Đã giao / Hoàn đang về đang để 0 để tránh lấy nhầm dữ liệu từ Thống kê SKU.`
+            );
+        }
+
         if (unmapped.length) {
             messages.push(
                 `Có <strong>${unmapped.length} SKU quy đổi chưa được gắn với mặt hàng tồn kho</strong>: ` +
@@ -10351,8 +10906,8 @@ function renderInventoryModule() {
 
         if (scopeMismatch.length) {
             messages.push(
-                `<strong>${scopeMismatch.length} mặt hàng có SL đã xuất HĐ lớn hơn SL “Đã giao” trong dữ liệu Shopee đang lưu.</strong> ` +
-                `Điều này thường do file MISA và dữ liệu Shopee đang khác phạm vi ngày. ` +
+                `<strong>${scopeMismatch.length} mặt hàng có SL đã xuất HĐ lớn hơn SL “Đã giao” trong snapshot luân chuyển.</strong> ` +
+                `Điều này thường do file MISA và snapshot Shopee đang khác phạm vi thời gian, hoặc snapshot không chứa đơn đã giao. ` +
                 `Không dùng “Đã xuất HĐ” để trừ Tồn thực tế lần nữa.`
             );
         }
@@ -10462,6 +11017,7 @@ function renderInventoryModule() {
 
     renderInventoryTransactionItemOptions();
     renderInventoryMisaUploadInfo();
+    renderInventoryTransitSourceCard();
     setInventoryTab(inventoryState.activeTab || "overview");
 }
 
@@ -10743,6 +11299,15 @@ $("btnInventoryRefresh")?.addEventListener("click", async () => {
 $("inventoryStockFileInput")?.addEventListener("change", e => {
     const file = e.target.files?.[0];
     if (file) importInventoryExcel(file);
+});
+
+$("inventoryTransitFileInput")?.addEventListener("change", e => {
+    const file = e.target.files?.[0];
+    if (file) processInventoryTransitUpload(file);
+});
+
+$("btnInventoryTransitChooseFile")?.addEventListener("click", () => {
+    $("inventoryTransitFileInput")?.click();
 });
 
 $("inventoryMisaFileInput")?.addEventListener("change", e => {
