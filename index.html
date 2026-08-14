@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V33: snapshot đơn luân chuyển Shopee riêng + nguồn vận hành tách biệt -->
+    <!-- ONE-FILE V34: tự map SKU từ file luân chuyển + không phụ thuộc SKU Shopee cũ -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3732,6 +3732,43 @@ button{cursor:pointer}
     }
 }
 
+
+/* =========================================================
+   V34 - TỰ MAP TỪ FILE LUÂN CHUYỂN
+========================================================= */
+.inventory-transit-item-source{
+    display:inline-flex;
+    align-items:center;
+    margin-top:3px;
+    padding:2px 6px;
+    border-radius:999px;
+    background:#eaf5fc;
+    color:#2778af;
+    font-size:7px;
+    font-weight:800
+}
+.inventory-transit-item-empty{
+    display:block;
+    margin-top:3px;
+    color:#95a3aa;
+    font-size:7px;
+    font-weight:650
+}
+.inventory-transit-map-method{
+    display:inline-flex;
+    align-items:center;
+    margin-left:4px;
+    color:#7c9099;
+    font-size:6.5px;
+    font-weight:650
+}
+.inventory-transit-unmatched-list{
+    margin-top:5px;
+    color:#8e681a;
+    font-size:7.5px;
+    line-height:1.5
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -4595,8 +4632,9 @@ button{cursor:pointer}
                 </div>
 
                 <div class="inventory-table-note">
-                    <strong>🚚 Nguồn luân chuyển:</strong>
-                    Giữ đơn / Đang giao / Đã giao / Hoàn đang về lấy từ <strong>snapshot Shopee mới nhất</strong> mà bạn upload tại module này.
+                    <strong>🚚 Nguồn luân chuyển V34:</strong>
+                    Giữ đơn / Đang giao / Đã giao / Hoàn đang về chỉ lấy từ <strong>file snapshot bạn upload ngay tại module này</strong>.
+                    Hệ thống tự ghép SKU/tên sản phẩm của file vào mặt hàng kho; <strong>không lấy số lượng hay trạng thái từ Thống kê SKU</strong>.
                     Mỗi lần upload file mới sẽ <strong>thay snapshot đang dùng</strong>, không cộng chồng lên file cũ.
                     <br>
                     <strong>* Chờ HĐ</strong> = Đã giao trong snapshot − số lượng <strong>đã phát hành hóa đơn</strong> trong file MISA đang xem.
@@ -5045,7 +5083,7 @@ button{cursor:pointer}
                                 <th>STT</th>
                                 <th>Mã kho</th>
                                 <th>Tên sản phẩm</th>
-                                <th>SKU Shopee quy đổi</th>
+                                <th>SKU ưu tiên (tùy chọn)</th>
                                 <th>Mã / từ khóa MISA</th>
                                 <th>Tồn đầu</th>
                                 <th>Tồn thực tế</th>
@@ -5058,9 +5096,11 @@ button{cursor:pointer}
                 </div>
 
                 <div class="inventory-editor-help">
-                    <strong>SKU Shopee quy đổi</strong> nên điền theo SKU kho cơ bản như REWD, RCS, RTB, ROE...
-                    để hệ thống ghép với bảng quy đổi SKU hiện tại.
-                    Cột <strong>Mã / từ khóa MISA</strong> có thể nhập nhiều mã/từ khóa, ngăn cách bằng dấu <strong>|</strong>,
+                    <strong>SKU ưu tiên (tùy chọn)</strong> không còn bắt buộc.
+                    V34 tự ghép file luân chuyển bằng <strong>SKU + tên sản phẩm ngay trong file vừa upload</strong>.
+                    Chỉ điền ô này khi có một mã đặc biệt mà hệ thống không tự nhận đúng.
+                    <br>
+                    Cột <strong>Mã / từ khóa MISA</strong> vẫn dùng riêng cho file hóa đơn MISA; có thể nhập nhiều mã/từ khóa bằng dấu <strong>|</strong>,
                     ví dụ <code>REWD|TEST.1|Extra White & Deodorant Cream 35g</code>.
                 </div>
 
@@ -9228,12 +9268,168 @@ function inventoryMoney(value) {
     return `${formatNumber(Math.round(Number(value) || 0))} đ`;
 }
 
+const DEFAULT_TRANSIT_NAME_ALIASES = {
+    "WH-REWD": [
+        "extra white deodorant cream 35g",
+        "deodorant cream 35g",
+        "kem trang nach",
+        "kem nach"
+    ],
+    "WH-REWS": [
+        "extra white smooth cream 80g",
+        "smooth cream 80g",
+        "smooth"
+    ],
+    "WH-RTB": [
+        "tranex brightening body cream 200g",
+        "tranex brightening",
+        "tranex"
+    ],
+    "WH-RHBS": [
+        "honey black sugar body scrub 450g",
+        "body scrub 450g",
+        "duong den mat ong"
+    ],
+    "WH-RKN": [
+        "curcumin cream 80g",
+        "kem nghe",
+        "curcumin"
+    ],
+    "WH-SER120": [
+        "serum 120ml",
+        "body serum 120ml",
+        "glow serum 120ml"
+    ],
+    "WH-REWGS": [
+        "extra white glow body serum 250ml",
+        "body serum 250ml",
+        "serum 250ml"
+    ],
+    "WH-LOT120": [
+        "lotion 120ml",
+        "body lotion 120ml"
+    ],
+    "WH-LOT250": [
+        "lotion 250ml",
+        "body lotion 250ml"
+    ],
+    "WH-RCS": [
+        "confidence stick 25ml",
+        "lan nach",
+        "confidence stick"
+    ],
+    "WH-ROE": [
+        "retinol oil essence 160ml",
+        "body oil",
+        "retinol oil"
+    ],
+    "WH-COMBO": [
+        "combo oil mist",
+        "combo body oil body mist",
+        "body oil body mist",
+        "set body oil body mist"
+    ]
+};
+
+function getInventoryItemCodeSuffix(item) {
+    return String(item?.itemCode || "")
+        .replace(/^WH[-_]?/i, "")
+        .trim();
+}
+
+function getInventoryTransitNameTokens(item) {
+    const values = [
+        item?.name || "",
+        item?.invoiceKeyword || "",
+        ...(DEFAULT_TRANSIT_NAME_ALIASES[item?.itemCode] || [])
+    ];
+
+    return [...new Set(
+        values
+            .map(value => normalizeText(value))
+            .filter(value => value.length >= 4)
+    )];
+}
+
+function resolveInventoryItemFromTransit(row, baseSku) {
+    const activeItems = inventoryState.items
+        .filter(item => item.active !== false);
+
+    const rawSku = normalizeText(row?.sku || "");
+    const normalizedBaseSku = normalizeText(baseSku || "");
+    const productName = normalizeText(row?.product || "");
+
+    // 1. SKU ưu tiên đã nhập thủ công - chỉ là từ điển ghép, không phải nguồn dữ liệu.
+    const manualSkuMatch = activeItems.find(item => {
+        const configuredSku = normalizeText(item.shopeeSku || "");
+        return configuredSku && (
+            configuredSku === normalizedBaseSku ||
+            configuredSku === rawSku
+        );
+    });
+
+    if (manualSkuMatch) {
+        return { item: manualSkuMatch, method: "sku-ưu-tiên" };
+    }
+
+    // 2. Thử ghép trực tiếp mã kho WH-XXX với SKU XXX trong file.
+    const itemCodeMatch = activeItems.find(item => {
+        const suffix = normalizeText(getInventoryItemCodeSuffix(item));
+        return suffix && (
+            suffix === normalizedBaseSku ||
+            suffix === rawSku
+        );
+    });
+
+    if (itemCodeMatch) {
+        return { item: itemCodeMatch, method: "mã-file" };
+    }
+
+    // 3. Tự nhận diện bằng tên sản phẩm NGAY TRONG FILE LUÂN CHUYỂN.
+    if (productName) {
+        let best = null;
+
+        activeItems.forEach(item => {
+            const tokens = getInventoryTransitNameTokens(item);
+
+            tokens.forEach(token => {
+                let score = 0;
+
+                if (productName === token) {
+                    score = 10000 + token.length;
+                } else if (productName.includes(token)) {
+                    score = 5000 + token.length;
+                } else if (
+                    productName.length >= 6 &&
+                    token.includes(productName)
+                ) {
+                    score = 2500 + productName.length;
+                }
+
+                if (score > 0 && (!best || score > best.score)) {
+                    best = { item, score };
+                }
+            });
+        });
+
+        if (best) {
+            return { item: best.item, method: "tên-trong-file" };
+        }
+    }
+
+    return { item: null, method: "chưa-ghép" };
+}
+
 function getInventoryItemMapByShopeeSku() {
+    // Giữ hàm này cho tương thích code cũ/MISA.
+    // V34 không dùng nó làm nguồn ghép chính cho file luân chuyển.
     const map = new Map();
+
     inventoryState.items.forEach(item => {
         const sku = String(item.shopeeSku || "").trim();
         if (sku) map.set(sku, item);
     });
+
     return map;
 }
 
@@ -9327,12 +9523,12 @@ function expandShopeeRowToInventorySkus(row) {
 }
 
 function buildInventoryMovementRows(asOfDate = "") {
-    const itemMap = getInventoryItemMapByShopeeSku();
-
-    // V33:
-    // - Không truyền ngày => Dashboard vận hành dùng SNAPSHOT luân chuyển mới nhất.
-    // - Có asOfDate => phần tồn lý thuyết vẫn dùng lịch sử Shopee ngày/ca đã lưu,
-    //   vì snapshot hiện tại không phải là lịch sử sự kiện xuất kho.
+    // V34:
+    // Dashboard hiện tại: CHỈ dùng snapshot file luân chuyển riêng.
+    // Không lấy số lượng/trạng thái từ Thống kê SKU.
+    //
+    // Khi có asOfDate: chỉ phần tính lịch sử tồn lý thuyết mới dùng dữ liệu
+    // ngày/ca cũ, vì snapshot hiện tại không thể đại diện lịch sử.
     const sourceRows = asOfDate
         ? getLatestDailyShopeeLinesForInventory(asOfDate)
         : getTransitSnapshotRowsForInventory();
@@ -9344,7 +9540,8 @@ function buildInventoryMovementRows(asOfDate = "") {
         const expanded = expandShopeeRowToInventorySkus(row);
 
         expanded.forEach(part => {
-            const item = itemMap.get(part.baseSku) || null;
+            const resolved = resolveInventoryItemFromTransit(row, part.baseSku);
+            const item = resolved.item;
 
             result.push({
                 orderId: row.orderId || "-",
@@ -9361,6 +9558,7 @@ function buildInventoryMovementRows(asOfDate = "") {
                 quantity: Number(part.quantity || 0),
                 status: row.status || "",
                 bucket,
+                matchMethod: resolved.method,
                 sourceType: asOfDate ? "daily-history" : "transit-snapshot"
             });
         });
@@ -9559,6 +9757,13 @@ function renderInventoryTransitSourceCard() {
 
     const movement = getInventoryTransitStatusSummary(snapshot.rows);
     const statuses = getInventoryTransitObservedStatuses(snapshot.rows);
+    const mappedRows = buildInventoryMovementRows();
+    const mappedQty = mappedRows
+        .filter(row => row.itemCode)
+        .reduce((sum, row) => sum + Number(row.quantity || 0), 0);
+    const unmatchedQty = mappedRows
+        .filter(row => !row.itemCode)
+        .reduce((sum, row) => sum + Number(row.quantity || 0), 0);
     const hasDelivered = movement.delivered > 0;
 
     box.classList.add("loaded");
@@ -9576,7 +9781,9 @@ function renderInventoryTransitSourceCard() {
             <span>
                 Snapshot đang dùng · ${formatNumber(snapshot.orderCount || 0)} đơn ·
                 ${formatNumber(snapshot.rowCount || snapshot.rows.length)} dòng ·
-                cập nhật ${escapeHTML(importedText)}.
+                cập nhật ${escapeHTML(importedText)} ·
+                <strong>${formatNumber(mappedQty)} SP đã tự ghép vào kho</strong>
+                ${unmatchedQty ? ` · <span class="inventory-transit-no-delivered">${formatNumber(unmatchedQty)} SP chưa ghép</span>` : ""}.
                 ${!hasDelivered
                     ? '<span class="inventory-transit-no-delivered"> File này không có trạng thái “Đã giao”, nên cột Đã giao hiện = 0.</span>'
                     : ""}
@@ -9780,30 +9987,48 @@ function buildInventorySummary() {
     const misaAssignment = buildInventoryMisaAssignment();
     inventoryState.misaAssignment = misaAssignment;
 
-    const bySku = new Map();
+    const byItemCode = new Map();
 
     movementRows.forEach(row => {
-        if (!bySku.has(row.baseSku)) {
-            bySku.set(row.baseSku, {
+        if (!row.itemCode) return;
+
+        if (!byItemCode.has(row.itemCode)) {
+            byItemCode.set(row.itemCode, {
                 reserved: 0,
                 in_transit: 0,
                 delivered: 0,
                 returning: 0,
                 cancelled: 0,
-                other: 0
+                other: 0,
+                transitSkus: new Set(),
+                matchMethods: new Set()
             });
         }
-        const bucket = bySku.get(row.baseSku);
-        bucket[row.bucket] = Number(bucket[row.bucket] || 0) + Number(row.quantity || 0);
+
+        const bucket = byItemCode.get(row.itemCode);
+        bucket[row.bucket] =
+            Number(bucket[row.bucket] || 0) +
+            Number(row.quantity || 0);
+
+        if (row.rawSku) bucket.transitSkus.add(String(row.rawSku));
+        if (row.matchMethod) bucket.matchMethods.add(String(row.matchMethod));
     });
 
     return inventoryState.items
         .filter(item => item.active !== false)
         .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0))
         .map(item => {
-            const movement = bySku.get(item.shopeeSku) || {
-                reserved: 0, in_transit: 0, delivered: 0, returning: 0, cancelled: 0, other: 0
+            const movement = byItemCode.get(item.itemCode) || {
+                reserved: 0,
+                in_transit: 0,
+                delivered: 0,
+                returning: 0,
+                cancelled: 0,
+                other: 0,
+                transitSkus: new Set(),
+                matchMethods: new Set()
             };
+
             const invoiceQty = misaAssignment.detailed
                 ? Number(misaAssignment.qtyByItemCode.get(item.itemCode) || 0)
                 : getLegacyInventoryInvoiceQty(item);
@@ -9817,7 +10042,14 @@ function buildInventorySummary() {
 
             return {
                 ...item,
-                ...movement,
+                reserved: Number(movement.reserved || 0),
+                in_transit: Number(movement.in_transit || 0),
+                delivered: Number(movement.delivered || 0),
+                returning: Number(movement.returning || 0),
+                cancelled: Number(movement.cancelled || 0),
+                other: Number(movement.other || 0),
+                transitSkus: [...movement.transitSkus],
+                transitMatchMethods: [...movement.matchMethods],
                 invoiceQty,
                 waitingInvoice,
                 invoiceScopeMismatch,
@@ -9829,15 +10061,29 @@ function buildInventorySummary() {
 }
 
 function getInventoryUnmappedSkus() {
-    const mapped = new Set(
-        inventoryState.items.map(item => item.shopeeSku).filter(Boolean)
-    );
+    const unresolved = buildInventoryMovementRows()
+        .filter(row => !row.itemCode);
 
-    return [...new Set(
-        buildInventoryMovementRows()
-            .map(row => row.baseSku)
-            .filter(sku => sku && !mapped.has(sku))
-    )].sort();
+    const unique = new Map();
+
+    unresolved.forEach(row => {
+        const sku = String(row.rawSku || row.baseSku || "").trim() || "(không có SKU)";
+        const name = String(row.itemName || "").trim();
+        const key = `${sku}|${name}`;
+
+        if (!unique.has(key)) {
+            unique.set(key, {
+                sku,
+                name,
+                quantity: 0
+            });
+        }
+
+        unique.get(key).quantity += Number(row.quantity || 0);
+    });
+
+    return [...unique.values()]
+        .sort((a, b) => b.quantity - a.quantity);
 }
 
 function renderInventoryFlowBars(summary) {
@@ -10318,7 +10564,7 @@ function renderInventoryCurrentStock() {
             <td>${escapeHTML(row.itemCode)}</td>
             <td>
                 <strong>${escapeHTML(row.name)}</strong>
-                <div class="muted">${row.shopeeSku ? `Shopee: ${escapeHTML(row.shopeeSku)}` : "Chưa map SKU Shopee"}</div>
+                <div class="muted">Mặt hàng tồn kho</div>
             </td>
             <td>${row.baselineDate ? formatDateLabel(row.baselineDate) : "-"}</td>
             <td><strong>${formatNumber(row.baselineQty)}</strong></td>
@@ -10843,7 +11089,8 @@ function renderInventoryModule() {
         !search ||
         normalizeText(item.itemCode).includes(search) ||
         normalizeText(item.name).includes(search) ||
-        normalizeText(item.shopeeSku).includes(search)
+        normalizeText(item.shopeeSku).includes(search) ||
+        (item.transitSkus || []).some(sku => normalizeText(sku).includes(search))
     );
 
     const totals = summary.reduce((acc, item) => {
@@ -10898,9 +11145,11 @@ function renderInventoryModule() {
 
         if (unmapped.length) {
             messages.push(
-                `Có <strong>${unmapped.length} SKU quy đổi chưa được gắn với mặt hàng tồn kho</strong>: ` +
-                `${unmapped.map(escapeHTML).join(", ")}. ` +
-                `Bấm <b>Cập nhật tồn thực tế</b> để điền cột “SKU Shopee quy đổi”.`
+                `Có <strong>${unmapped.length} mặt hàng trong FILE LUÂN CHUYỂN chưa tự ghép được vào kho</strong>: ` +
+                `${unmapped.slice(0, 8).map(item =>
+                    `${escapeHTML(item.sku)}${item.name ? ` – ${escapeHTML(item.name)}` : ""} (${formatNumber(item.quantity)})`
+                ).join("; ")}. ` +
+                `V34 đã thử bằng SKU và tên sản phẩm trong chính file. Chỉ khi tên/mã quá khác mới cần điền “SKU ưu tiên” thủ công.`
             );
         }
 
@@ -10938,7 +11187,22 @@ function renderInventoryModule() {
                         <td>${escapeHTML(item.itemCode)}</td>
                         <td>
                             <strong>${escapeHTML(item.name)}</strong>
-                            <div>${item.shopeeSku ? `Shopee: ${escapeHTML(item.shopeeSku)}` : '<span class="inventory-unmapped">Chưa map SKU Shopee</span>'}</div>
+                            ${
+                                item.transitSkus?.length
+                                    ? `<div>
+                                        <span class="inventory-transit-item-source">
+                                            File luân chuyển: ${escapeHTML(item.transitSkus.join(", "))}
+                                        </span>
+                                        ${item.transitMatchMethods?.length
+                                            ? `<span class="inventory-transit-map-method">
+                                                · tự ghép ${escapeHTML(item.transitMatchMethods.join(", "))}
+                                               </span>`
+                                            : ""}
+                                       </div>`
+                                    : inventoryState.transitSnapshot?.rows?.length
+                                        ? '<span class="inventory-transit-item-empty">Không phát sinh trong snapshot hiện tại</span>'
+                                        : '<span class="inventory-transit-item-empty">Chưa upload file luân chuyển</span>'
+                            }
                         </td>
                         <td class="inventory-num">${formatNumber(item.openingQty || 0)}</td>
                         <td class="inventory-num inventory-col-physical">${formatNumber(item.physicalQty || 0)}</td>
@@ -11083,7 +11347,7 @@ function renderInventoryEditor() {
             <td>${index+1}</td>
             <td><input class="inventory-editor-input" data-field="itemCode" value="${escapeHTML(item.itemCode || "")}"></td>
             <td><input class="inventory-editor-input" data-field="name" value="${escapeHTML(item.name || "")}"></td>
-            <td><input class="inventory-editor-input" data-field="shopeeSku" value="${escapeHTML(item.shopeeSku || "")}" placeholder="VD: REWD"></td>
+            <td><input class="inventory-editor-input" data-field="shopeeSku" value="${escapeHTML(item.shopeeSku || "")}" placeholder="Không bắt buộc"></td>
             <td><input class="inventory-editor-input" data-field="invoiceKeyword" value="${escapeHTML(item.invoiceKeyword || "")}" placeholder="VD: REWD|TEST.1|Extra White..."></td>
             <td><input class="inventory-editor-input number" type="number" min="0" step="1" data-field="openingQty" value="${Number(item.openingQty || 0)}"></td>
             <td><input class="inventory-editor-input number" type="number" min="0" step="1" data-field="physicalQty" value="${Number(item.physicalQty || 0)}"></td>
