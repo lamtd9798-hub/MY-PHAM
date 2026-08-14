@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V16: lịch 12 tháng 2026-2035, chọn ngày rồi upload/lọc/thống kê ngay trong SKU -->
+    <!-- ONE-FILE V17: chữ dễ đọc hơn + nhớ trang/ngày + STT 2 bảng + cân lại độ rộng cột -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1035,6 +1035,159 @@ button{cursor:pointer}
     font-size:7.5px!important;
 }
 
+
+/* =========================================================
+   V17 - CĂN LẠI GIAO DIỆN / CHỮ / BẢNG
+========================================================= */
+
+/* Hình 1: chữ trong bộ lọc dễ đọc hơn */
+.stats-shift-filter-header{
+    padding:12px 13px;
+}
+.stats-shift-filter-header strong{
+    font-size:11px!important;
+}
+.stats-shift-filter-header span{
+    font-size:8.5px!important;
+}
+.stats-filter-date-label{
+    min-width:82px!important;
+    padding-top:8px!important;
+    font-size:9px!important;
+}
+.stats-filter-date-control input[type="date"]{
+    height:36px!important;
+    font-size:10px!important;
+    font-weight:750!important;
+}
+.stats-filter-date-buttons .available-date-btn{
+    min-height:25px!important;
+    padding:4px 7px!important;
+    font-size:8px!important;
+}
+.stats-filter-status-title strong{
+    font-size:9px!important;
+}
+.stats-filter-status-grid{
+    gap:6px!important;
+}
+.stats-filter-status-grid .shift-status-check{
+    padding:7px 8px!important;
+    min-height:33px;
+    align-items:center;
+}
+.stats-filter-status-grid .shift-status-check span{
+    font-size:8.3px!important;
+    line-height:1.35!important;
+}
+.shift-filter-preview{
+    font-size:7.5px!important;
+}
+.stats-shift-filter-footer span{
+    font-size:8.5px!important;
+}
+.stats-shift-filter-footer strong{
+    font-size:10.5px!important;
+}
+
+/* Ngày báo cáo phía trên lớn hơn */
+.day-detail-date span{
+    font-size:8px!important;
+}
+.day-detail-date strong{
+    font-size:20px!important;
+    letter-spacing:.15px;
+}
+.btn-back-calendar{
+    min-width:66px;
+}
+
+/* Hình 2: thêm STT và cho mã SKU thụt vào */
+.stt-col{
+    width:46px!important;
+    min-width:46px!important;
+    max-width:46px!important;
+    text-align:center!important;
+}
+.sku-code-cell{
+    padding-left:18px!important;
+    white-space:nowrap;
+}
+.sku-code-cell strong{
+    display:inline-block;
+}
+
+/* Hình 3: cột OBM đủ rộng để nằm một hàng */
+.base-sku-header{
+    white-space:nowrap!important;
+    min-width:64px;
+}
+.base-sku-header.wide-base-sku{
+    min-width:108px!important;
+    width:108px!important;
+    max-width:108px!important;
+}
+.wide-base-sku-cell{
+    min-width:108px!important;
+    width:108px!important;
+    max-width:108px!important;
+}
+.wide-base-sku-cell .conversion-input{
+    margin-left:auto;
+    margin-right:auto;
+}
+
+/* Bảng trên cân lại một chút */
+.conversion-table th,
+.conversion-table td{
+    vertical-align:middle;
+}
+.conversion-table .product-name-cell{
+    line-height:1.35;
+}
+
+/* Hình 4: bảng sau quy đổi gọn, các cột số sát mã hơn */
+.converted-summary-wrap{
+    overflow-x:auto;
+    padding-bottom:2px;
+}
+.converted-summary-table{
+    width:760px!important;
+    max-width:100%!important;
+    min-width:650px!important;
+    table-layout:fixed;
+    margin:0!important;
+}
+.converted-summary-table col.col-stt{width:52px}
+.converted-summary-table col.col-sku{width:230px}
+.converted-summary-table col.col-shift{width:145px}
+.converted-summary-table col.col-total{width:155px}
+
+.converted-summary-table th,
+.converted-summary-table td{
+    padding-top:10px!important;
+    padding-bottom:10px!important;
+}
+.converted-summary-table th:first-child,
+.converted-summary-table td:first-child{
+    text-align:center!important;
+}
+.converted-summary-table .converted-sku-cell{
+    padding-left:16px!important;
+}
+.converted-summary-table .converted-shift-value,
+.converted-summary-table .converted-total-value{
+    text-align:center!important;
+}
+
+/* Cho bảng dưới có cảm giác thành một khối riêng đẹp hơn */
+.converted-summary-table thead th{
+    background:#fafcfd;
+}
+.converted-summary-table tbody tr:hover td{
+    background:#f8fbfa;
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1452,10 +1605,18 @@ button{cursor:pointer}
                         </div>
                     </div>
 
-                    <div class="table-scroll">
-                        <table>
+                    <div class="converted-summary-wrap">
+                        <table class="converted-summary-table">
+                            <colgroup>
+                                <col class="col-stt">
+                                <col class="col-sku">
+                                <col class="col-shift">
+                                <col class="col-shift">
+                                <col class="col-total">
+                            </colgroup>
                             <thead>
                                 <tr>
+                                    <th>STT</th>
                                     <th>SKU kho / SKU quy đổi</th>
                                     <th class="center">Buổi sáng</th>
                                     <th class="center">Buổi chiều</th>
@@ -1463,7 +1624,7 @@ button{cursor:pointer}
                                 </tr>
                             </thead>
                             <tbody id="convertedTotalsBody">
-                                <tr><td colspan="4" class="empty-table">Chưa có dữ liệu</td></tr>
+                                <tr><td colspan="5" class="empty-table">Chưa có dữ liệu</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -2215,13 +2376,22 @@ async function enterAuthenticatedApp(session) {
         loadConversionConfigFromCloud()
     ]);
 
+    const savedUi = readUiStateV17();
+
     const reportDates = [...new Set(
         state.skuRows.map(row => row.orderDate).filter(Boolean)
     )].sort();
 
-    const initialReportDate = reportDates.length
+    const latestReportDate = reportDates.length
         ? reportDates[reportDates.length - 1]
         : getLocalTodayKey();
+
+    let initialReportDate = savedUi.reportDate || latestReportDate;
+
+    // Cho phép giữ cả ngày chưa có dữ liệu nếu user đang chuẩn bị upload.
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(initialReportDate)) {
+        initialReportDate = latestReportDate;
+    }
 
     state.selectedDates = new Set([initialReportDate]);
     state.dateFilterInitialized = true;
@@ -2230,10 +2400,48 @@ async function enterAuthenticatedApp(session) {
         $("reportDateInput").value = initialReportDate;
     }
 
+    if ($("calendarYearSelect")) {
+        const savedYear = Number(savedUi.calendarYear);
+        const dateYear = Number(initialReportDate.slice(0, 4));
+
+        const preferredYear =
+            savedYear >= CALENDAR_MIN_YEAR && savedYear <= CALENDAR_MAX_YEAR
+                ? savedYear
+                : dateYear;
+
+        if (preferredYear >= CALENDAR_MIN_YEAR && preferredYear <= CALENDAR_MAX_YEAR) {
+            $("calendarYearSelect").value = String(preferredYear);
+        }
+    }
+
     loadShiftConfigurationForReportDate(initialReportDate);
 
     renderAll();
-    openView("overview");
+
+    const allowedViews = [
+        "overview",
+        "sku-stats",
+        "history",
+        "orders",
+        "fees",
+        "returns",
+        "payments",
+        "errors"
+    ];
+
+    const restoreView = allowedViews.includes(savedUi.view)
+        ? savedUi.view
+        : "overview";
+
+    openView(restoreView);
+
+    if (restoreView === "sku-stats") {
+        if (savedUi.skuMode === "detail") {
+            openStatsDay(initialReportDate);
+        } else {
+            showStatsCalendar();
+        }
+    }
 }
 
 $("authForm")?.addEventListener("submit", async event => {
@@ -2413,6 +2621,68 @@ if ($("btnImportGoCalendar")) {
     });
 }
 
+
+/* ======================== V17 - GHI NHỚ MÀN HÌNH ĐANG XEM ======================== */
+const STORAGE_UI_STATE_V17 = "rucos_ui_state_v17";
+
+function readUiStateV17() {
+    try {
+        return JSON.parse(localStorage.getItem(STORAGE_UI_STATE_V17) || "{}");
+    } catch (error) {
+        return {};
+    }
+}
+
+function writeUiStateV17(patch = {}) {
+    try {
+        const current = readUiStateV17();
+
+        localStorage.setItem(
+            STORAGE_UI_STATE_V17,
+            JSON.stringify({
+                ...current,
+                ...patch,
+                updatedAt: new Date().toISOString()
+            })
+        );
+    } catch (error) {
+        console.warn("Không lưu được trạng thái giao diện.", error);
+    }
+}
+
+function getCurrentViewNameV17() {
+    const active = document.querySelector(".view.active");
+    return active?.id?.replace(/^view-/, "") || "overview";
+}
+
+function persistCurrentUiStateV17() {
+    const selectedDate = [...state.selectedDates][0] || getSelectedReportDate() || "";
+    const detail = $("statsDetailScreen");
+    const calendar = $("statsCalendarScreen");
+
+    let skuMode = "calendar";
+
+    if (detail && !detail.classList.contains("hidden")) {
+        skuMode = "detail";
+    } else if (calendar && !calendar.classList.contains("hidden")) {
+        skuMode = "calendar";
+    }
+
+    writeUiStateV17({
+        view: getCurrentViewNameV17(),
+        reportDate: selectedDate,
+        skuMode,
+        calendarYear: $("calendarYearSelect")?.value || ""
+    });
+}
+
+window.addEventListener("pagehide", persistCurrentUiStateV17);
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+        persistCurrentUiStateV17();
+    }
+});
+
 function openView(viewName) {
     document.querySelectorAll(".view").forEach(view => view.classList.remove("active"));
     const target = $("view-" + viewName);
@@ -2446,6 +2716,7 @@ function openView(viewName) {
             rebuildSkuStatistics();
         }
     }
+    writeUiStateV17({ view: viewName });
 }
 
 /* ======================== EXCEL ======================== */
@@ -3220,6 +3491,11 @@ function showStatsCalendar() {
     }
 
     renderStatsCalendar();
+    writeUiStateV17({
+        view: "sku-stats",
+        skuMode: "calendar",
+        calendarYear: yearSelect?.value || ""
+    });
 }
 
 function showStatsDetail() {
@@ -3228,6 +3504,11 @@ function showStatsDetail() {
 
     if (calendar) calendar.classList.add("hidden");
     if (detail) detail.classList.remove("hidden");
+    writeUiStateV17({
+        view: "sku-stats",
+        skuMode: "detail",
+        reportDate: [...state.selectedDates][0] || getSelectedReportDate() || ""
+    });
 }
 
 function openStatsDay(dateKey) {
@@ -3250,10 +3531,24 @@ function openStatsDay(dateKey) {
     syncShiftInputsFromState();
     rebuildSkuStatistics();
 
+    writeUiStateV17({
+        view: "sku-stats",
+        skuMode: "detail",
+        reportDate: dateKey,
+        calendarYear: String(dateKey).slice(0, 4)
+    });
+
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-$("calendarYearSelect")?.addEventListener("change", renderStatsCalendar);
+$("calendarYearSelect")?.addEventListener("change", event => {
+    writeUiStateV17({
+        view: "sku-stats",
+        skuMode: "calendar",
+        calendarYear: event.target.value
+    });
+    renderStatsCalendar();
+});
 $("btnBackCalendar")?.addEventListener("click", showStatsCalendar);
 
 
@@ -3681,6 +3976,7 @@ function renderConversionTable() {
 
     head.innerHTML = `
         <tr>
+            <th class="stt-col">STT</th>
             <th>SKU sản phẩm</th>
             <th>Tên sản phẩm</th>
             <th class="stat-shift-col">Buổi sáng</th>
@@ -3688,7 +3984,7 @@ function renderConversionTable() {
             <th class="stat-total-col">TỔNG</th>
 
             ${state.baseSkus.map(baseSku => `
-                <th class="base-sku-header">
+                <th class="base-sku-header ${baseSku === "OBM-100326-2" ? "wide-base-sku" : ""}">
                     ${escapeHTML(baseSku)}
                     <button class="remove-base-sku" data-base-sku="${escapeHTML(baseSku)}" title="Xóa cột">×</button>
                 </th>
@@ -3701,7 +3997,7 @@ function renderConversionTable() {
     if (!state.skuStats.length) {
         body.innerHTML = `
             <tr>
-                <td colspan="${6 + state.baseSkus.length}" class="empty-table">
+                <td colspan="${7 + state.baseSkus.length}" class="empty-table">
                     Chưa có dữ liệu Sáng / Chiều cho ngày báo cáo đang chọn.
                 </td>
             </tr>
@@ -3715,14 +4011,18 @@ function renderConversionTable() {
 
     const unmapped = [];
 
-    body.innerHTML = state.skuStats.map(item => {
+    body.innerHTML = state.skuStats.map((item, index) => {
         const mapped = hasAnyConversion(item.sku);
 
         if (!mapped) unmapped.push(item.sku);
 
         return `
             <tr>
-                <td><strong>${escapeHTML(item.sku)}</strong></td>
+                <td class="stt-col">${index + 1}</td>
+
+                <td class="sku-code-cell">
+                    <strong>${escapeHTML(item.sku)}</strong>
+                </td>
 
                 <td class="product-name-cell">
                     ${escapeHTML(item.product)}
@@ -3742,9 +4042,10 @@ function renderConversionTable() {
 
                 ${state.baseSkus.map(baseSku => {
                     const factor = getConversionFactor(item.sku, baseSku);
+                    const wideClass = baseSku === "OBM-100326-2" ? "wide-base-sku-cell" : "";
 
                     return `
-                        <td>
+                        <td class="${wideClass}">
                             <input
                                 class="conversion-input"
                                 type="number"
@@ -3775,14 +4076,15 @@ function renderConversionTable() {
 
     foot.innerHTML = `
         <tr>
-            <td><strong>TỔNG</strong></td>
+            <td class="stt-col"></td>
+            <td class="sku-code-cell"><strong>TỔNG</strong></td>
             <td>Sáng + Chiều</td>
             <td class="stat-shift-col">${formatNumber(morningTotal)}</td>
             <td class="stat-shift-col">${formatNumber(afternoonTotal)}</td>
             <td class="stat-total-col">${formatNumber(grandTotal)}</td>
 
             ${state.baseSkus.map(baseSku => `
-                <td class="conversion-total-highlight">
+                <td class="conversion-total-highlight ${baseSku === "OBM-100326-2" ? "wide-base-sku-cell" : ""}">
                     ${formatNumber(totals[baseSku] || 0)}
                 </td>
             `).join("")}
@@ -3914,23 +4216,27 @@ function renderConvertedTotals() {
 
     if (!rows.length) {
         body.innerHTML =
-            '<tr><td colspan="4" class="empty-table">Chưa có dữ liệu quy đổi.</td></tr>';
+            '<tr><td colspan="5" class="empty-table">Chưa có dữ liệu quy đổi.</td></tr>';
         return;
     }
 
-    body.innerHTML = rows.map(item => `
+    body.innerHTML = rows.map((item, index) => `
         <tr class="total-converted-table">
-            <td><strong>${escapeHTML(item.sku)}</strong></td>
+            <td class="stt-col">${index + 1}</td>
 
-            <td class="center converted-shift-value">
+            <td class="converted-sku-cell">
+                <strong>${escapeHTML(item.sku)}</strong>
+            </td>
+
+            <td class="converted-shift-value">
                 ${item.morning ? formatNumber(item.morning) : ""}
             </td>
 
-            <td class="center converted-shift-value">
+            <td class="converted-shift-value">
                 ${item.afternoon ? formatNumber(item.afternoon) : ""}
             </td>
 
-            <td class="center converted-total-value">
+            <td class="converted-total-value">
                 ${formatNumber(item.total)}
             </td>
         </tr>
