@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V18: sửa độ rộng bảng - STT/SKU nhỏ, Tên sản phẩm rộng nhất -->
+    <!-- ONE-FILE V19: sửa xung đột CSS cũ - STT giữa, SKU/Tên SP trái, bỏ khoảng trắng -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1305,6 +1305,156 @@ button{cursor:pointer}
     table-layout:fixed!important;
 }
 
+
+/* =========================================================
+   V19 - XÓA XUNG ĐỘT CSS CỘT CŨ SAU KHI THÊM STT
+========================================================= */
+
+/*
+   Các bản cũ từng có:
+   cột 1 = SKU (sticky 95/108px)
+   cột 2 = Tên sản phẩm (sticky 390/500px)
+   Sau khi thêm STT, các rule này làm lệch toàn bộ bảng.
+   V19 reset lại hoàn toàn.
+*/
+
+/* Không sticky các cột nội dung nữa; chỉ giữ header sticky theo chiều dọc */
+.conversion-table th:first-child,
+.conversion-table td:first-child,
+.conversion-table th:nth-child(2),
+.conversion-table td:nth-child(2){
+    position:static!important;
+    left:auto!important;
+    right:auto!important;
+    z-index:auto!important;
+}
+
+/* Hủy toàn bộ min/max-width cũ của 3 cột đầu.
+   Kích thước thực tế do COLGROUP V18/V19 điều khiển. */
+.conversion-table th:first-child,
+.conversion-table td:first-child,
+.conversion-table th:nth-child(2),
+.conversion-table td:nth-child(2),
+.conversion-table th:nth-child(3),
+.conversion-table td:nth-child(3){
+    min-width:0!important;
+    max-width:none!important;
+}
+
+/* ===== CỘT 1: STT ===== */
+.conversion-table th:nth-child(1),
+.conversion-table td:nth-child(1){
+    width:42px!important;
+    text-align:center!important;
+    padding-left:4px!important;
+    padding-right:4px!important;
+    white-space:nowrap!important;
+}
+
+/* ===== CỘT 2: SKU ===== */
+.conversion-table th:nth-child(2),
+.conversion-table td:nth-child(2){
+    width:88px!important;
+    text-align:left!important;
+    padding-left:10px!important;
+    padding-right:6px!important;
+    white-space:nowrap!important;
+}
+
+/* ===== CỘT 3: TÊN SẢN PHẨM - RỘNG NHẤT ===== */
+.conversion-table th:nth-child(3),
+.conversion-table td:nth-child(3){
+    width:410px!important;
+    text-align:left!important;
+    padding-left:12px!important;
+    padding-right:12px!important;
+    white-space:normal!important;
+}
+
+.conversion-table td:nth-child(3){
+    font-size:10px!important;
+    line-height:1.35!important;
+    overflow-wrap:normal!important;
+    word-break:normal!important;
+}
+
+/* Không để header/ô bị kéo lệch bởi các rule cũ */
+.conversion-table thead th:nth-child(1),
+.conversion-table thead th:nth-child(2),
+.conversion-table thead th:nth-child(3){
+    position:sticky!important;
+    top:0!important;
+    left:auto!important;
+    z-index:5!important;
+    background:#fafbfc!important;
+}
+
+/* Hàng tổng: chữ SKU + mô tả canh trái */
+.conversion-table tfoot td:nth-child(1){
+    text-align:center!important;
+}
+.conversion-table tfoot td:nth-child(2),
+.conversion-table tfoot td:nth-child(3){
+    text-align:left!important;
+    padding-left:10px!important;
+}
+
+/* STT số nằm chính giữa ô */
+.conversion-table .stt-col{
+    text-align:center!important;
+    padding-left:4px!important;
+    padding-right:4px!important;
+}
+
+/* SKU không còn khoảng trống giả phía trước */
+.conversion-table .sku-code-cell{
+    text-align:left!important;
+    padding-left:10px!important;
+    padding-right:6px!important;
+    margin:0!important;
+}
+.conversion-table .sku-code-cell strong{
+    display:inline!important;
+    margin:0!important;
+    padding:0!important;
+}
+
+/* Tên sản phẩm luôn bắt đầu sát bên phải cột SKU */
+.conversion-table .product-name-cell{
+    text-align:left!important;
+    padding-left:12px!important;
+    margin:0!important;
+}
+
+/* Bảng dưới: STT giữa, mã trái; không canh giữa phần chữ */
+.converted-summary-table th:nth-child(1),
+.converted-summary-table td:nth-child(1){
+    text-align:center!important;
+}
+.converted-summary-table th:nth-child(2),
+.converted-summary-table td:nth-child(2){
+    text-align:left!important;
+}
+.converted-summary-table .converted-sku-cell{
+    text-align:left!important;
+    padding-left:12px!important;
+}
+
+/* Các số ở bảng dưới vẫn giữa */
+.converted-summary-table th:nth-child(n+3),
+.converted-summary-table td:nth-child(n+3){
+    text-align:center!important;
+}
+
+
+.conversion-table .sku-header-cell{
+    text-align:left!important;
+    padding-left:10px!important;
+}
+.conversion-table .product-header-cell{
+    text-align:left!important;
+    padding-left:12px!important;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -4109,8 +4259,8 @@ function renderConversionTable() {
     head.innerHTML = `
         <tr>
             <th class="stt-col">STT</th>
-            <th>SKU sản phẩm</th>
-            <th>Tên sản phẩm</th>
+            <th class="sku-header-cell">SKU sản phẩm</th>
+            <th class="product-header-cell">Tên sản phẩm</th>
             <th class="stat-shift-col">Buổi sáng</th>
             <th class="stat-shift-col">Buổi chiều</th>
             <th class="stat-total-col">TỔNG</th>
