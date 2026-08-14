@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V19: sửa xung đột CSS cũ - STT giữa, SKU/Tên SP trái, bỏ khoảng trắng -->
+    <!-- ONE-FILE V20: xóa theo ngày/tháng + xác thực mật khẩu admin Supabase -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1455,6 +1455,104 @@ button{cursor:pointer}
     text-align:left!important;
     padding-left:12px!important;
 }
+
+/* =========================================================
+   V20 - MODAL XÓA DỮ LIỆU ADMIN
+========================================================= */
+.admin-delete-overlay{
+    position:fixed;inset:0;z-index:12000;
+    display:flex;align-items:center;justify-content:center;
+    padding:18px;background:rgba(10,29,37,.62);
+    backdrop-filter:blur(4px)
+}
+.admin-delete-overlay.hidden{display:none!important}
+.admin-delete-modal{
+    width:min(520px,100%);max-height:calc(100vh - 34px);overflow:auto;
+    background:#fff;border:1px solid #dce5e9;border-radius:14px;
+    box-shadow:0 28px 90px rgba(0,0,0,.28)
+}
+.admin-delete-header{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+    padding:18px 19px 14px;border-bottom:1px solid #edf1f3
+}
+.admin-delete-header h2{font-size:16px;margin-bottom:4px;color:#172d37}
+.admin-delete-header p{font-size:9px;color:#81929d;line-height:1.45}
+.admin-delete-close{
+    width:30px;height:30px;border:1px solid #e0e6e9;border-radius:7px;
+    background:#fff;color:#72838d;font-size:19px;line-height:1;cursor:pointer
+}
+.admin-delete-body{padding:16px 19px}
+.admin-delete-warning{
+    margin-bottom:14px;padding:10px 11px;border:1px solid #fecaca;
+    border-radius:8px;background:#fff5f5;color:#a93636;
+    font-size:9px;font-weight:650;line-height:1.5
+}
+.admin-delete-field{margin-bottom:13px}
+.admin-delete-field>label{
+    display:block;margin-bottom:6px;color:#526671;
+    font-size:8.5px;font-weight:800
+}
+.admin-delete-field>small{
+    display:block;margin-top:5px;color:#96a3ab;font-size:7.8px;line-height:1.4
+}
+.admin-delete-scope{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px
+}
+.admin-scope-option{
+    display:flex;align-items:flex-start;gap:8px;padding:10px;
+    border:1px solid #dce5e9;border-radius:8px;background:#fafcfd;
+    cursor:pointer;transition:.14s
+}
+.admin-scope-option.active{
+    border-color:#e57c7c;background:#fff6f6;
+    box-shadow:0 0 0 2px rgba(220,38,38,.04)
+}
+.admin-scope-option input{margin-top:2px;accent-color:#dc4747}
+.admin-scope-option strong{
+    display:block;color:#344b55;font-size:9px;margin-bottom:2px
+}
+.admin-scope-option small{
+    display:block;color:#8d9ca5;font-size:7.7px;line-height:1.35
+}
+.admin-delete-select,
+.admin-delete-password{
+    width:100%;height:40px;padding:0 10px;border:1px solid #d4dfe4;
+    border-radius:7px;background:#fff;color:#253a43;font-family:inherit;
+    font-size:10px;outline:none
+}
+.admin-delete-select:focus,
+.admin-delete-password:focus{
+    border-color:#dd7777;box-shadow:0 0 0 3px rgba(220,71,71,.08)
+}
+.admin-email-box{
+    height:38px;display:flex;align-items:center;padding:0 10px;
+    border:1px solid #e0e6e9;border-radius:7px;background:#f8fafb;
+    color:#526671;font-size:10px;font-weight:700
+}
+.admin-delete-target-info{
+    min-height:20px;margin-top:6px;padding:6px 8px;border-radius:6px;
+    background:#f7f9fa;color:#7c8e98;font-size:8px;line-height:1.4
+}
+.admin-delete-error{
+    display:none;padding:9px 10px;border:1px solid #fecaca;border-radius:7px;
+    background:#fff1f2;color:#b91c1c;font-size:8.5px;line-height:1.45
+}
+.admin-delete-error.show{display:block}
+.admin-delete-footer{
+    display:flex;justify-content:flex-end;gap:8px;
+    padding:13px 19px 17px;border-top:1px solid #edf1f3
+}
+.btn-danger-solid{
+    height:35px;padding:0 13px;border:1px solid #dc4747;border-radius:7px;
+    background:#dc4747;color:#fff;font-family:inherit;
+    font-size:9px;font-weight:800;cursor:pointer
+}
+.btn-danger-solid:hover{background:#c93e3e}
+.btn-danger-solid:disabled{opacity:.55;cursor:wait}
+@media(max-width:560px){
+    .admin-delete-scope{grid-template-columns:1fr}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1492,6 +1590,80 @@ button{cursor:pointer}
             Không dùng Secret key/service_role trên trang web.
         </div>
     </form>
+</div>
+
+
+<!-- ======================== V20 - XÓA DỮ LIỆU CÓ XÁC THỰC ADMIN ======================== -->
+<div id="adminDeleteModal" class="admin-delete-overlay hidden">
+    <div class="admin-delete-modal">
+        <div class="admin-delete-header">
+            <div>
+                <h2>🛡️ Xóa dữ liệu Cloud</h2>
+                <p>Chọn ngày/tháng cần xóa và xác thực bằng mật khẩu quản trị.</p>
+            </div>
+            <button type="button" id="btnCloseAdminDelete" class="admin-delete-close">×</button>
+        </div>
+
+        <div class="admin-delete-body">
+            <div class="admin-delete-warning">
+                ⚠ Dữ liệu bị xóa sẽ mất trên tất cả máy. Hệ số quy đổi SKU vẫn được giữ nguyên.
+            </div>
+
+            <div class="admin-delete-field">
+                <label>PHẠM VI XÓA</label>
+
+                <div class="admin-delete-scope">
+                    <label class="admin-scope-option active" data-admin-scope-card="day">
+                        <input type="radio" name="adminDeleteScope" value="day" checked>
+                        <span>
+                            <strong>Xóa theo ngày</strong>
+                            <small>Xóa cả file Sáng + Chiều của một ngày báo cáo</small>
+                        </span>
+                    </label>
+
+                    <label class="admin-scope-option" data-admin-scope-card="month">
+                        <input type="radio" name="adminDeleteScope" value="month">
+                        <span>
+                            <strong>Xóa theo tháng</strong>
+                            <small>Xóa toàn bộ ngày đã lưu trong một tháng</small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="admin-delete-field">
+                <label id="adminDeleteTargetLabel">CHỌN NGÀY CẦN XÓA</label>
+                <select id="adminDeleteTargetSelect" class="admin-delete-select"></select>
+                <div id="adminDeleteTargetInfo" class="admin-delete-target-info"></div>
+            </div>
+
+            <div class="admin-delete-field">
+                <label>TÀI KHOẢN ADMIN</label>
+                <div class="admin-email-box">lamtd9798@gmail.com</div>
+            </div>
+
+            <div class="admin-delete-field">
+                <label>MẬT KHẨU ADMIN</label>
+                <input
+                    id="adminDeletePassword"
+                    class="admin-delete-password"
+                    type="password"
+                    autocomplete="current-password"
+                    placeholder="Nhập mật khẩu admin"
+                >
+                <small>Mật khẩu không được lưu trong code hoặc trình duyệt. Supabase Auth kiểm tra trực tiếp.</small>
+            </div>
+
+            <div id="adminDeleteError" class="admin-delete-error"></div>
+        </div>
+
+        <div class="admin-delete-footer">
+            <button type="button" id="btnCancelAdminDelete" class="btn btn-light">Hủy</button>
+            <button type="button" id="btnConfirmAdminDelete" class="btn-danger-solid">
+                XÁC NHẬN XÓA
+            </button>
+        </div>
+    </div>
 </div>
 
 <div class="app-layout">
@@ -2201,6 +2373,7 @@ const DB_ROWS = "shopee_rows";
 const DB_IMPORTS = "imports";
 const DB_TARGETS = "conversion_targets";
 const DB_RULES = "conversion_rules";
+const ADMIN_EMAIL = "lamtd9798@gmail.com";
 
 let supabaseClient = null;
 
@@ -2446,25 +2619,45 @@ async function dbDeleteSavedDate(dateKey) {
 async function dbReplaceShiftData(reportDate, slot, rows, importInfo) {
     const client = initSupabaseClient();
 
-    // Mỗi ngày báo cáo chỉ giữ 1 bộ dữ liệu mới nhất cho từng ca.
-    const { error: deleteRowsError } = await client
-        .from(DB_ROWS)
-        .delete()
-        .eq("report_date", reportDate)
-        .eq("import_slot", slot);
+    const dbRows = rows.map(row => ({
+        row_key: row.rowKey,
+        order_date: row.sourceOrderDate || null,
+        report_date: row.reportDate || row.orderDate || null,
+        import_slot: row.importSlot || slot,
+        order_id: row.orderId || null,
+        status: row.status || null,
+        sku: row.sku,
+        product: row.product || null,
+        quantity: Number(row.quantity || 0),
+        source_file: row.sourceFile || null,
+        updated_at: row.updatedAt || new Date().toISOString()
+    }));
 
-    if (deleteRowsError) throw deleteRowsError;
+    const dbImport = {
+        file_hash: importInfo.hash,
+        file_name: importInfo.fileName,
+        file_size: importInfo.fileSize,
+        imported_at: importInfo.importedAt,
+        row_count: importInfo.rowCount,
+        added: importInfo.added,
+        updated: importInfo.updated,
+        unchanged: importInfo.unchanged,
+        dates: importInfo.dates || [],
+        report_date: importInfo.reportDate || reportDate,
+        import_slot: importInfo.importSlot || slot,
+        source_date: importInfo.sourceDate || null,
+        selected_statuses: importInfo.selectedStatuses || [],
+        saved_all_rows: Boolean(importInfo.savedAllRows)
+    };
 
-    const { error: deleteImportsError } = await client
-        .from(DB_IMPORTS)
-        .delete()
-        .eq("report_date", reportDate)
-        .eq("import_slot", slot);
+    const { error } = await client.rpc("replace_shift_data", {
+        p_report_date: reportDate,
+        p_slot: slot,
+        p_rows: dbRows,
+        p_import: dbImport
+    });
 
-    if (deleteImportsError) throw deleteImportsError;
-
-    await dbPutManyRows(rows);
-    await dbPutImport(importInfo);
+    if (error) throw error;
 }
 
 async function saveShiftFilterConfigToCloud(reportDate, slot) {
@@ -4823,6 +5016,291 @@ $("btnExportSku").addEventListener("click", () => {
     XLSX.writeFile(workbook, "THONG_KE_QUY_DOI_SKU_SHOPEE.xlsx");
 });
 
+
+/* ======================== V20 - ADMIN DELETE ======================== */
+function createAdminVerificationClient() {
+    return window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY,
+        {
+            auth: {
+                persistSession: false,
+                autoRefreshToken: false,
+                detectSessionInUrl: false
+            }
+        }
+    );
+}
+
+function getSavedReportDates() {
+    return [...new Set(
+        state.skuRows.map(row => row.orderDate).filter(Boolean)
+    )].sort().reverse();
+}
+
+function getDeleteScope() {
+    return document.querySelector('input[name="adminDeleteScope"]:checked')?.value || "day";
+}
+
+function getMonthLabel(monthKey) {
+    const match = /^(\d{4})-(\d{2})$/.exec(monthKey || "");
+    if (!match) return monthKey || "-";
+    return `Tháng ${Number(match[2])}/${match[1]}`;
+}
+
+function showAdminDeleteError(message = "") {
+    const box = $("adminDeleteError");
+    if (!box) return;
+    box.textContent = message;
+    box.classList.toggle("show", Boolean(message));
+}
+
+function renderAdminDeleteTargetInfo() {
+    const scope = getDeleteScope();
+    const target = $("adminDeleteTargetSelect")?.value || "";
+    const info = $("adminDeleteTargetInfo");
+
+    if (!info) return;
+
+    if (!target) {
+        info.textContent = "Chưa có dữ liệu phù hợp để xóa.";
+        return;
+    }
+
+    if (scope === "day") {
+        const rows = state.skuRows.filter(row => row.orderDate === target);
+        const imports = state.imports.filter(item => item.reportDate === target);
+        const morningRows = rows.filter(row => normalizeRowSlot(row) === "morning").length;
+        const afternoonRows = rows.filter(row => normalizeRowSlot(row) === "afternoon").length;
+
+        info.innerHTML =
+            `<strong>${formatDateLabel(target)}</strong> · ` +
+            `${formatNumber(rows.length)} dòng ` +
+            `(Sáng ${formatNumber(morningRows)} / Chiều ${formatNumber(afternoonRows)}) · ` +
+            `${formatNumber(imports.length)} file`;
+    } else {
+        const rows = state.skuRows.filter(row => String(row.orderDate || "").startsWith(target));
+        const imports = state.imports.filter(item => String(item.reportDate || "").startsWith(target));
+        const dayCount = new Set(rows.map(row => row.orderDate).filter(Boolean)).size;
+
+        info.innerHTML =
+            `<strong>${getMonthLabel(target)}</strong> · ` +
+            `${formatNumber(dayCount)} ngày · ` +
+            `${formatNumber(rows.length)} dòng · ` +
+            `${formatNumber(imports.length)} file`;
+    }
+}
+
+function renderAdminDeleteTargets() {
+    const scope = getDeleteScope();
+    const select = $("adminDeleteTargetSelect");
+    const label = $("adminDeleteTargetLabel");
+
+    if (!select || !label) return;
+
+    const dates = getSavedReportDates();
+
+    if (scope === "day") {
+        label.textContent = "CHỌN NGÀY CẦN XÓA";
+
+        select.innerHTML = dates.length
+            ? dates.map(dateKey => `
+                <option value="${escapeHTML(dateKey)}">
+                    ${formatDateLabel(dateKey)}
+                </option>
+            `).join("")
+            : '<option value="">Không có ngày dữ liệu</option>';
+    } else {
+        label.textContent = "CHỌN THÁNG CẦN XÓA";
+
+        const months = [...new Set(
+            dates.map(dateKey => dateKey.slice(0, 7))
+        )].sort().reverse();
+
+        select.innerHTML = months.length
+            ? months.map(monthKey => `
+                <option value="${escapeHTML(monthKey)}">
+                    ${getMonthLabel(monthKey)}
+                </option>
+            `).join("")
+            : '<option value="">Không có tháng dữ liệu</option>';
+    }
+
+    const currentDate = [...state.selectedDates][0] || getSelectedReportDate() || "";
+
+    if (scope === "day" && dates.includes(currentDate)) {
+        select.value = currentDate;
+    }
+
+    if (scope === "month") {
+        const currentMonth = currentDate.slice(0, 7);
+        if ([...select.options].some(option => option.value === currentMonth)) {
+            select.value = currentMonth;
+        }
+    }
+
+    renderAdminDeleteTargetInfo();
+}
+
+function openAdminDeleteModal() {
+    showAdminDeleteError("");
+    if ($("adminDeletePassword")) $("adminDeletePassword").value = "";
+
+    renderAdminDeleteTargets();
+    $("adminDeleteModal")?.classList.remove("hidden");
+
+    setTimeout(() => $("adminDeletePassword")?.focus(), 80);
+}
+
+function closeAdminDeleteModal() {
+    $("adminDeleteModal")?.classList.add("hidden");
+    if ($("adminDeletePassword")) $("adminDeletePassword").value = "";
+    showAdminDeleteError("");
+}
+
+async function verifyAdminAndDelete(scope, target, password) {
+    if (!password) throw new Error("Hãy nhập mật khẩu admin.");
+
+    const adminClient = createAdminVerificationClient();
+
+    const { data, error: loginError } = await adminClient.auth.signInWithPassword({
+        email: ADMIN_EMAIL,
+        password
+    });
+
+    if (loginError || !data?.user) {
+        throw new Error("Mật khẩu admin không đúng.");
+    }
+
+    if (String(data.user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+        await adminClient.auth.signOut().catch(() => {});
+        throw new Error("Tài khoản xác thực không phải admin.");
+    }
+
+    const { data: result, error: deleteError } = await adminClient.rpc(
+        "admin_delete_shopee_data",
+        {
+            p_scope: scope,
+            p_target: target
+        }
+    );
+
+    await adminClient.auth.signOut().catch(() => {});
+
+    if (deleteError) throw deleteError;
+    return result;
+}
+
+async function refreshAfterAdminDelete(scope, target) {
+    await loadSavedDataFromDb({ resetFilters: true });
+
+    const remainingDates = getSavedReportDates();
+    const nextDate = remainingDates[0] || getLocalTodayKey();
+
+    state.selectedDates = new Set([nextDate]);
+    state.dateFilterInitialized = true;
+
+    if ($("reportDateInput")) $("reportDateInput").value = nextDate;
+
+    loadShiftConfigurationForReportDate(nextDate);
+    renderAll();
+
+    openView("sku-stats");
+    showStatsCalendar();
+
+    const label = scope === "day"
+        ? formatDateLabel(target)
+        : getMonthLabel(target);
+
+    showToast(`Đã xóa dữ liệu ${label}.`);
+}
+
+document.querySelectorAll('input[name="adminDeleteScope"]').forEach(radio => {
+    radio.addEventListener("change", () => {
+        document.querySelectorAll("[data-admin-scope-card]").forEach(card => {
+            card.classList.toggle(
+                "active",
+                card.dataset.adminScopeCard === getDeleteScope()
+            );
+        });
+
+        renderAdminDeleteTargets();
+    });
+});
+
+$("adminDeleteTargetSelect")?.addEventListener("change", renderAdminDeleteTargetInfo);
+$("btnCloseAdminDelete")?.addEventListener("click", closeAdminDeleteModal);
+$("btnCancelAdminDelete")?.addEventListener("click", closeAdminDeleteModal);
+
+$("adminDeleteModal")?.addEventListener("click", event => {
+    if (event.target === $("adminDeleteModal")) closeAdminDeleteModal();
+});
+
+document.addEventListener("keydown", event => {
+    if (
+        event.key === "Escape" &&
+        !$("adminDeleteModal")?.classList.contains("hidden")
+    ) {
+        closeAdminDeleteModal();
+    }
+});
+
+$("btnConfirmAdminDelete")?.addEventListener("click", async () => {
+    const scope = getDeleteScope();
+    const target = $("adminDeleteTargetSelect")?.value || "";
+    const password = $("adminDeletePassword")?.value || "";
+    const button = $("btnConfirmAdminDelete");
+
+    if (!target) {
+        showAdminDeleteError("Chưa có ngày/tháng dữ liệu để xóa.");
+        return;
+    }
+
+    if (!password) {
+        showAdminDeleteError("Hãy nhập mật khẩu admin.");
+        $("adminDeletePassword")?.focus();
+        return;
+    }
+
+    const displayTarget = scope === "day"
+        ? formatDateLabel(target)
+        : getMonthLabel(target);
+
+    if (!confirm(
+        `XÁC NHẬN XÓA ${scope === "day" ? "NGÀY" : "THÁNG"} ${displayTarget}?\n\n` +
+        "Dữ liệu đã xóa không thể hoàn tác."
+    )) return;
+
+    showAdminDeleteError("");
+    button.disabled = true;
+    button.textContent = "ĐANG XÁC THỰC...";
+
+    try {
+        await verifyAdminAndDelete(scope, target, password);
+        closeAdminDeleteModal();
+        await refreshAfterAdminDelete(scope, target);
+    } catch (error) {
+        console.error(error);
+
+        const message = String(error?.message || "");
+
+        showAdminDeleteError(
+            message.includes("Invalid login credentials") ||
+            message.includes("Mật khẩu admin")
+                ? "Mật khẩu admin không đúng."
+                : message.includes("ADMIN_ONLY")
+                    ? "Tài khoản này chưa được cấp quyền admin trong Supabase."
+                    : (message || "Không xóa được dữ liệu.")
+        );
+
+        $("adminDeletePassword")?.select();
+    } finally {
+        button.disabled = false;
+        button.textContent = "XÁC NHẬN XÓA";
+    }
+});
+
+
 /* ======================== ACTIONS ======================== */
 if ($("btnOpenSkuStats")) {
     $("btnOpenSkuStats").addEventListener("click", () => {
@@ -4831,36 +5309,7 @@ if ($("btnOpenSkuStats")) {
     });
 }
 
-$("btnReset").addEventListener("click", async () => {
-    if (!confirm(
-        "Xóa TOÀN BỘ dữ liệu Shopee trên SUPABASE CLOUD? Dữ liệu sẽ mất trên tất cả máy. " +
-        "Bảng hệ số quy đổi SKU vẫn được giữ lại."
-    )) return;
-
-    try {
-        await dbClearAllSavedData();
-
-        state.fileName = "";
-        state.skuRows = [];
-        state.imports = [];
-        state.skuStats = [];
-        state.selectedStatuses.clear();
-        state.statusFilterInitialized = false;
-        state.selectedDates.clear();
-        state.dateFilterInitialized = false;
-
-        if ($("morningFile")) $("morningFile").value = "";
-        if ($("afternoonFile")) $("afternoonFile").value = "";
-        renderUploadSlotStatuses();
-
-        renderAll();
-        openView("overview");
-        showToast("Đã xóa toàn bộ dữ liệu Shopee đã lưu.");
-    } catch (error) {
-        console.error(error);
-        alert("Không xóa được dữ liệu đã lưu.");
-    }
-});
+$("btnReset").addEventListener("click", openAdminDeleteModal);
 
 /* ======================== TOAST ======================== */
 let toastTimer;
