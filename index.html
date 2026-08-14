@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- ONE-FILE V23: thêm Thống kê hóa đơn từ file Excel -->
+    <!-- ONE-FILE V24: tăng cỡ chữ bảng Thống kê hóa đơn -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2298,6 +2298,76 @@ button{cursor:pointer}
     .invoice-kpi-grid{
         grid-template-columns:repeat(2,minmax(0,1fr))
     }
+}
+
+
+/* =========================================================
+   V24 - TĂNG CỠ CHỮ BẢNG THỐNG KÊ HÓA ĐƠN
+========================================================= */
+
+/* Tiêu đề bảng */
+.invoice-table-toolbar h2{
+    font-size:14px!important;
+}
+.invoice-table-toolbar p{
+    font-size:8.5px!important;
+}
+
+/* Header cột */
+.invoice-summary-table thead th{
+    padding:12px 12px!important;
+    font-size:9px!important;
+    line-height:1.3!important;
+}
+
+/* Dữ liệu trong bảng */
+.invoice-summary-table tbody td{
+    padding:12px 12px!important;
+    font-size:10.5px!important;
+    line-height:1.45!important;
+}
+
+/* Tên sản phẩm rõ hơn */
+.invoice-summary-table tbody td:nth-child(2){
+    font-size:10.5px!important;
+    font-weight:500!important;
+}
+
+/* Số lượng nổi bật hơn */
+.invoice-qty-value{
+    font-size:11px!important;
+    font-weight:850!important;
+}
+
+/* Các cột tiền */
+.invoice-money-value{
+    font-size:10.5px!important;
+    font-weight:600!important;
+}
+
+/* STT dễ nhìn hơn */
+.invoice-summary-table tbody td:first-child{
+    font-size:9.5px!important;
+}
+
+/* Badge khuyến mại lớn hơn chút */
+.invoice-promo-badge{
+    height:20px!important;
+    padding:0 7px!important;
+    font-size:7.2px!important;
+}
+
+/* Dòng tổng cộng */
+.invoice-summary-table tfoot td{
+    padding:13px 12px!important;
+    font-size:10.8px!important;
+    line-height:1.35!important;
+}
+
+/* Ghi chú dưới bảng */
+.invoice-note{
+    font-size:8.2px!important;
+    padding:11px 14px!important;
 }
 
 </style>
