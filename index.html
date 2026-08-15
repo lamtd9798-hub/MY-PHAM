@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=51">
+    <link rel="stylesheet" href="style.css?v=52">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -266,7 +266,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V51.0</span>
+                <span class="v38-sidebar-version">V52.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -1238,6 +1238,109 @@
                             <tr><td colspan="9" class="empty-table">Chưa có snapshot đơn luân chuyển.</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+
+            <!-- ======================== V52 - DỰ BÁO TỒN & ĐỀ XUẤT NHẬP ======================== -->
+            <div id="inventoryForecastPanelV52" class="panel inventory-forecast-v52-panel">
+                <div class="panel-header inventory-forecast-v52-header">
+                    <div>
+                        <h2>📈 Dự báo tồn kho & đề xuất nhập hàng</h2>
+                        <p id="inventoryForecastSubtitleV52">
+                            Tốc độ bán lấy từ đơn Shopee duy nhất theo Mã đơn + SKU, loại đơn hủy/đang hoàn để tránh đếm trùng snapshot.
+                        </p>
+                    </div>
+
+                    <div class="inventory-forecast-v52-toolbar">
+                        <select id="inventoryForecastFilterV52" class="select-control">
+                            <option value="all">Tất cả mặt hàng</option>
+                            <option value="urgent">Cần nhập ngay</option>
+                            <option value="reorder">Nên đặt hàng</option>
+                            <option value="watch">Theo dõi</option>
+                            <option value="ok">Tồn ổn</option>
+                            <option value="nodata">Chưa đủ dữ liệu bán</option>
+                        </select>
+                        <input id="inventoryForecastSearchV52"
+                               type="text"
+                               class="search-input"
+                               placeholder="Tìm SKU / sản phẩm...">
+                    </div>
+                </div>
+
+                <div class="inventory-forecast-v52-kpis">
+                    <div class="inventory-forecast-v52-kpi urgent">
+                        <span>CẦN NHẬP NGAY</span>
+                        <strong id="inventoryForecastUrgentV52">0</strong>
+                        <small>Hết hàng / không đủ tới lúc hàng mới về</small>
+                    </div>
+                    <div class="inventory-forecast-v52-kpi reorder">
+                        <span>NÊN ĐẶT HÀNG</span>
+                        <strong id="inventoryForecastReorderV52">0</strong>
+                        <small>Đã chạm điểm đặt hàng</small>
+                    </div>
+                    <div class="inventory-forecast-v52-kpi watch">
+                        <span>THEO DÕI</span>
+                        <strong id="inventoryForecastWatchV52">0</strong>
+                        <small>Ngày tồn còn lại đang giảm</small>
+                    </div>
+                    <div class="inventory-forecast-v52-kpi ok">
+                        <span>TỒN ỔN</span>
+                        <strong id="inventoryForecastOkV52">0</strong>
+                        <small>Chưa cần nhập thêm</small>
+                    </div>
+                    <div class="inventory-forecast-v52-kpi qty">
+                        <span>TỔNG SL ĐỀ XUẤT NHẬP</span>
+                        <strong id="inventoryForecastSuggestedQtyV52">0</strong>
+                        <small>Tổng các SKU đã đến điểm đặt hàng</small>
+                    </div>
+                    <div class="inventory-forecast-v52-kpi value">
+                        <span>GIÁ TRỊ THAM CHIẾU</span>
+                        <strong id="inventoryForecastSuggestedValueV52">0 đ</strong>
+                        <small>Theo đơn giá hiện đang lưu, không phải giá vốn mua</small>
+                    </div>
+                </div>
+
+                <div class="inventory-forecast-v52-explain">
+                    <div><b>Điểm đặt hàng</b> = Tốc độ bán/ngày × Lead time + Tồn an toàn.</div>
+                    <div><b>Đề xuất nhập</b> = Mức tồn mục tiêu sau khi chờ hàng − Khả dụng LT.</div>
+                    <div><b>Còn bán</b> = Khả dụng LT ÷ Tốc độ bán/ngày.</div>
+                    <div id="inventoryForecastReferenceV52"><b>Ngày dữ liệu:</b> —</div>
+                </div>
+
+                <div class="inventory-forecast-v52-table-wrap">
+                    <table class="inventory-forecast-v52-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>SKU kho</th>
+                                <th>Tên sản phẩm</th>
+                                <th class="center">Khả dụng LT</th>
+                                <th class="center">Bán TB 7N</th>
+                                <th class="center">Bán TB 30N</th>
+                                <th class="center">Tốc độ dùng</th>
+                                <th class="center">Còn bán</th>
+                                <th class="center">Tồn an toàn</th>
+                                <th class="center">Lead time</th>
+                                <th class="center">Mục tiêu sau về</th>
+                                <th class="center">Điểm đặt hàng</th>
+                                <th class="center">Đề xuất nhập</th>
+                                <th class="right">Giá trị tham chiếu</th>
+                                <th class="center">Trạng thái</th>
+                                <th class="center">Cài đặt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryForecastBodyV52">
+                            <tr><td colspan="16" class="empty-table">Đang tính dự báo tồn kho...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="inventory-forecast-v52-note">
+                    <strong>Lưu ý:</strong>
+                    Bán TB chỉ chính xác theo lượng dữ liệu Shopee đã lưu trên Cloud. Nếu mới lưu 1–2 ngày,
+                    hệ thống vẫn tính nhưng sẽ ghi rõ số ngày quan sát; nên dùng sau khi tích lũy thêm dữ liệu.
+                    ADMIN/KHO có thể chỉnh <b>Tồn an toàn / Lead time / Mục tiêu sau khi hàng về</b> cho từng SKU.
                 </div>
             </div>
 
@@ -2558,6 +2661,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=51"></script>
+    <script src="script.js?v=52"></script>
 </body>
 </html>

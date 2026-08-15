@@ -5993,3 +5993,52 @@ body.sidebar-collapsed .sidebar-collapse-handle{right:-15px!important;transform:
 body.return-v51-modal-open{overflow:hidden;}
 @media(max-width:1200px){.returns-v51-kpis{grid-template-columns:repeat(3,minmax(0,1fr));}.returns-v51-grid{grid-template-columns:1fr;}}
 @media(max-width:760px){.returns-v51-kpis{grid-template-columns:1fr 1fr}.returns-v51-filters{width:100%;flex-direction:column}.returns-v51-filters input,.returns-v51-filters select{width:100%}.returns-v51-form-grid{grid-template-columns:1fr}.returns-v51-form-grid label.wide{grid-column:auto}.returns-v51-modal-context{grid-template-columns:1fr}}
+
+
+/* =========================================================
+   V52 - DỰ BÁO TỒN & ĐỀ XUẤT NHẬP HÀNG
+========================================================= */
+.inventory-forecast-v52-panel{margin-top:12px; overflow:hidden;}
+.inventory-forecast-v52-header{align-items:flex-start;gap:12px;}
+.inventory-forecast-v52-header h2{font-size:16px!important;}
+.inventory-forecast-v52-header p{font-size:11.5px!important;line-height:1.55;max-width:850px;}
+.inventory-forecast-v52-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.inventory-forecast-v52-toolbar .select-control{min-width:160px;}
+.inventory-forecast-v52-toolbar .search-input{min-width:210px;}
+.inventory-forecast-v52-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;padding:0 12px 12px;}
+.inventory-forecast-v52-kpi{border:1px solid #dfe8eb;border-radius:10px;padding:11px 12px;background:#fff;min-width:0;}
+.inventory-forecast-v52-kpi span{display:block;font-size:9px;font-weight:900;color:#647b85;}
+.inventory-forecast-v52-kpi strong{display:block;font-size:23px;line-height:1.1;margin-top:5px;color:#203d48;}
+.inventory-forecast-v52-kpi small{display:block;margin-top:5px;font-size:9.5px;line-height:1.4;color:#80939b;}
+.inventory-forecast-v52-kpi.urgent{background:#fff2f2;border-color:#efc7c9}.inventory-forecast-v52-kpi.urgent strong{color:#c43f46}
+.inventory-forecast-v52-kpi.reorder{background:#fff8e9;border-color:#ead49f}.inventory-forecast-v52-kpi.reorder strong{color:#a56a0a}
+.inventory-forecast-v52-kpi.watch{background:#fffdf2;border-color:#e7dfb8}.inventory-forecast-v52-kpi.watch strong{color:#8b731a}
+.inventory-forecast-v52-kpi.ok{background:#eff9f6;border-color:#bfe1d7}.inventory-forecast-v52-kpi.ok strong{color:#087963}
+.inventory-forecast-v52-kpi.qty{background:#f0f7fc;border-color:#c9deeb}.inventory-forecast-v52-kpi.qty strong{color:#3377a6}
+.inventory-forecast-v52-kpi.value{background:#f1faf7;border-color:#c3e1d8}.inventory-forecast-v52-kpi.value strong{color:#087963;font-size:18px;}
+.inventory-forecast-v52-explain{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 12px 10px;padding:9px 11px;border:1px solid #e1e9eb;border-radius:8px;background:#f8fbfc;color:#5e747d;font-size:10.5px;line-height:1.5;}
+.inventory-forecast-v52-table-wrap{margin:0 12px 11px;overflow:auto;border:1px solid #dfe7e9;border-radius:9px;max-height:610px;}
+.inventory-forecast-v52-table{width:100%;min-width:1680px;border-collapse:separate;border-spacing:0;}
+.inventory-forecast-v52-table th{position:sticky;top:0;z-index:5;background:#f6f9fa;color:#526a74;font-size:10.5px;padding:10px 8px;border-bottom:1px solid #dce5e8;white-space:nowrap;}
+.inventory-forecast-v52-table td{font-size:11.5px;padding:10px 8px;border-bottom:1px solid #edf1f2;vertical-align:middle;background:#fff;}
+.inventory-forecast-v52-table tbody tr:last-child td{border-bottom:none;}
+.inventory-forecast-v52-table th:nth-child(1),.inventory-forecast-v52-table td:nth-child(1){position:sticky;left:0;z-index:4;width:48px;min-width:48px;background:#fff;}
+.inventory-forecast-v52-table th:nth-child(2),.inventory-forecast-v52-table td:nth-child(2){position:sticky;left:48px;z-index:4;width:110px;min-width:110px;background:#fff;}
+.inventory-forecast-v52-table th:nth-child(3),.inventory-forecast-v52-table td:nth-child(3){position:sticky;left:158px;z-index:4;width:220px;min-width:220px;background:#fff;border-right:2px solid #b8d9d1;}
+.inventory-forecast-v52-table thead th:nth-child(-n+3){z-index:8;background:#f6f9fa;}
+.inventory-forecast-v52-row.urgent td{background:#fffafa}.inventory-forecast-v52-row.urgent td:nth-child(-n+3){background:#fffafa}
+.inventory-forecast-v52-row.reorder td{background:#fffdf8}.inventory-forecast-v52-row.reorder td:nth-child(-n+3){background:#fffdf8}
+.inventory-forecast-v52-name{display:block;color:#273f49;}.inventory-forecast-v52-table td small{display:block;margin-top:3px;font-size:9px;color:#81939a;line-height:1.35;}
+.inventory-forecast-v52-available{font-size:13px!important;font-weight:900;color:#087963;}
+.inventory-forecast-v52-average strong{font-size:12px;color:#294750;}
+.inventory-forecast-v52-setting{width:70px;height:31px;border:1px solid #cfdde2;border-radius:7px;padding:0 6px;text-align:center;font-size:11px;font-weight:800;background:#fff;}
+.inventory-forecast-v52-setting:focus{outline:none;border-color:#59bda8;box-shadow:0 0 0 2px rgba(54,171,145,.09)}
+.inventory-forecast-v52-setting:disabled{background:#f2f5f6;color:#829198;}
+.inventory-forecast-v52-suggested strong{font-size:14px;color:#be4a22;}
+.inventory-forecast-v52-status{display:inline-flex;align-items:center;justify-content:center;min-height:26px;padding:0 8px;border-radius:999px;font-size:9.5px;font-weight:900;white-space:nowrap;}
+.inventory-forecast-v52-status.urgent{background:#ffe7e8;color:#bd343c}.inventory-forecast-v52-status.reorder{background:#fff0cd;color:#9c650a}.inventory-forecast-v52-status.watch{background:#fff8dc;color:#857019}.inventory-forecast-v52-status.ok{background:#e5f7f1;color:#087963}.inventory-forecast-v52-status.nodata{background:#edf3f6;color:#5c7886}
+.inventory-forecast-v52-save{height:30px;padding:0 9px;border:1px solid #b9dace;border-radius:7px;background:#eff9f6;color:#087963;font-size:9.5px;font-weight:900;cursor:pointer;white-space:nowrap;}
+.inventory-forecast-v52-save:hover{background:#e0f4ed}.inventory-forecast-v52-readonly{font-size:9px;color:#87979d;}
+.inventory-forecast-v52-no-data{color:#9aa8ad}.inventory-forecast-v52-note{margin:0 12px 12px;padding:9px 11px;border-left:3px solid #55b9a3;background:#f5faf9;color:#657a83;font-size:10.5px;line-height:1.55;}
+@media(max-width:1350px){.inventory-forecast-v52-kpis{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(max-width:760px){.inventory-forecast-v52-kpis{grid-template-columns:1fr 1fr}.inventory-forecast-v52-toolbar{width:100%}.inventory-forecast-v52-toolbar>*{width:100%!important;}}

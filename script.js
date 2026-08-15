@@ -221,9 +221,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V51.0";
+const APP_VERSION = "V52.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "51";
+const APP_CACHE_VERSION = "52";
 
 const systemHealthStateV38 = {
     running: false,
@@ -356,6 +356,8 @@ function inventoryDbRowToState(row) {
         openingQty: Number(row.opening_qty || 0),
         physicalQty: Number(row.physical_qty || 0),
         safetyStock: Number(row.safety_stock || 0),
+        leadTimeDays: Number(row.lead_time_days ?? 5),
+        targetCoverDays: Number(row.target_cover_days ?? 14),
         unitPrice: Number(row.unit_price || 0),
         stocktakeDate: row.stocktake_date || "",
         sortOrder: Number(row.sort_order || 0),
@@ -373,6 +375,8 @@ function inventoryStateToDbRow(item) {
         opening_qty: Number(item.openingQty || 0),
         physical_qty: Number(item.physicalQty || 0),
         safety_stock: Number(item.safetyStock || 0),
+        lead_time_days: Math.max(0, Number(item.leadTimeDays ?? 5)),
+        target_cover_days: Math.max(1, Number(item.targetCoverDays ?? 14)),
         unit_price: Number(item.unitPrice || 0),
         stocktake_date: item.stocktakeDate || null,
         sort_order: Number(item.sortOrder || 0),
@@ -7471,6 +7475,7 @@ function renderInventoryModule() {
     renderInventoryFlowBars(summary);
     renderInventoryMisaInfo(summary);
     renderInventoryOrderAgingV49();
+    renderInventoryForecastV52();
     renderInventoryMovementTable();
 
     if (!inventoryState.currentDate) {
@@ -7800,6 +7805,336 @@ function renderInventoryOrderAgingV49() {
     }).join("");
 }
 
+
+/* =========================================================
+   V52 - DỰ BÁO TỒN KHO & ĐỀ XUẤT NHẬP HÀNG
+========================================================= */
+const inventoryForecastStateV52 = {
+    filter: "all",
+    search: ""
+};
+
+function inventoryDateToUtcV52(dateKey) {
+    const parts = String(dateKey || "").split("-").map(Number);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+    return Date.UTC(parts[0], parts[1] - 1, parts[2]);
+}
+
+function inventoryDateDiffDaysV52(fromDate, toDate) {
+    const a = inventoryDateToUtcV52(fromDate);
+    const b = inventoryDateToUtcV52(toDate);
+    if (a === null || b === null) return null;
+    return Math.floor((b - a) / 86400000);
+}
+
+function inventoryAddDaysV52(dateKey, days) {
+    const utc = inventoryDateToUtcV52(dateKey);
+    if (utc === null) return "";
+    const d = new Date(utc + Number(days || 0) * 86400000);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}-${String(d.getUTCDate()).padStart(2,"0")}`;
+}
+
+function buildInventoryDemandHistoryV52() {
+    const latestRows = getLatestDailyShopeeLinesForInventory();
+    const demandByItem = new Map();
+    let referenceDate = "";
+    let earliestDate = "";
+
+    latestRows.forEach(row => {
+        const bucket = classifyInventoryShopeeStatus(row.status);
+
+        // Tốc độ bán phục vụ nhập hàng: lấy đơn còn hiệu lực / đã giao,
+        // bỏ Hủy và Hoàn đang về để tránh đề xuất nhập quá cao.
+        if (!["reserved", "in_transit", "delivered"].includes(bucket)) return;
+
+        const orderDate = String(row.orderDate || row.sourceOrderDate || "").trim();
+        if (!orderDate) return;
+
+        if (!referenceDate || orderDate > referenceDate) referenceDate = orderDate;
+        if (!earliestDate || orderDate < earliestDate) earliestDate = orderDate;
+
+        expandShopeeRowToInventorySkus(row).forEach(part => {
+            const resolved = resolveInventoryItemFromTransit(row, part.baseSku);
+            const item = resolved.item;
+            if (!item?.itemCode) return;
+
+            if (!demandByItem.has(item.itemCode)) {
+                demandByItem.set(item.itemCode, new Map());
+            }
+
+            const daily = demandByItem.get(item.itemCode);
+            daily.set(orderDate, Number(daily.get(orderDate) || 0) + Number(part.quantity || 0));
+        });
+    });
+
+    if (!referenceDate) {
+        referenceDate = inventoryState.transitSnapshot?.snapshotDate || getLatestSavedReportDate() || getLocalTodayKey();
+    }
+
+    return { demandByItem, referenceDate, earliestDate };
+}
+
+function inventoryWindowAverageV52(dailyMap, referenceDate, windowDays) {
+    const entries = [...(dailyMap || new Map()).entries()]
+        .filter(([date]) => date && date <= referenceDate)
+        .sort((a,b) => a[0].localeCompare(b[0]));
+
+    if (!entries.length || !referenceDate) {
+        return { total: 0, average: 0, observedDays: 0, startDate: "" };
+    }
+
+    const windowStart = inventoryAddDaysV52(referenceDate, -(Number(windowDays || 1) - 1));
+    const valid = entries.filter(([date]) => date >= windowStart && date <= referenceDate);
+    if (!valid.length) {
+        return { total: 0, average: 0, observedDays: 0, startDate: "" };
+    }
+
+    const firstDate = valid[0][0];
+    const span = inventoryDateDiffDaysV52(firstDate, referenceDate);
+    const observedDays = Math.max(1, Math.min(Number(windowDays || 1), Number(span ?? 0) + 1));
+    const total = valid.reduce((sum, [,qty]) => sum + Number(qty || 0), 0);
+
+    return {
+        total,
+        average: total / observedDays,
+        observedDays,
+        startDate: firstDate
+    };
+}
+
+function inventoryForecastStatusV52(row) {
+    if (row.available <= 0) {
+        return { key: "urgent", label: "Hết / cần nhập ngay", detail: "Khả dụng LT đã bằng 0." };
+    }
+
+    if (row.velocity <= 0) {
+        if (row.available <= row.safetyStock) {
+            return { key: "reorder", label: "Dưới tồn an toàn", detail: "Chưa có tốc độ bán nhưng tồn đã thấp hơn ngưỡng an toàn." };
+        }
+        return { key: "nodata", label: "Chưa đủ dữ liệu bán", detail: "Chưa có đơn hợp lệ để tính tốc độ bán." };
+    }
+
+    if (row.daysCover <= row.leadTimeDays || row.available <= row.safetyStock) {
+        return { key: "urgent", label: "Cần nhập ngay", detail: `Tồn chỉ đủ khoảng ${row.daysCover.toFixed(1)} ngày.` };
+    }
+
+    if (row.suggestedQty > 0) {
+        return { key: "reorder", label: "Nên đặt hàng", detail: "Khả dụng đã chạm điểm đặt hàng." };
+    }
+
+    if (row.daysCover <= row.targetCoverDays) {
+        return { key: "watch", label: "Theo dõi", detail: `Còn khoảng ${row.daysCover.toFixed(1)} ngày bán.` };
+    }
+
+    return { key: "ok", label: "Tồn ổn", detail: `Còn khoảng ${row.daysCover.toFixed(1)} ngày bán.` };
+}
+
+function buildInventoryForecastRowsV52() {
+    const summary = buildInventorySummary();
+    const demand = buildInventoryDemandHistoryV52();
+
+    const rows = summary.map(item => {
+        const daily = demand.demandByItem.get(item.itemCode) || new Map();
+        const avg7 = inventoryWindowAverageV52(daily, demand.referenceDate, 7);
+        const avg30 = inventoryWindowAverageV52(daily, demand.referenceDate, 30);
+
+        // Ưu tiên nhịp bán gần đây nếu đang tăng; lấy max(7N, 30N) để tránh thiếu hàng.
+        const velocity = Math.max(Number(avg7.average || 0), Number(avg30.average || 0));
+        const available = Math.max(0, Number(item.available || 0));
+        const safetyStock = Math.max(0, Number(item.safetyStock || 0));
+        const leadTimeDays = Math.max(0, Number(item.leadTimeDays ?? 5));
+        const targetCoverDays = Math.max(1, Number(item.targetCoverDays ?? 14));
+
+        const daysCover = velocity > 0 ? available / velocity : null;
+        const reorderPoint = velocity > 0
+            ? Math.ceil(velocity * leadTimeDays + safetyStock)
+            : safetyStock;
+        const targetStock = velocity > 0
+            ? Math.ceil(velocity * (leadTimeDays + targetCoverDays) + safetyStock)
+            : safetyStock;
+
+        let suggestedQty = 0;
+        if (velocity > 0) {
+            suggestedQty = available <= reorderPoint
+                ? Math.max(0, Math.ceil(targetStock - available))
+                : 0;
+        } else if (available < safetyStock) {
+            suggestedQty = Math.max(0, Math.ceil(safetyStock - available));
+        }
+
+        const row = {
+            ...item,
+            available,
+            safetyStock,
+            leadTimeDays,
+            targetCoverDays,
+            avg7,
+            avg30,
+            velocity,
+            daysCover,
+            reorderPoint,
+            targetStock,
+            suggestedQty,
+            suggestedValue: suggestedQty * Number(item.unitPrice || 0)
+        };
+
+        row.forecastStatus = inventoryForecastStatusV52(row);
+        return row;
+    });
+
+    return {
+        rows,
+        referenceDate: demand.referenceDate,
+        earliestDate: demand.earliestDate
+    };
+}
+
+function inventoryForecastDaysTextV52(days) {
+    if (days === null || !Number.isFinite(days)) return "—";
+    if (days >= 999) return ">999 ngày";
+    return `${days.toFixed(days < 10 ? 1 : 0)} ngày`;
+}
+
+function inventoryForecastAverageTextV52(data) {
+    if (!data?.observedDays) return '<span class="inventory-forecast-v52-no-data">—</span>';
+    return `
+        <strong>${Number(data.average || 0).toFixed(1)}</strong>
+        <small>${formatNumber(data.total)} SP / ${formatNumber(data.observedDays)} ngày</small>
+    `;
+}
+
+function renderInventoryForecastV52() {
+    const body = $("inventoryForecastBodyV52");
+    if (!body) return;
+
+    const data = buildInventoryForecastRowsV52();
+    const allRows = data.rows;
+
+    const totals = allRows.reduce((acc,row) => {
+        const key = row.forecastStatus?.key || "nodata";
+        if (key === "urgent") acc.urgent++;
+        else if (key === "reorder") acc.reorder++;
+        else if (key === "watch") acc.watch++;
+        else if (key === "ok") acc.ok++;
+        else acc.nodata++;
+        acc.qty += Number(row.suggestedQty || 0);
+        acc.value += Number(row.suggestedValue || 0);
+        return acc;
+    }, {urgent:0,reorder:0,watch:0,ok:0,nodata:0,qty:0,value:0});
+
+    if ($("inventoryForecastUrgentV52")) $("inventoryForecastUrgentV52").textContent = formatNumber(totals.urgent);
+    if ($("inventoryForecastReorderV52")) $("inventoryForecastReorderV52").textContent = formatNumber(totals.reorder);
+    if ($("inventoryForecastWatchV52")) $("inventoryForecastWatchV52").textContent = formatNumber(totals.watch);
+    if ($("inventoryForecastOkV52")) $("inventoryForecastOkV52").textContent = formatNumber(totals.ok);
+    if ($("inventoryForecastSuggestedQtyV52")) $("inventoryForecastSuggestedQtyV52").textContent = formatNumber(totals.qty);
+    if ($("inventoryForecastSuggestedValueV52")) $("inventoryForecastSuggestedValueV52").textContent = inventoryMoney(totals.value);
+
+    if ($("inventoryForecastReferenceV52")) {
+        $("inventoryForecastReferenceV52").innerHTML = `<b>Ngày dữ liệu:</b> ${data.referenceDate ? formatDateLabel(data.referenceDate) : "—"}`;
+    }
+
+    if ($("inventoryForecastSubtitleV52")) {
+        $("inventoryForecastSubtitleV52").textContent = data.referenceDate
+            ? `Tính tới ${formatDateLabel(data.referenceDate)} · dùng đơn Shopee duy nhất theo Mã đơn + SKU · loại Đã hủy/Hoàn đang về.`
+            : "Chưa có đủ dữ liệu Shopee để tính tốc độ bán.";
+    }
+
+    const filter = $("inventoryForecastFilterV52")?.value || inventoryForecastStateV52.filter || "all";
+    const rawSearch = $("inventoryForecastSearchV52")?.value || inventoryForecastStateV52.search || "";
+    const search = normalizeText(rawSearch);
+    inventoryForecastStateV52.filter = filter;
+    inventoryForecastStateV52.search = rawSearch;
+
+    const rows = allRows.filter(row => {
+        const filterOk = filter === "all" || row.forecastStatus?.key === filter;
+        const searchOk = !search || normalizeText(`${row.itemCode} ${row.name} ${row.shopeeSku || ""}`).includes(search);
+        return filterOk && searchOk;
+    });
+
+    if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="16" class="empty-table">Không có mặt hàng phù hợp bộ lọc hiện tại.</td></tr>';
+        return;
+    }
+
+    const canEdit = hasPermissionV40("INVENTORY_WRITE");
+
+    body.innerHTML = rows.map((row,index) => {
+        const status = row.forecastStatus || {key:"nodata",label:"Chưa có dữ liệu",detail:""};
+        return `
+            <tr class="inventory-forecast-v52-row ${escapeHTML(status.key)}" data-v52-item="${escapeHTML(row.itemCode)}">
+                <td>${index+1}</td>
+                <td><strong>${escapeHTML(row.itemCode)}</strong></td>
+                <td>
+                    <strong class="inventory-forecast-v52-name">${escapeHTML(row.name)}</strong>
+                    ${row.shopeeSku ? `<small>Shopee: ${escapeHTML(row.shopeeSku)}</small>` : '<small>Chưa map SKU Shopee</small>'}
+                </td>
+                <td class="center inventory-forecast-v52-available">${formatNumber(row.available)}</td>
+                <td class="center inventory-forecast-v52-average">${inventoryForecastAverageTextV52(row.avg7)}</td>
+                <td class="center inventory-forecast-v52-average">${inventoryForecastAverageTextV52(row.avg30)}</td>
+                <td class="center"><strong>${row.velocity > 0 ? row.velocity.toFixed(1) : "—"}</strong><small>SP/ngày</small></td>
+                <td class="center"><strong>${inventoryForecastDaysTextV52(row.daysCover)}</strong></td>
+                <td class="center">
+                    <input class="inventory-forecast-v52-setting" data-v52-setting="safetyStock" type="number" min="0" step="1" value="${Number(row.safetyStock || 0)}" ${canEdit ? "" : "disabled"}>
+                </td>
+                <td class="center">
+                    <input class="inventory-forecast-v52-setting" data-v52-setting="leadTimeDays" type="number" min="0" max="365" step="1" value="${Number(row.leadTimeDays || 0)}" ${canEdit ? "" : "disabled"}>
+                    <small>ngày</small>
+                </td>
+                <td class="center">
+                    <input class="inventory-forecast-v52-setting" data-v52-setting="targetCoverDays" type="number" min="1" max="365" step="1" value="${Number(row.targetCoverDays || 14)}" ${canEdit ? "" : "disabled"}>
+                    <small>ngày</small>
+                </td>
+                <td class="center"><strong>${formatNumber(row.reorderPoint)}</strong></td>
+                <td class="center inventory-forecast-v52-suggested"><strong>${formatNumber(row.suggestedQty)}</strong></td>
+                <td class="right"><strong>${inventoryMoney(row.suggestedValue)}</strong></td>
+                <td class="center">
+                    <span class="inventory-forecast-v52-status ${escapeHTML(status.key)}">${escapeHTML(status.label)}</span>
+                    <small>${escapeHTML(status.detail)}</small>
+                </td>
+                <td class="center">
+                    ${canEdit
+                        ? `<button type="button" class="inventory-forecast-v52-save" data-v52-save="${escapeHTML(row.itemCode)}">💾 Lưu</button>`
+                        : '<span class="inventory-forecast-v52-readonly">Chỉ ADMIN/KHO</span>'}
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+async function saveInventoryForecastSettingsV52(itemCode) {
+    if (!requirePermissionV40("INVENTORY_WRITE")) return;
+
+    const item = inventoryState.items.find(row => row.itemCode === itemCode);
+    const tr = document.querySelector(`[data-v52-item="${CSS.escape(itemCode)}"]`);
+    if (!item || !tr) return;
+
+    const readValue = key => Number(tr.querySelector(`[data-v52-setting="${key}"]`)?.value || 0);
+    const safetyStock = Math.max(0, Math.round(readValue("safetyStock")));
+    const leadTimeDays = Math.max(0, Math.round(readValue("leadTimeDays")));
+    const targetCoverDays = Math.max(1, Math.round(readValue("targetCoverDays")));
+
+    item.safetyStock = safetyStock;
+    item.leadTimeDays = leadTimeDays;
+    item.targetCoverDays = targetCoverDays;
+
+    try {
+        if (inventoryState.cloudReady && state.user) {
+            const client = initSupabaseClient();
+            const { error } = await client
+                .from(DB_INVENTORY_ITEMS)
+                .upsert([inventoryStateToDbRow(item)], { onConflict: "item_code" });
+            if (error) throw error;
+        }
+
+        saveInventoryLocal();
+        renderInventoryModule();
+        showToast(`Đã lưu cài đặt nhập hàng cho ${itemCode}.`);
+    } catch (error) {
+        console.error("V52 save forecast settings:", error);
+        alert(error?.message || "Không lưu được cài đặt dự báo tồn kho.");
+    }
+}
+
 function renderInventoryMovementTable() {
     const body = $("inventoryMovementBody");
     const summary = $("inventoryMovementSummary");
@@ -8097,6 +8432,19 @@ $("inventoryAgingBucketFilter")?.addEventListener("change", event => {
 $("inventoryAgingSearch")?.addEventListener("input", event => {
     inventoryAgingStateV49.search = event.target.value || "";
     renderInventoryOrderAgingV49();
+});
+$("inventoryForecastFilterV52")?.addEventListener("change", event => {
+    inventoryForecastStateV52.filter = event.target.value || "all";
+    renderInventoryForecastV52();
+});
+$("inventoryForecastSearchV52")?.addEventListener("input", event => {
+    inventoryForecastStateV52.search = event.target.value || "";
+    renderInventoryForecastV52();
+});
+$("inventoryForecastBodyV52")?.addEventListener("click", event => {
+    const button = event.target.closest("[data-v52-save]");
+    if (!button) return;
+    saveInventoryForecastSettingsV52(button.dataset.v52Save || "");
 });
 $("inventoryMovementFilter")?.addEventListener("change", renderInventoryMovementTable);
 $("inventoryMovementSearch")?.addEventListener("input", renderInventoryMovementTable);
@@ -12354,6 +12702,8 @@ async function v39ProbeSystemHealthRpc(client) {
         const v41 = data?.v41 || {};
         const v47 = data?.v47 || {};
         const v50 = data?.v50 || {};
+        const v51 = data?.v51 || {};
+        const v52 = data?.v52 || {};
 
         const requiredRpcs = [
             "app_user_context",
@@ -12362,7 +12712,9 @@ async function v39ProbeSystemHealthRpc(client) {
             "replace_shift_data",
             "admin_delete_shopee_data",
             "save_invoice_history",
-            "admin_delete_invoice_history"
+            "admin_delete_invoice_history",
+            "confirm_inventory_return_v51",
+            "reverse_inventory_return_v51"
         ];
 
         const missingRpcs = requiredRpcs.filter(name => rpcs[name] !== true);
@@ -12372,7 +12724,8 @@ async function v39ProbeSystemHealthRpc(client) {
             "invoice_imports",
             "invoice_groups",
             "invoice_lines",
-            "invoice_order_links"
+            "invoice_order_links",
+            "inventory_return_receipts"
         ];
 
         const missingTables = requiredTables.filter(name => tables[name] !== true);
@@ -12398,33 +12751,41 @@ async function v39ProbeSystemHealthRpc(client) {
         const requiredV50 = ["invoice_order_links_ready"];
         const missingV50 = requiredV50.filter(name => v50[name] !== true);
 
-        if (missingRpcs.length || missingTables.length || missingV41.length || missingV47.length || missingV50.length) {
+        const requiredV51 = ["return_receipts_ready", "confirm_return_rpc", "reverse_return_rpc"];
+        const missingV51 = requiredV51.filter(name => v51[name] !== true);
+
+        const requiredV52 = ["inventory_lead_time_days", "inventory_target_cover_days"];
+        const missingV52 = requiredV52.filter(name => v52[name] !== true);
+
+        if (missingRpcs.length || missingTables.length || missingV41.length || missingV47.length || missingV50.length || missingV51.length || missingV52.length) {
             return v38HealthCheckItem(
                 "rpc",
-                "RPC & SQL V50",
+                "RPC & SQL V52",
                 "error",
                 [
                     missingRpcs.length ? `Thiếu RPC: ${missingRpcs.join(", ")}` : "",
                     missingTables.length ? `Thiếu bảng: ${missingTables.join(", ")}` : "",
                     missingV41.length ? `Thiếu cột V41: ${missingV41.join(", ")}` : "",
                     missingV47.length ? `Thiếu cột kiểm kê V47: ${missingV47.join(", ")}` : "",
-                    missingV50.length ? `Thiếu V50: ${missingV50.join(", ")}` : ""
+                    missingV50.length ? `Thiếu V50: ${missingV50.join(", ")}` : "",
+                    missingV51.length ? `Thiếu V51: ${missingV51.join(", ")}` : "",
+                    missingV52.length ? `Thiếu V52: ${missingV52.join(", ")}` : ""
                 ].filter(Boolean).join(" · ")
             );
         }
 
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V50",
+            "RPC & SQL V52",
             "ok",
-            `Role ${roleLabelV40()} + RPC + kiểm kê V47 + cầu nối hóa đơn V50 đã sẵn sàng.`
+            `Role ${roleLabelV40()} + kiểm kê V47 + cầu nối V50 + hoàn kho V51 + dự báo nhập hàng V52 đã sẵn sàng.`
         );
     } catch (error) {
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V50",
+            "RPC & SQL V52",
             "error",
-            `Chưa chạy SQL V50 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
+            `Chưa chạy SQL V52 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
         );
     }
 }
