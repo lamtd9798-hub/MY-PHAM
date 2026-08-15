@@ -215,9 +215,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V45.0";
+const APP_VERSION = "V46.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "45";
+const APP_CACHE_VERSION = "46";
 
 const systemHealthStateV38 = {
     running: false,

@@ -5356,3 +5356,118 @@ body.sidebar-collapsed .sidebar-collapse-handle{right:-15px!important;transform:
 .inventory-summary-table td:nth-child(3) span{
     font-size:10px;
 }
+
+
+/* =========================================================
+   V46 - FREEZE 3 CỘT TRÁI BẢNG TỒN KHO KHI KÉO NGANG
+   Cố định: STT + SKU kho + Tên sản phẩm
+========================================================= */
+.inventory-table-wrap{
+    --inv-stt-width: 54px;
+    --inv-sku-width: 108px;
+    --inv-name-width: 310px;
+    position:relative;
+    isolation:isolate;
+}
+
+/* Ép 3 cột đầu có chiều rộng ổn định để left offset luôn chính xác */
+.inventory-summary-table th:nth-child(1),
+.inventory-summary-table td:nth-child(1){
+    width:var(--inv-stt-width)!important;
+    min-width:var(--inv-stt-width)!important;
+    max-width:var(--inv-stt-width)!important;
+}
+.inventory-summary-table th:nth-child(2),
+.inventory-summary-table td:nth-child(2){
+    width:var(--inv-sku-width)!important;
+    min-width:var(--inv-sku-width)!important;
+    max-width:var(--inv-sku-width)!important;
+}
+.inventory-summary-table th:nth-child(3),
+.inventory-summary-table td:nth-child(3){
+    width:var(--inv-name-width)!important;
+    min-width:var(--inv-name-width)!important;
+    max-width:var(--inv-name-width)!important;
+}
+
+/* BODY: 3 cột cố định */
+.inventory-summary-table tbody td:nth-child(1),
+.inventory-summary-table tbody td:nth-child(2),
+.inventory-summary-table tbody td:nth-child(3){
+    position:sticky;
+    z-index:4;
+    background:#fff;
+    background-clip:padding-box;
+}
+.inventory-summary-table tbody td:nth-child(1){
+    left:0;
+}
+.inventory-summary-table tbody td:nth-child(2){
+    left:var(--inv-stt-width);
+}
+.inventory-summary-table tbody td:nth-child(3){
+    left:calc(var(--inv-stt-width) + var(--inv-sku-width));
+    box-shadow:8px 0 12px -11px rgba(27,63,76,.62);
+}
+
+/* HEADER tầng 1: STT / SKU / Tên sản phẩm có rowspan=2 */
+.inventory-summary-table thead .inventory-group-header th:nth-child(1),
+.inventory-summary-table thead .inventory-group-header th:nth-child(2),
+.inventory-summary-table thead .inventory-group-header th:nth-child(3){
+    position:sticky!important;
+    z-index:12!important;
+    background:#f8fafb!important;
+    background-clip:padding-box;
+}
+.inventory-summary-table thead .inventory-group-header th:nth-child(1){
+    left:0;
+}
+.inventory-summary-table thead .inventory-group-header th:nth-child(2){
+    left:var(--inv-stt-width);
+}
+.inventory-summary-table thead .inventory-group-header th:nth-child(3){
+    left:calc(var(--inv-stt-width) + var(--inv-sku-width));
+    box-shadow:8px 0 12px -11px rgba(27,63,76,.62);
+}
+
+/* FOOTER tổng cũng đứng yên 3 cột đầu */
+.inventory-summary-table tfoot td:nth-child(1),
+.inventory-summary-table tfoot td:nth-child(2),
+.inventory-summary-table tfoot td:nth-child(3){
+    position:sticky!important;
+    z-index:10!important;
+    background:#eaf8f5!important;
+    background-clip:padding-box;
+}
+.inventory-summary-table tfoot td:nth-child(1){
+    left:0;
+}
+.inventory-summary-table tfoot td:nth-child(2){
+    left:var(--inv-stt-width);
+}
+.inventory-summary-table tfoot td:nth-child(3){
+    left:calc(var(--inv-stt-width) + var(--inv-sku-width));
+    box-shadow:8px 0 12px -11px rgba(27,63,76,.62);
+}
+
+/* Viền phải rõ để biết vùng đang được đóng băng */
+.inventory-summary-table thead .inventory-group-header th:nth-child(3),
+.inventory-summary-table tbody td:nth-child(3),
+.inventory-summary-table tfoot td:nth-child(3){
+    border-right:2px solid #9bcfc3!important;
+}
+
+/* Khi rê dòng, vùng cố định cũng đổi nền cùng dòng để dễ theo mắt */
+.inventory-summary-table tbody tr:hover td:nth-child(1),
+.inventory-summary-table tbody tr:hover td:nth-child(2),
+.inventory-summary-table tbody tr:hover td:nth-child(3){
+    background:#f5fbf9!important;
+}
+
+@media(max-width:1200px){
+    .inventory-table-wrap{
+        --inv-stt-width:50px;
+        --inv-sku-width:100px;
+        --inv-name-width:280px;
+    }
+}
