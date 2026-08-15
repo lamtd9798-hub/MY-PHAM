@@ -215,9 +215,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V41.0";
+const APP_VERSION = "V42.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "41";
+const APP_CACHE_VERSION = "42";
 
 const systemHealthStateV38 = {
     running: false,
@@ -1512,7 +1512,7 @@ async function enterAuthenticatedApp(session) {
     // V38: kiểm tra hệ thống nền sau khi toàn bộ dữ liệu Cloud đã tải.
     setTimeout(() => {
         runSystemHealthCheckV38({ silent: true }).catch(error => {
-            console.warn("V41 health check:", error);
+            console.warn("V42 health check:", error);
         });
     }, 150);
 
@@ -10521,18 +10521,18 @@ async function runSystemHealthCheckV38({ silent = false } = {}) {
     systemHealthStateV38.checks = [
         v38HealthCheckItem(
             "version",
-            "Phiên bản V41",
+            "Phiên bản V42",
             (
-                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=41") &&
-                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=41")
+                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=42") &&
+                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=42")
             )
                 ? "ok"
                 : "warning",
             (
-                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=41") &&
-                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=41")
+                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=42") &&
+                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=42")
             )
-                ? "index.html đang gọi style.css?v=41 và script.js?v=41."
+                ? "index.html đang gọi style.css?v=42 và script.js?v=42."
                 : "Trình duyệt có thể đang dùng file cache hoặc index cũ."
         ),
 
@@ -10687,6 +10687,57 @@ $("btnV38RunHealthCheck")?.addEventListener("click", () => {
 });
 
 
+/* =========================================================
+   V42 - SIDEBAR THU GỌN
+========================================================= */
+const V42_SIDEBAR_KEY = "rucos_sidebar_collapsed_v42";
+
+function applySidebarCollapsedV42(collapsed, persist = true) {
+    const isCollapsed = Boolean(collapsed);
+    document.body.classList.toggle("sidebar-collapsed", isCollapsed);
+
+    const button = $("sidebarToggleBtn");
+    if (button) {
+        button.textContent = isCollapsed ? "⟩" : "⟨";
+        button.title = isCollapsed ? "Mở rộng menu" : "Thu gọn menu";
+        button.setAttribute("aria-label", button.title);
+    }
+
+    document.querySelectorAll(".nav-item[data-view]").forEach(item => {
+        const labelNode = item.querySelector("span:not(.nav-icon):not(.nav-badge)");
+        const labelText = (labelNode?.textContent || "").trim();
+        if (labelText) item.title = labelText;
+    });
+
+    if (persist) {
+        try {
+            localStorage.setItem(V42_SIDEBAR_KEY, isCollapsed ? "1" : "0");
+        } catch (error) {
+            console.warn("Không lưu được trạng thái sidebar:", error);
+        }
+    }
+}
+
+function initSidebarToggleV42() {
+    const button = $("sidebarToggleBtn");
+    if (!button) return;
+
+    let collapsed = false;
+    try {
+        collapsed = localStorage.getItem(V42_SIDEBAR_KEY) === "1";
+    } catch (error) {
+        collapsed = false;
+    }
+
+    applySidebarCollapsedV42(collapsed, false);
+
+    button.addEventListener("click", () => {
+        const nextState = !document.body.classList.contains("sidebar-collapsed");
+        applySidebarCollapsedV42(nextState, true);
+    });
+}
+
+
 function renderAll() {
     renderTopFileState();
     renderImportSummary();
@@ -10758,4 +10809,5 @@ async function initApp() {
     }
 }
 
+initSidebarToggleV42();
 initApp();

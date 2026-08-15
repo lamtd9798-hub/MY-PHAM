@@ -4964,3 +4964,205 @@ button{cursor:pointer}
         width:100%;
     }
 }
+
+
+/* =========================================================
+   V42 - CHỮ TO HƠN + SIDEBAR THU GỌN
+========================================================= */
+:root{
+    --sidebar-collapsed-width:84px;
+}
+body{
+    font-size:14px;
+}
+.sidebar{
+    transition:width .18s ease;
+}
+.main-content{
+    transition:margin-left .18s ease, padding .18s ease;
+}
+.sidebar-collapse-handle{
+    position:absolute;
+    top:18px;
+    right:-14px;
+    z-index:120;
+    width:28px;
+    height:28px;
+    border:1px solid #d7e3e8;
+    border-radius:999px;
+    background:#fff;
+    color:#134756;
+    box-shadow:0 6px 16px rgba(0,0,0,.10);
+    font-size:16px;
+    font-weight:900;
+    line-height:1;
+    display:grid;
+    place-items:center;
+}
+.sidebar-collapse-handle:hover{
+    background:#f5fbf9;
+    color:#0b8069;
+}
+.sidebar-logo{
+    position:relative;
+}
+.nav-item{
+    position:relative;
+    min-height:45px;
+    font-size:14px;
+    font-weight:650;
+}
+.nav-icon{
+    width:30px;
+    font-size:17px;
+}
+.nav-badge{
+    font-size:10px;
+    font-weight:800;
+}
+.logo-title{font-size:19px}
+.logo-subtitle{font-size:9px}
+.sidebar-section-title{font-size:10px}
+.shop-name{font-size:12px}
+.shop-platform{font-size:10px}
+.topbar h1{font-size:24px}
+.topbar p{font-size:12px}
+.btn{font-size:12px}
+.file-pill{font-size:11px}
+.panel-header h2{font-size:15px}
+.panel-header p{font-size:11px}
+th{font-size:10px}
+td{font-size:11px}
+.summary-row span{font-size:11px}
+.summary-row strong{font-size:12px}
+.kpi-top{font-size:10px}
+.kpi-value{font-size:28px}
+.kpi-footer{font-size:10px}
+.mini-kpi span{font-size:10px}
+.mini-kpi strong{font-size:22px}
+.search-input{font-size:11px}
+.select-control{font-size:11px}
+.empty-box,.empty-table{font-size:11px}
+.status-pill{font-size:9px}
+.text-button{font-size:11px}
+
+/* Readability specifically for V41/V42 invoice reconciliation block */
+.v41-reconcile-header h2{font-size:17px}
+.v41-reconcile-header p{font-size:12px; line-height:1.6}
+.v41-reconcile-controls label > span{font-size:10px}
+.v41-reconcile-controls select,
+.v41-reconcile-controls input{
+    height:36px;
+    font-size:13px;
+}
+.v41-order-ref-notice{
+    font-size:12px;
+    line-height:1.65;
+    padding:11px 12px;
+}
+.v41-kpi-grid{gap:10px}
+.v41-kpi{padding:12px}
+.v41-kpi span{font-size:10px}
+.v41-kpi strong{font-size:26px}
+.v41-kpi small{font-size:10px; line-height:1.45}
+.v41-section-title strong{font-size:13px}
+.v41-section-title span{font-size:11px; line-height:1.45}
+.v41-mode-badge{min-height:26px; font-size:10px!important; padding:0 10px}
+.v41-order-table th,
+.v41-sku-table th{
+    padding:10px 8px;
+    font-size:10px;
+}
+.v41-order-table td,
+.v41-sku-table td{
+    padding:11px 8px;
+    font-size:12px;
+    line-height:1.5;
+}
+.v41-order-code{font-size:12px}
+.v41-order-sku-chip{
+    min-height:24px;
+    padding:0 8px;
+    font-size:10px;
+}
+.v41-invoice-list{font-size:12px}
+.v41-result-badge{
+    min-height:26px;
+    padding:0 9px;
+    font-size:10px;
+}
+.v41-result-detail{font-size:10px; line-height:1.45}
+.v41-empty-explain{font-size:12px!important}
+
+/* Sidebar collapsed desktop mode */
+body.sidebar-collapsed{
+    --sidebar-width:var(--sidebar-collapsed-width);
+}
+body.sidebar-collapsed .sidebar{
+    width:var(--sidebar-collapsed-width);
+}
+body.sidebar-collapsed .main-content{
+    margin-left:var(--sidebar-collapsed-width);
+}
+body.sidebar-collapsed .sidebar-logo{
+    justify-content:center;
+    padding:0 10px;
+}
+body.sidebar-collapsed .logo-copy,
+body.sidebar-collapsed .sidebar-section-title,
+body.sidebar-collapsed .shop-text,
+body.sidebar-collapsed .v38-sidebar-version,
+body.sidebar-collapsed .nav-item > span:not(.nav-icon):not(.nav-badge){
+    display:none!important;
+}
+body.sidebar-collapsed .nav-item{
+    justify-content:center;
+    padding:0;
+}
+body.sidebar-collapsed .nav-icon{
+    width:auto;
+    font-size:18px;
+}
+body.sidebar-collapsed .nav-badge{
+    display:inline-flex!important;
+    align-items:center;
+    justify-content:center;
+    position:absolute;
+    top:6px;
+    right:8px;
+    min-width:16px;
+    height:16px;
+    padding:0 4px;
+    font-size:8px;
+}
+body.sidebar-collapsed .shop-info{
+    justify-content:center;
+    padding:8px;
+}
+body.sidebar-collapsed .shop-avatar{
+    margin-right:0;
+}
+body.sidebar-collapsed .sidebar-footer{
+    padding:10px 8px;
+}
+body.sidebar-collapsed .v38-sidebar-system{
+    justify-content:center;
+}
+body.sidebar-collapsed .v38-sidebar-health{
+    font-size:0;
+    width:10px;
+    height:10px;
+    min-width:10px;
+    padding:0;
+    border-radius:999px;
+}
+body.sidebar-collapsed .sidebar-collapse-handle{
+    right:-14px;
+}
+body.sidebar-collapsed .sidebar-collapse-handle{
+    transform:rotate(180deg);
+}
+
+@media(max-width:850px){
+    .sidebar-collapse-handle{display:none!important;}
+}
