@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=47">
+    <link rel="stylesheet" href="style.css?v=48">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -266,7 +266,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V47.0</span>
+                <span class="v38-sidebar-version">V48.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -1031,6 +1031,7 @@
                     </div>
 
                     <div class="inventory-toolbar-right">
+                        <span class="inventory-ledger-toolbar-hint">Bấm SKU / tên SP để xem nhật ký</span>
                         <div class="inventory-search-box">
                             🔎
                             <input id="inventorySearchInput" type="text" placeholder="Tìm SKU / tên sản phẩm...">
@@ -2079,7 +2080,70 @@
     </main>
 </div>
 
+
+
+<!-- ======================== V48 - NHẬT KÝ LUÂN CHUYỂN TỪNG SKU ======================== -->
+<div id="inventoryLedgerModal" class="inventory-ledger-modal hidden" aria-hidden="true">
+    <div class="inventory-ledger-backdrop" data-ledger-close></div>
+    <section class="inventory-ledger-dialog" role="dialog" aria-modal="true" aria-labelledby="inventoryLedgerTitle">
+        <header class="inventory-ledger-header">
+            <div class="inventory-ledger-heading">
+                <div class="inventory-ledger-icon">📚</div>
+                <div>
+                    <div class="inventory-ledger-eyebrow">NHẬT KÝ LUÂN CHUYỂN SKU</div>
+                    <h2 id="inventoryLedgerTitle">Chi tiết mặt hàng</h2>
+                    <p id="inventoryLedgerSubtitle">Theo dõi mốc kiểm, nhập/xuất và đơn Shopee làm thay đổi tồn.</p>
+                </div>
+            </div>
+            <div class="inventory-ledger-header-actions">
+                <label>TỚI NGÀY<input id="inventoryLedgerAsOfDate" type="date"></label>
+                <button type="button" class="inventory-ledger-close" data-ledger-close title="Đóng">×</button>
+            </div>
+        </header>
+        <div class="inventory-ledger-body">
+            <div id="inventoryLedgerFormulaStatus" class="inventory-ledger-formula-status"></div>
+            <div id="inventoryLedgerKpis" class="inventory-ledger-kpis"></div>
+            <div class="inventory-ledger-section">
+                <div class="inventory-ledger-section-head">
+                    <div>
+                        <h3>Dòng thời gian ảnh hưởng tồn</h3>
+                        <p>Mỗi dòng giải thích số nào làm tồn lý thuyết tăng/giảm. MISA chỉ để tham chiếu, không trừ kho lần nữa.</p>
+                    </div>
+                    <div class="inventory-ledger-filters">
+                        <select id="inventoryLedgerTypeFilter">
+                            <option value="all">Tất cả nguồn</option>
+                            <option value="stock">Chỉ ảnh hưởng tồn</option>
+                            <option value="manual">Nhập / xuất thủ công</option>
+                            <option value="shopee">Shopee</option>
+                            <option value="misa">MISA</option>
+                        </select>
+                        <input id="inventoryLedgerSearch" type="text" placeholder="Tìm mã đơn / phiếu / hóa đơn...">
+                    </div>
+                </div>
+                <div class="inventory-ledger-table-wrap">
+                    <table class="inventory-ledger-table">
+                        <thead><tr><th>Ngày / giờ</th><th>Nguồn</th><th>Nghiệp vụ</th><th>Mã đơn / Tham chiếu</th><th>Từ → Đến</th><th class="center">Ảnh hưởng tồn</th><th class="center">SL tham chiếu</th><th>Ghi chú</th><th>Người tạo</th></tr></thead>
+                        <tbody id="inventoryLedgerTimelineBody"><tr><td colspan="9" class="empty-table">Chọn một SKU để xem nhật ký.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="inventory-ledger-section">
+                <div class="inventory-ledger-section-head">
+                    <div><h3>Đơn Shopee đang liên quan tới SKU này</h3><p>Snapshot luân chuyển mới nhất: đơn đang giữ, đang giao, đã giao, hoàn đang về.</p></div>
+                    <strong id="inventoryLedgerOrderCount" class="inventory-ledger-count-badge">0 đơn</strong>
+                </div>
+                <div class="inventory-ledger-table-wrap compact">
+                    <table class="inventory-ledger-orders-table">
+                        <thead><tr><th>STT</th><th>Mã đơn</th><th>Ngày đơn</th><th>SKU Shopee</th><th class="center">SL</th><th>Trạng thái</th><th>Nhóm hiện tại</th><th>Ý nghĩa với kho</th></tr></thead>
+                        <tbody id="inventoryLedgerOrdersBody"><tr><td colspan="8" class="empty-table">Chưa có snapshot luân chuyển.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
 <div id="toast" class="toast"></div>
-    <script src="script.js?v=47"></script>
+    <script src="script.js?v=48"></script>
 </body>
 </html>

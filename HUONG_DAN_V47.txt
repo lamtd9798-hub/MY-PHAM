@@ -1,0 +1,41 @@
+RUCOS V47 - ĐỐI CHIẾU TỒN KHO CHUẨN
+
+MỤC TIÊU V47
+- Nhìn trực tiếp được công thức tồn theo từng SKU:
+  Mốc kiểm + Nhập + Hoàn nhập - Shopee - Xuất khác +/- Điều chỉnh = Tồn lý thuyết hiện tại.
+- Khả dụng dự kiến = Tồn lý thuyết hiện tại - Giữ đơn.
+- Kiểm kê cho ra Khớp / Thiếu / Thừa và giá trị chênh lệch.
+- Chốt kiểm kê theo ngày và lấy số đếm đó làm mốc mới cho ngày sau.
+- Lưu riêng theoretical_qty / variance_qty / variance_value / reconcile_status trên Supabase.
+
+THỨ TỰ CẬP NHẬT
+1. Supabase -> SQL Editor -> New query.
+2. Chạy toàn bộ SQL_V47_INVENTORY_RECONCILIATION.sql.
+3. Results phải thấy v47_health_check và 5 cột V47.
+4. Sau đó thay 3 file GitHub:
+   - index.html
+   - style.css
+   - script.js
+5. Commit.
+6. Mở web -> Ctrl + F5.
+7. Góc trái dưới phải hiện V47.0.
+
+CÁCH ĐỌC BẢNG TỒN V47
+- Tồn đầu gốc: số ban đầu của danh mục kho.
+- Mốc kiểm: số thực tế đã đếm ở lần kiểm kê gần nhất.
+- + Nhập: nhập kho sau mốc kiểm.
+- + Hoàn nhập: hàng hoàn đã thực sự quay lại kho sau mốc.
+- - Shopee: số hàng đã rời kho qua Shopee tăng thêm sau mốc.
+- - Xuất khác: xuất kho ngoài Shopee.
+- +/- Điều chỉnh: điều chỉnh thủ công.
+- Tồn LT hiện tại: số hệ thống dự kiến đang còn trong kho.
+- Giữ đơn: hàng có đơn nhưng chưa rời kho.
+- Khả dụng LT: số còn có thể tiếp tục bán/giữ cho đơn.
+- Chênh SL: chênh ở lần kiểm kê gần nhất.
+- Giá trị CL: Chênh SL x Đơn giá.
+- Kết luận: Khớp / Thiếu / Thừa.
+
+LƯU Ý
+- Tồn kiểm gần nhất là số đếm ở ngày kiểm; không nên coi nó là tồn hiện tại nếu sau đó có phát sinh.
+- Vì vậy V47 dùng Tồn lý thuyết hiện tại để tính Khả dụng.
+- Cột MISA chỉ dùng đối chiếu hóa đơn, không trừ kho lần hai.

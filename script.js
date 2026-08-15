@@ -215,9 +215,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V47.0";
+const APP_VERSION = "V48.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "47";
+const APP_CACHE_VERSION = "48";
 
 const systemHealthStateV38 = {
     running: false,
@@ -5856,9 +5856,9 @@ function renderInventoryCurrentStock() {
     body.innerHTML = rows.map((row,index) => `
         <tr>
             <td>${index+1}</td>
-            <td>${escapeHTML(row.itemCode)}</td>
+            <td><button type="button" class="inventory-ledger-sku-link" data-inventory-ledger="${escapeHTML(row.itemCode)}">${escapeHTML(row.itemCode)}</button></td>
             <td>
-                <strong>${escapeHTML(row.name)}</strong>
+                <button type="button" class="inventory-ledger-name-link" data-inventory-ledger="${escapeHTML(row.itemCode)}">${escapeHTML(row.name)}</button>
                 <div class="muted">Mặt hàng tồn kho</div>
             </td>
             <td>${row.baselineDate ? formatDateLabel(row.baselineDate) : "-"}</td>
@@ -6166,7 +6166,7 @@ async function commitInventoryReconciliation() {
             `Bạn mới đếm ${counted.length}/${rows.length} mặt hàng.
 
 ` +
-            `Nếu tiếp tục, V47 chỉ chốt ${counted.length} SKU đã nhập; các SKU còn lại giữ nguyên mốc cũ.
+            `Nếu tiếp tục, V48 chỉ chốt ${counted.length} SKU đã nhập; các SKU còn lại giữ nguyên mốc cũ.
 
 ` +
             `Tiếp tục chốt một phần?`
@@ -6237,7 +6237,7 @@ async function commitInventoryReconciliation() {
                     reconcile_status: status,
 
                     note:
-                        `Kiểm kê V47 · Lý thuyết ${row.theoretical} · ` +
+                        `Kiểm kê V48 · Lý thuyết ${row.theoretical} · ` +
                         `Thực tế ${row.actual} · Chênh ${variance} · ` +
                         `Giá trị chênh ${varianceValue} · ${status}`,
                     created_by: state.user?.id || null
@@ -6270,7 +6270,7 @@ async function commitInventoryReconciliation() {
                         variance_value:varianceValue,
                         reconcile_status:status,
                         note:
-                            `Kiểm kê V47 · Lý thuyết ${row.theoretical} · ` +
+                            `Kiểm kê V48 · Lý thuyết ${row.theoretical} · ` +
                             `Thực tế ${row.actual} · Chênh ${variance} · ` +
                             `Giá trị chênh ${varianceValue} · ${status}`,
                         created_at:now
@@ -6425,6 +6425,293 @@ function setInventoryTab(tabName) {
     if (tab === "misa") renderInventoryMisaTab();
 }
 
+/* =========================================================
+   V48 - NHẬT KÝ LUÂN CHUYỂN TỪNG SKU
+========================================================= */
+const inventoryLedgerStateV48 = {
+    itemCode: "",
+    asOfDate: "",
+    typeFilter: "stock",
+    search: ""
+};
+
+function inventoryLedgerDateTimeV48(dateKey, isoValue = "") {
+    const dateText = dateKey ? formatDateLabel(dateKey) : "-";
+    if (!isoValue) return dateText;
+    try {
+        const d = new Date(isoValue);
+        if (Number.isNaN(d.getTime())) return dateText;
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        return `${dateText} ${hh}:${mm}`;
+    } catch (_) {
+        return dateText;
+    }
+}
+
+function inventoryLedgerSourceLabelV48(source) {
+    return { stocktake:"Kiểm kê", manual:"Kho", shopee:"Shopee", misa:"MISA" }[source] || source || "Khác";
+}
+
+function inventoryLedgerManualTypeV48(type) {
+    const map = {
+        INBOUND:{ operation:"Nhập kho", route:"Nhà cung cấp → Kho", sign:1 },
+        RETURN_IN:{ operation:"Hoàn đã nhập kho", route:"ĐVVC / Khách → Kho", sign:1 },
+        OUT_OTHER:{ operation:"Xuất kho khác", route:"Kho → Xuất khác", sign:-1 },
+        ADJUSTMENT:{ operation:"Điều chỉnh kho", route:"Điều chỉnh sổ → Tồn hệ thống", sign:0 }
+    };
+    return map[type] || { operation:inventoryTxLabel(type), route:"Kho → Kho", sign:0 };
+}
+
+function getInventoryOrderPositionMapV48(itemCode, asOfDate) {
+    const map = new Map();
+    buildInventoryMovementRows(asOfDate)
+        .filter(row => row.itemCode === itemCode)
+        .forEach(row => {
+            const orderId = String(row.orderId || "-").trim() || "-";
+            const existing = map.get(orderId) || {
+                orderId,
+                reportDate:row.reportDate || asOfDate || "",
+                orderDate:row.sourceOrderDate || "",
+                status:row.status || "",
+                bucket:row.bucket || "other",
+                offsiteQty:0,
+                totalQty:0,
+                rawSkus:new Set()
+            };
+            const qty = Number(row.quantity || 0);
+            existing.totalQty += qty;
+            if (["in_transit","delivered","returning"].includes(row.bucket)) existing.offsiteQty += qty;
+            if (row.rawSku) existing.rawSkus.add(String(row.rawSku));
+            if ((row.reportDate || "") >= (existing.reportDate || "")) {
+                existing.reportDate = row.reportDate || existing.reportDate;
+                existing.orderDate = row.sourceOrderDate || existing.orderDate;
+                existing.status = row.status || existing.status;
+                existing.bucket = row.bucket || existing.bucket;
+            }
+            map.set(orderId, existing);
+        });
+    return map;
+}
+
+function buildInventoryShopeeDeltaEventsV48(itemCode, baselineDate, asOfDate) {
+    const baselineMap = getInventoryOrderPositionMapV48(itemCode, baselineDate);
+    const currentMap = getInventoryOrderPositionMapV48(itemCode, asOfDate);
+    const events = [];
+    new Set([...baselineMap.keys(), ...currentMap.keys()]).forEach(key => {
+        const before = baselineMap.get(key);
+        const after = currentMap.get(key);
+        const beforeQty = Number(before?.offsiteQty || 0);
+        const afterQty = Number(after?.offsiteQty || 0);
+        const delta = afterQty - beforeQty;
+        if (!delta) return;
+        const positiveOut = delta > 0;
+        const qty = Math.abs(delta);
+        const display = after || before || {};
+        events.push({
+            id:`shopee-${key}-${asOfDate}`,
+            date:display.reportDate || asOfDate || baselineDate || "",
+            iso:"",
+            source:"shopee",
+            category:"stock",
+            operation:positiveOut ? "Hàng Shopee rời kho" : "Giảm hàng ngoài kho",
+            reference:display.orderId || key,
+            route:positiveOut ? `Kho → ${inventoryBucketLabel(display.bucket || "in_transit")}` : "Luân chuyển Shopee → Kho lý thuyết",
+            impact:-delta,
+            referenceQty:qty,
+            note:positiveOut ? `${display.status || inventoryBucketLabel(display.bucket)} · phát sinh sau mốc kiểm` : `Số hàng ngoài kho giảm so với mốc kiểm; cộng lại ${formatNumber(qty)} vào tồn lý thuyết.`,
+            createdBy:"Shopee"
+        });
+    });
+    return events;
+}
+
+function buildInventoryMisaEventsV48(item, baselineDate, asOfDate) {
+    return getIssuedMisaLines()
+        .filter(line => {
+            if (!isMisaLineMatchedToInventoryItem(line, item)) return false;
+            const date = line.invoiceDate || "";
+            if (baselineDate && date && date < baselineDate) return false;
+            if (asOfDate && date && date > asOfDate) return false;
+            return true;
+        })
+        .map((line,index) => ({
+            id:`misa-${line.invoiceNo || index}-${line.productCode || ""}`,
+            date:line.invoiceDate || asOfDate || "",
+            iso:"",
+            source:"misa",
+            category:"reference",
+            operation:"Hóa đơn đã phát hành",
+            reference:line.invoiceNo || "Không có Số HĐ",
+            route:"Đã giao → Đã xuất hóa đơn",
+            impact:0,
+            referenceQty:Number(line.quantity || 0),
+            note:`${line.productCode || ""}${line.productName ? ` · ${line.productName}` : ""}`.replace(/^ · /,""),
+            createdBy:"MISA"
+        }));
+}
+
+function buildInventoryLedgerV48(itemCode, asOfDate) {
+    const item = inventoryState.items.find(row => row.itemCode === itemCode);
+    if (!item) return null;
+    const ledgerRow = buildInventoryLedgerAsOf(asOfDate).find(row => row.itemCode === itemCode);
+    if (!ledgerRow) return null;
+    const summaryItem = buildInventorySummary().find(row => row.itemCode === itemCode) || {};
+    const events = [{
+        id:`baseline-${itemCode}-${ledgerRow.baselineDate}`,
+        date:ledgerRow.baselineDate || asOfDate,
+        iso:"",
+        source:"stocktake",
+        category:"baseline",
+        operation:"Mốc kiểm kê",
+        reference:ledgerRow.baselineDate ? `Kiểm kê ${formatDateLabel(ledgerRow.baselineDate)}` : "Mốc tồn",
+        route:"Số đếm thực tế → Mốc hệ thống",
+        impact:null,
+        referenceQty:Number(ledgerRow.baselineQty || 0),
+        note:`Bắt đầu công thức tồn từ ${formatNumber(ledgerRow.baselineQty || 0)} sản phẩm.`,
+        createdBy:"Kiểm kê"
+    }];
+
+    getTransactionsForItemPeriod(itemCode, ledgerRow.baselineDate, asOfDate).forEach(tx => {
+        const def = inventoryLedgerManualTypeV48(tx.type);
+        const rawQty = Number(tx.quantity || 0);
+        const impact = tx.type === "ADJUSTMENT" ? rawQty : def.sign * Math.abs(rawQty);
+        events.push({
+            id:`tx-${tx.id}`,
+            date:tx.transactionDate || "",
+            iso:tx.createdAt || "",
+            source:"manual",
+            category:"stock",
+            operation:def.operation,
+            reference:tx.reference || "-",
+            route:def.route,
+            impact,
+            referenceQty:Math.abs(rawQty),
+            note:tx.note || "Biến động kho ghi nhận thủ công.",
+            createdBy:tx.createdBy === state.user?.id ? "Bạn" : (tx.createdBy ? "Nhân viên" : "-")
+        });
+    });
+
+    events.push(...buildInventoryShopeeDeltaEventsV48(itemCode, ledgerRow.baselineDate, asOfDate));
+    events.push(...buildInventoryMisaEventsV48(item, ledgerRow.baselineDate, asOfDate));
+    events.sort((a,b) => String(b.date || "").localeCompare(String(a.date || "")) || String(b.iso || "").localeCompare(String(a.iso || "")));
+
+    const stockImpact = events.reduce((sum,event) => sum + (typeof event.impact === "number" ? event.impact : 0), 0);
+    const calculated = Number(ledgerRow.baselineQty || 0) + stockImpact;
+    const formulaDiff = Number(ledgerRow.theoretical || 0) - calculated;
+    const currentSnapshotRows = buildInventoryMovementRows()
+        .filter(row => row.itemCode === itemCode)
+        .sort((a,b) => {
+            const order = {reserved:0,in_transit:1,delivered:2,returning:3,cancelled:4,other:5};
+            const c=(order[a.bucket] ?? 9)-(order[b.bucket] ?? 9);
+            return c || String(a.orderId || "").localeCompare(String(b.orderId || ""));
+        });
+    return { item, ledgerRow, summaryItem, events, currentSnapshotRows, stockImpact, calculated, formulaDiff };
+}
+
+function inventoryLedgerMeaningV48(row) {
+    if (row.bucket === "reserved") return {cls:"reserved",text:"Giảm khả dụng, chưa rời kho"};
+    if (["in_transit","delivered"].includes(row.bucket)) return {cls:"outside",text:"Đang ở ngoài kho"};
+    if (row.bucket === "returning") return {cls:"returning",text:"Ngoài kho, đang hoàn về"};
+    return {cls:"other",text:"Không trừ thêm tồn"};
+}
+
+function renderInventoryLedgerV48() {
+    const modal = $("inventoryLedgerModal");
+    if (!modal || !inventoryLedgerStateV48.itemCode) return;
+    const asOfDate = $("inventoryLedgerAsOfDate")?.value || inventoryLedgerStateV48.asOfDate || getLocalTodayKey();
+    inventoryLedgerStateV48.asOfDate = asOfDate;
+    const data = buildInventoryLedgerV48(inventoryLedgerStateV48.itemCode, asOfDate);
+    if (!data) return;
+    const {item,ledgerRow,summaryItem,events,currentSnapshotRows,calculated,formulaDiff} = data;
+
+    if ($("inventoryLedgerTitle")) $("inventoryLedgerTitle").textContent = `${item.itemCode} · ${item.name}`;
+    if ($("inventoryLedgerSubtitle")) $("inventoryLedgerSubtitle").textContent = `Mốc ${ledgerRow.baselineDate ? formatDateLabel(ledgerRow.baselineDate) : "-"} → ${formatDateLabel(asOfDate)} · SKU Shopee ${item.shopeeSku || "chưa cấu hình"}`;
+
+    const formulaBox = $("inventoryLedgerFormulaStatus");
+    if (formulaBox) {
+        const ok = Math.abs(Number(formulaDiff || 0)) < .0001;
+        formulaBox.className = `inventory-ledger-formula-status ${ok ? "" : "warning"}`;
+        formulaBox.innerHTML = `<span><strong>${ok ? "✓ Công thức tồn đang khớp" : "⚠ Công thức cần kiểm tra"}</strong><br>Mốc ${formatNumber(ledgerRow.baselineQty)} ${data.stockImpact >= 0 ? "+" : "−"} ${formatNumber(Math.abs(data.stockImpact))} = <b>${formatNumber(calculated)}</b> · Tồn LT hệ thống = <b>${formatNumber(ledgerRow.theoretical)}</b></span><span>Chênh công thức: <strong>${formulaDiff > 0 ? "+" : ""}${formatNumber(formulaDiff)}</strong></span>`;
+    }
+
+    const kpis = [
+        ["MỐC KIỂM",ledgerRow.baselineQty,ledgerRow.baselineDate ? formatDateLabel(ledgerRow.baselineDate) : "-",""],
+        ["+ NHẬP",ledgerRow.inbound,"Nhập sau mốc","positive"],
+        ["+ HOÀN NHẬP",ledgerRow.returnIn,"Đã nhận lại kho","positive"],
+        ["− SHOPEE",ledgerRow.shopeeOutDelta,"Rời kho sau mốc","negative"],
+        ["− XUẤT KHÁC",ledgerRow.outOther,"Xuất ngoài Shopee","negative"],
+        ["± ĐIỀU CHỈNH",ledgerRow.adjustment,"Điều chỉnh thủ công",ledgerRow.adjustment < 0 ? "negative" : "positive"],
+        ["TỒN LÝ THUYẾT",ledgerRow.theoretical,`Tới ${formatDateLabel(asOfDate)}`,"available"],
+        ["KHẢ DỤNG",Math.max(0,Number(ledgerRow.theoretical || 0)-Number(summaryItem.reserved || 0)),`Giữ đơn ${formatNumber(summaryItem.reserved || 0)}`,"available"]
+    ];
+    if ($("inventoryLedgerKpis")) $("inventoryLedgerKpis").innerHTML = kpis.map(([label,value,note,cls]) => {
+        const n=Number(value || 0);
+        const prefix=String(label).startsWith("+") && n>0 ? "+" : String(label).startsWith("−") && n>0 ? "−" : (String(label).startsWith("±") && n>0 ? "+" : (String(label).startsWith("±") && n<0 ? "−" : ""));
+        return `<div class="inventory-ledger-kpi ${cls || ""}"><span>${escapeHTML(label)}</span><strong>${prefix}${formatNumber(Math.abs(n))}</strong><small>${escapeHTML(note || "")}</small></div>`;
+    }).join("");
+
+    const filter = $("inventoryLedgerTypeFilter")?.value || inventoryLedgerStateV48.typeFilter || "all";
+    const rawSearch = $("inventoryLedgerSearch")?.value || inventoryLedgerStateV48.search || "";
+    const search = normalizeText(rawSearch);
+    inventoryLedgerStateV48.typeFilter = filter;
+    inventoryLedgerStateV48.search = rawSearch;
+    const filteredEvents = events.filter(event => {
+        if (filter === "stock" && event.category !== "stock" && event.source !== "stocktake") return false;
+        if (filter === "manual" && event.source !== "manual") return false;
+        if (filter === "shopee" && event.source !== "shopee") return false;
+        if (filter === "misa" && event.source !== "misa") return false;
+        return !search || normalizeText([event.operation,event.reference,event.route,event.note,event.createdBy].join(" ")).includes(search);
+    });
+
+    const timelineBody = $("inventoryLedgerTimelineBody");
+    if (timelineBody) timelineBody.innerHTML = filteredEvents.length ? filteredEvents.map(event => {
+        const hasImpact = typeof event.impact === "number";
+        const impact = Number(event.impact || 0);
+        const impactClass = !hasImpact || impact===0 ? "zero" : impact>0 ? "plus" : "minus";
+        const impactText = !hasImpact ? "Mốc" : impact===0 ? "0" : `${impact>0?"+":"−"}${formatNumber(Math.abs(impact))}`;
+        return `<tr><td>${escapeHTML(inventoryLedgerDateTimeV48(event.date,event.iso))}</td><td><span class="inventory-ledger-source ${escapeHTML(event.source)}">${escapeHTML(inventoryLedgerSourceLabelV48(event.source))}</span></td><td><span class="inventory-ledger-operation">${escapeHTML(event.operation)}</span></td><td><span class="inventory-ledger-ref">${escapeHTML(event.reference || "-")}</span></td><td>${escapeHTML(event.route || "-")}</td><td class="center"><span class="inventory-ledger-impact ${impactClass}">${impactText}</span></td><td class="center">${formatNumber(event.referenceQty || 0)}</td><td>${escapeHTML(event.note || "-")}</td><td>${escapeHTML(event.createdBy || "-")}</td></tr>`;
+    }).join("") : '<tr><td colspan="9" class="empty-table">Không có dòng nhật ký phù hợp bộ lọc.</td></tr>';
+
+    const orderBody = $("inventoryLedgerOrdersBody");
+    if (orderBody) orderBody.innerHTML = currentSnapshotRows.length ? currentSnapshotRows.map((row,index) => {
+        const meaning=inventoryLedgerMeaningV48(row);
+        return `<tr><td>${index+1}</td><td><span class="inventory-ledger-ref">${escapeHTML(row.orderId || "-")}</span></td><td>${row.sourceOrderDate ? formatDateLabel(row.sourceOrderDate) : "-"}</td><td>${escapeHTML(row.rawSku || row.baseSku || "-")}</td><td class="center"><strong>${formatNumber(row.quantity || 0)}</strong></td><td>${escapeHTML(row.status || "-")}</td><td>${escapeHTML(inventoryBucketLabel(row.bucket))}</td><td><span class="inventory-ledger-order-meaning ${meaning.cls}">${escapeHTML(meaning.text)}</span></td></tr>`;
+    }).join("") : '<tr><td colspan="8" class="empty-table">SKU này không phát sinh trong snapshot luân chuyển hiện tại.</td></tr>';
+
+    if ($("inventoryLedgerOrderCount")) {
+        const uniqueOrders=new Set(currentSnapshotRows.map(row=>row.orderId).filter(Boolean));
+        $("inventoryLedgerOrderCount").textContent=`${formatNumber(uniqueOrders.size)} đơn · ${formatNumber(currentSnapshotRows.reduce((s,r)=>s+Number(r.quantity||0),0))} SP`;
+    }
+}
+
+function openInventoryLedgerV48(itemCode) {
+    const item=inventoryState.items.find(row=>row.itemCode===itemCode);
+    if (!item) return;
+    inventoryLedgerStateV48.itemCode=itemCode;
+    inventoryLedgerStateV48.asOfDate=getLocalTodayKey();
+    inventoryLedgerStateV48.typeFilter="stock";
+    inventoryLedgerStateV48.search="";
+    const modal=$("inventoryLedgerModal");
+    if (!modal) return;
+    if ($("inventoryLedgerAsOfDate")) $("inventoryLedgerAsOfDate").value=inventoryLedgerStateV48.asOfDate;
+    if ($("inventoryLedgerTypeFilter")) $("inventoryLedgerTypeFilter").value="stock";
+    if ($("inventoryLedgerSearch")) $("inventoryLedgerSearch").value="";
+    modal.classList.remove("hidden");
+    modal.setAttribute("aria-hidden","false");
+    document.body.classList.add("inventory-ledger-open");
+    renderInventoryLedgerV48();
+}
+
+function closeInventoryLedgerV48() {
+    const modal=$("inventoryLedgerModal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden","true");
+    document.body.classList.remove("inventory-ledger-open");
+}
+
+
 function renderInventoryModule() {
     if (!inventoryState.loaded) loadInventoryLocal();
 
@@ -6530,7 +6817,7 @@ function renderInventoryModule() {
         if (!reconcileOverview.latestDate) {
             messages.push(
                 `<strong>Chưa có lần kiểm kê đối chiếu nào được chốt.</strong> ` +
-                `V47 chưa thể kết luận kho “Khớp / Thiếu / Thừa”. Hãy vào tab <b>Kiểm kê & đối chiếu</b> để nhập số đếm thực tế.`
+                `V48 chưa thể kết luận kho “Khớp / Thiếu / Thừa”. Hãy vào tab <b>Kiểm kê & đối chiếu</b> để nhập số đếm thực tế.`
             );
         } else if (reconcileOverview.counted < reconcileOverview.totalItems) {
             messages.push(
@@ -6590,9 +6877,9 @@ function renderInventoryModule() {
                 return `
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${escapeHTML(item.itemCode)}</td>
+                        <td><button type="button" class="inventory-ledger-sku-link" data-inventory-ledger="${escapeHTML(item.itemCode)}" title="Xem nhật ký ${escapeHTML(item.itemCode)}">${escapeHTML(item.itemCode)}</button></td>
                         <td>
-                            <strong>${escapeHTML(item.name)}</strong>
+                            <button type="button" class="inventory-ledger-name-link" data-inventory-ledger="${escapeHTML(item.itemCode)}" title="Xem nhật ký mặt hàng">${escapeHTML(item.name)}</button>
                             ${
                                 item.transitSkus?.length
                                     ? `<div>
@@ -7032,6 +7319,20 @@ $("btnInventoryAddTransaction")?.addEventListener("click", addInventoryTransacti
 $("inventoryTxFilter")?.addEventListener("change", renderInventoryTransactions);
 $("btnInventoryClearCounts")?.addEventListener("click", clearInventoryReconcileCounts);
 $("btnInventoryCommitReconcile")?.addEventListener("click", commitInventoryReconciliation);
+// V48 - mở nhật ký khi bấm SKU / tên sản phẩm.
+document.addEventListener("click", event => {
+    const trigger = event.target.closest("[data-inventory-ledger]");
+    if (!trigger) return;
+    const itemCode = trigger.getAttribute("data-inventory-ledger") || "";
+    if (itemCode) openInventoryLedgerV48(itemCode);
+});
+
+document.querySelectorAll("[data-ledger-close]").forEach(node => node.addEventListener("click", closeInventoryLedgerV48));
+$("inventoryLedgerAsOfDate")?.addEventListener("change", event => { inventoryLedgerStateV48.asOfDate = event.target.value || getLocalTodayKey(); renderInventoryLedgerV48(); });
+$("inventoryLedgerTypeFilter")?.addEventListener("change", event => { inventoryLedgerStateV48.typeFilter = event.target.value || "all"; renderInventoryLedgerV48(); });
+$("inventoryLedgerSearch")?.addEventListener("input", event => { inventoryLedgerStateV48.search = event.target.value || ""; renderInventoryLedgerV48(); });
+document.addEventListener("keydown", event => { if (event.key === "Escape" && !$("inventoryLedgerModal")?.classList.contains("hidden")) closeInventoryLedgerV48(); });
+
 $("btnInventoryOpenInvoiceV31")?.addEventListener("click", () => openView("invoice-stats"));
 
 $("btnInventoryEdit")?.addEventListener("click", () => { if (requirePermissionV40("INVENTORY_WRITE")) openInventoryEditor(); });
