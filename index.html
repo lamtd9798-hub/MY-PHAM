@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=50">
+    <link rel="stylesheet" href="style.css?v=51">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -266,7 +266,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V49.0</span>
+                <span class="v38-sidebar-version">V51.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -2293,30 +2293,141 @@
             </div>
         </section>
 
-        <!-- ======================== HOÀN / HỦY ======================== -->
+        <!-- ======================== HOÀN / HỦY & NHẬP LẠI KHO - V51 ======================== -->
         <section id="view-returns" class="view">
-            <div class="panel">
-                <div class="panel-header">
+            <div class="returns-v51-top panel">
+                <div class="panel-header returns-v51-header">
                     <div>
-                        <h2>Đơn hoàn / hủy trong file Shopee</h2>
-                        <p id="returnTableSummary">0 dòng</p>
+                        <h2>↩️ Hoàn / Hủy & nhập lại kho</h2>
+                        <p>
+                            Hủy đơn chưa chắc làm hàng rời kho. Hàng <strong>Hoàn đang về</strong> chỉ được cộng lại tồn khi kho thực sự nhận hàng và bấm <strong>Xác nhận nhập kho</strong>.
+                        </p>
+                    </div>
+                    <button type="button" class="btn secondary" id="btnReturnRefreshV51">↻ Đồng bộ lại</button>
+                </div>
+
+                <div id="returnV51Notice" class="returns-v51-notice">
+                    Đang đọc snapshot luân chuyển mới nhất và lịch sử nhập hoàn.
+                </div>
+
+                <div class="returns-v51-kpis">
+                    <div class="returns-v51-kpi returning">
+                        <span>HOÀN ĐANG VỀ</span>
+                        <strong id="returnReturningQtyV51">0</strong>
+                        <small id="returnReturningOrdersV51">0 đơn</small>
+                    </div>
+                    <div class="returns-v51-kpi waiting">
+                        <span>CHƯA NHẬP KHO</span>
+                        <strong id="returnWaitingQtyV51">0</strong>
+                        <small>Chưa được cộng vào tồn</small>
+                    </div>
+                    <div class="returns-v51-kpi confirmed">
+                        <span>ĐÃ NHẬP HOÀN</span>
+                        <strong id="returnConfirmedQtyV51">0</strong>
+                        <small id="returnConfirmedOrdersV51">0 đơn đã xác nhận</small>
+                    </div>
+                    <div class="returns-v51-kpi cancelled">
+                        <span>ĐƠN ĐÃ HỦY</span>
+                        <strong id="returnCancelledQtyV51">0</strong>
+                        <small id="returnCancelledOrdersV51">0 đơn · không tự cộng kho</small>
+                    </div>
+                    <div class="returns-v51-kpi value">
+                        <span>GIÁ TRỊ NHẬP HOÀN</span>
+                        <strong id="returnConfirmedValueV51">0 đ</strong>
+                        <small>Theo đơn giá tồn kho</small>
                     </div>
                 </div>
-                <div class="table-scroll large-table">
-                    <table>
+            </div>
+
+            <div class="panel returns-v51-panel">
+                <div class="panel-header returns-v51-toolbar">
+                    <div>
+                        <h2>🚚 Hàng hoàn đang về / chờ nhập kho</h2>
+                        <p id="returnTableSummary">0 dòng</p>
+                    </div>
+                    <div class="returns-v51-filters">
+                        <input id="returnSearchV51" type="search" placeholder="Tìm mã đơn / SKU / tên SP...">
+                        <select id="returnStatusFilterV51">
+                            <option value="all">Tất cả</option>
+                            <option value="waiting">Chưa nhập kho</option>
+                            <option value="confirmed">Đã nhập kho</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="returns-v51-table-wrap">
+                    <table class="returns-v51-table">
                         <thead>
                             <tr>
+                                <th>STT</th>
                                 <th>Mã đơn</th>
-                                <th>Trạng thái</th>
-                                <th>SKU</th>
+                                <th>Trạng thái Shopee</th>
+                                <th>SKU kho</th>
                                 <th>Tên sản phẩm</th>
-                                <th class="center">Số lượng</th>
+                                <th class="center">SL hoàn</th>
+                                <th>Ngày snapshot</th>
+                                <th>Kết quả kho</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="returnTableBody">
-                            <tr><td colspan="5" class="empty-table">Hãy nhập file Shopee trước.</td></tr>
+                            <tr><td colspan="9" class="empty-table">Chưa có dữ liệu hoàn.</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <div class="returns-v51-grid">
+                <div class="panel returns-v51-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>🧾 Lịch sử đã nhập hoàn</h2>
+                            <p id="returnReceiptSummaryV51">0 lần xác nhận</p>
+                        </div>
+                    </div>
+                    <div class="returns-v51-table-wrap compact">
+                        <table class="returns-v51-table">
+                            <thead>
+                                <tr>
+                                    <th>Ngày nhập</th>
+                                    <th>Mã đơn</th>
+                                    <th>SKU kho</th>
+                                    <th class="center">SL</th>
+                                    <th>Người xác nhận</th>
+                                    <th>Ghi chú</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="returnReceiptBodyV51">
+                                <tr><td colspan="7" class="empty-table">Chưa có lịch sử nhập hoàn.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel returns-v51-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>🚫 Đơn đã hủy</h2>
+                            <p>Đơn hủy không được tự động cộng kho. Nếu hàng đã rời kho rồi quay về, hãy chỉ xác nhận khi thực tế kho nhận lại hàng.</p>
+                        </div>
+                    </div>
+                    <div class="returns-v51-table-wrap compact">
+                        <table class="returns-v51-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>SKU kho</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th class="center">SL</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="returnCancelledBodyV51">
+                                <tr><td colspan="5" class="empty-table">Chưa có đơn hủy trong snapshot hiện tại.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
@@ -2407,6 +2518,46 @@
 </div>
 
 <div id="toast" class="toast"></div>
-    <script src="script.js?v=50"></script>
+
+    <!-- ======================== MODAL XÁC NHẬN NHẬP HOÀN V51 ======================== -->
+    <div id="returnConfirmModalV51" class="returns-v51-modal hidden" aria-hidden="true">
+        <div class="returns-v51-modal-card">
+            <div class="returns-v51-modal-head">
+                <div>
+                    <h2>📦 Xác nhận hàng hoàn đã nhập kho</h2>
+                    <p>Chỉ xác nhận khi hàng đã thực sự về tới kho và được kiểm nhận.</p>
+                </div>
+                <button type="button" id="btnReturnModalCloseV51" class="returns-v51-modal-close">×</button>
+            </div>
+
+            <div id="returnConfirmContextV51" class="returns-v51-modal-context"></div>
+
+            <div class="returns-v51-form-grid">
+                <label>
+                    <span>Ngày nhập kho</span>
+                    <input id="returnReceivedDateV51" type="date">
+                </label>
+                <label>
+                    <span>Số lượng thực nhận</span>
+                    <input id="returnReceivedQtyV51" type="number" min="0.0001" step="0.0001">
+                </label>
+                <label class="wide">
+                    <span>Ghi chú</span>
+                    <textarea id="returnReceivedNoteV51" rows="3" placeholder="Ví dụ: Đã kiểm hàng nguyên vẹn / thiếu 1 SP..."></textarea>
+                </label>
+            </div>
+
+            <div class="returns-v51-modal-warning">
+                Sau khi xác nhận, hệ thống tạo nghiệp vụ <strong>+ Hoàn nhập</strong> và Tồn lý thuyết sẽ tăng đúng số lượng thực nhận.
+            </div>
+
+            <div class="returns-v51-modal-actions">
+                <button type="button" class="btn secondary" id="btnReturnModalCancelV51">Hủy</button>
+                <button type="button" class="btn primary" id="btnReturnConfirmSaveV51">✓ Xác nhận nhập kho</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=51"></script>
 </body>
 </html>

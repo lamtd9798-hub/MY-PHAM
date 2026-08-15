@@ -65,6 +65,7 @@ const DB_INVENTORY_STOCKTAKES = "inventory_stocktakes";
 const DB_INVENTORY_TRANSACTIONS = "inventory_transactions";
 const DB_INVENTORY_TRANSIT_SNAPSHOTS = "inventory_transit_snapshots";
 const DB_INVENTORY_TRANSIT_ROWS = "inventory_transit_rows";
+const DB_INVENTORY_RETURN_RECEIPTS = "inventory_return_receipts";
 
 // V39 - Lịch sử hóa đơn Cloud
 const DB_INVOICE_IMPORTS = "invoice_imports";
@@ -86,7 +87,11 @@ const inventoryState = {
     reconcileDate: "",
     misaAssignment: null,
     transitSnapshot: null,
-    transitCloudReady: false
+    transitCloudReady: false,
+
+    // V51 - xác nhận hàng hoàn thực sự nhập lại kho.
+    returnReceipts: [],
+    returnReceiptCloudReady: false
 };
 
 const DEFAULT_INVENTORY_ITEMS = [
@@ -170,8 +175,8 @@ const PAGE_INFO = {
         subtitle: "Khung đối soát phí - chờ dữ liệu tài chính ở giai đoạn sau"
     },
     returns: {
-        title: "Hoàn / Hủy",
-        subtitle: "Theo dõi đơn hoàn, trả hoặc hủy có trong file Shopee"
+        title: "Hoàn / Hủy & nhập lại kho",
+        subtitle: "Theo dõi hàng hoàn đang về → xác nhận thực nhận → cộng lại tồn kho đúng thời điểm"
     },
     payments: {
         title: "Thanh toán",
@@ -216,9 +221,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V50.0";
+const APP_VERSION = "V51.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "50";
+const APP_CACHE_VERSION = "51";
 
 const systemHealthStateV38 = {
     running: false,
@@ -385,7 +390,8 @@ function saveInventoryLocal() {
                 items: inventoryState.items,
                 stocktakes: inventoryState.stocktakes,
                 transactions: inventoryState.transactions,
-                transitSnapshot: inventoryState.transitSnapshot
+                transitSnapshot: inventoryState.transitSnapshot,
+                returnReceipts: inventoryState.returnReceipts
             })
         );
     } catch (error) {
@@ -401,11 +407,13 @@ function loadInventoryLocal() {
             inventoryState.stocktakes = Array.isArray(saved.stocktakes) ? saved.stocktakes : [];
             inventoryState.transactions = Array.isArray(saved.transactions) ? saved.transactions : [];
             inventoryState.transitSnapshot = saved.transitSnapshot || null;
+            inventoryState.returnReceipts = Array.isArray(saved.returnReceipts) ? saved.returnReceipts : [];
         } else {
             inventoryState.items = DEFAULT_INVENTORY_ITEMS.map(item => ({ ...item }));
             inventoryState.stocktakes = [];
             inventoryState.transactions = [];
             inventoryState.transitSnapshot = null;
+            inventoryState.returnReceipts = [];
             saveInventoryLocal();
         }
     } catch (error) {
@@ -413,6 +421,7 @@ function loadInventoryLocal() {
         inventoryState.stocktakes = [];
         inventoryState.transactions = [];
         inventoryState.transitSnapshot = null;
+        inventoryState.returnReceipts = [];
     }
     inventoryState.loaded = true;
     inventoryState.cloudReady = false;
@@ -480,6 +489,49 @@ async function loadLatestInventoryTransitSnapshot(client) {
     }
 }
 
+
+async function loadInventoryReturnReceiptsV51(client = null) {
+    inventoryState.returnReceiptCloudReady = false;
+
+    if (!state.user) {
+        return inventoryState.returnReceipts || [];
+    }
+
+    try {
+        const supabase = client || initSupabaseClient();
+        const { data, error } = await supabase
+            .from(DB_INVENTORY_RETURN_RECEIPTS)
+            .select("*")
+            .order("received_date", { ascending: false })
+            .order("created_at", { ascending: false })
+            .limit(3000);
+
+        if (error) throw error;
+
+        inventoryState.returnReceipts = (data || []).map(row => ({
+            id: row.id || "",
+            orderId: row.order_id || "",
+            itemCode: row.item_code || "",
+            quantity: Number(row.quantity || 0),
+            receivedDate: row.received_date || "",
+            sourceStatus: row.source_status || "",
+            note: row.note || "",
+            transactionId: row.transaction_id || "",
+            confirmedBy: row.confirmed_by || "",
+            confirmedEmail: row.confirmed_email || "",
+            createdAt: row.created_at || ""
+        }));
+
+        inventoryState.returnReceiptCloudReady = true;
+        saveInventoryLocal();
+        return inventoryState.returnReceipts;
+    } catch (error) {
+        console.warn("V51 return receipts Cloud chưa sẵn sàng:", error);
+        inventoryState.returnReceiptCloudReady = false;
+        return inventoryState.returnReceipts || [];
+    }
+}
+
 async function loadInventoryData() {
     if (!state.user) {
         loadInventoryLocal();
@@ -531,6 +583,7 @@ async function loadInventoryData() {
         inventoryState.mode = "cloud";
 
         await loadLatestInventoryTransitSnapshot(client);
+        await loadInventoryReturnReceiptsV51(client);
         saveInventoryLocal();
 
         // V45: badge menu tồn kho phải hiện ngay sau khi tải Cloud,
@@ -3994,36 +4047,235 @@ function renderOrdersTab() {
     `).join("");
 }
 
-function renderReturnsTab() {
-    const body = $("returnTableBody");
-    const summary = $("returnTableSummary");
+const returnStateV51 = {
+    selected: null,
+    search: "",
+    filter: "all"
+};
+
+function getReturnReceiptKeyV51(orderId, itemCode) {
+    return `${String(orderId || "").trim().toUpperCase()}|${String(itemCode || "").trim().toUpperCase()}`;
+}
+
+function getReturnReceiptMapV51() {
+    const map = new Map();
+    (inventoryState.returnReceipts || []).forEach(row => {
+        map.set(getReturnReceiptKeyV51(row.orderId, row.itemCode), row);
+    });
+    return map;
+}
+
+function buildReturnCandidatesV51() {
+    if (!inventoryState.loaded) loadInventoryLocal();
+
+    const rows = buildInventoryMovementRows();
+    const grouped = new Map();
+
+    rows
+        .filter(row => ["returning", "cancelled"].includes(row.bucket))
+        .forEach(row => {
+            const itemCode = String(row.itemCode || "").trim();
+            const orderId = String(row.orderId || "").trim();
+            if (!itemCode || !orderId) return;
+
+            const key = getReturnReceiptKeyV51(orderId, itemCode);
+            if (!grouped.has(key)) {
+                grouped.set(key, {
+                    key,
+                    orderId,
+                    itemCode,
+                    itemName: row.itemName || "",
+                    rawSkus: new Set(),
+                    quantity: 0,
+                    status: row.status || "",
+                    bucket: row.bucket,
+                    snapshotDate: row.reportDate || inventoryState.transitSnapshot?.snapshotDate || "",
+                    sourceOrderDate: row.sourceOrderDate || ""
+                });
+            }
+
+            const current = grouped.get(key);
+            current.quantity += Number(row.quantity || 0);
+            if (row.rawSku) current.rawSkus.add(row.rawSku);
+            if (row.bucket === "returning") current.bucket = "returning";
+            if (row.status) current.status = row.status;
+        });
+
+    const receiptMap = getReturnReceiptMapV51();
+
+    return [...grouped.values()].map(row => ({
+        ...row,
+        rawSkus: [...row.rawSkus],
+        receipt: receiptMap.get(row.key) || null
+    }));
+}
+
+function returnCandidateValueV51(candidate) {
+    const item = (inventoryState.items || []).find(x => x.itemCode === candidate.itemCode);
+    return Number(candidate.quantity || 0) * Number(item?.unitPrice || 0);
+}
+
+function renderReturnKpisV51(candidates) {
+    const returning = candidates.filter(x => x.bucket === "returning");
+    const cancelled = candidates.filter(x => x.bucket === "cancelled");
+    const confirmed = (inventoryState.returnReceipts || []);
+    const waiting = returning.filter(x => !x.receipt);
+
+    const sumQty = rows => rows.reduce((sum, row) => sum + Number(row.quantity || 0), 0);
+
+    const returningOrders = new Set(returning.map(x => x.orderId)).size;
+    const cancelledOrders = new Set(cancelled.map(x => x.orderId)).size;
+    const confirmedOrders = new Set(confirmed.map(x => x.orderId)).size;
+    const confirmedValue = confirmed.reduce((sum, row) => {
+        const item = (inventoryState.items || []).find(x => x.itemCode === row.itemCode);
+        return sum + Number(row.quantity || 0) * Number(item?.unitPrice || 0);
+    }, 0);
+
+    if ($("returnReturningQtyV51")) $("returnReturningQtyV51").textContent = formatNumber(sumQty(returning));
+    if ($("returnReturningOrdersV51")) $("returnReturningOrdersV51").textContent = `${formatNumber(returningOrders)} đơn`;
+    if ($("returnWaitingQtyV51")) $("returnWaitingQtyV51").textContent = formatNumber(sumQty(waiting));
+    if ($("returnConfirmedQtyV51")) $("returnConfirmedQtyV51").textContent = formatNumber(sumQty(confirmed));
+    if ($("returnConfirmedOrdersV51")) $("returnConfirmedOrdersV51").textContent = `${formatNumber(confirmedOrders)} đơn đã xác nhận`;
+    if ($("returnCancelledQtyV51")) $("returnCancelledQtyV51").textContent = formatNumber(sumQty(cancelled));
+    if ($("returnCancelledOrdersV51")) $("returnCancelledOrdersV51").textContent = `${formatNumber(cancelledOrders)} đơn · không tự cộng kho`;
+    if ($("returnConfirmedValueV51")) $("returnConfirmedValueV51").textContent = inventoryMoney(confirmedValue);
+}
+
+function renderReturnReceiptsV51() {
+    const body = $("returnReceiptBodyV51");
+    const summary = $("returnReceiptSummaryV51");
     if (!body || !summary) return;
 
-    const data = state.skuRows.filter(row => isReturnOrCancelStatus(row.status));
+    const rows = [...(inventoryState.returnReceipts || [])].sort((a, b) =>
+        `${b.receivedDate}|${b.createdAt}`.localeCompare(`${a.receivedDate}|${a.createdAt}`)
+    );
 
-    summary.textContent =
-        `${formatNumber(data.length)} dòng · ${formatNumber(uniqueOrderCount(data))} mã đơn`;
+    summary.textContent = `${formatNumber(rows.length)} lần xác nhận · ${formatNumber(new Set(rows.map(x => x.orderId)).size)} đơn`;
 
-    if (!data.length) {
-        body.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-table">
-                    ${state.skuRows.length ? "Không có đơn hoàn / hủy trong file đang nhập." : "Hãy nhập file Shopee trước."}
-                </td>
-            </tr>
-        `;
+    if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="7" class="empty-table">Chưa có lịch sử nhập hoàn.</td></tr>';
         return;
     }
 
-    body.innerHTML = data.map(row => `
+    body.innerHTML = rows.map(row => `
         <tr>
-            <td><strong>${escapeHTML(row.orderId || "-")}</strong></td>
-            <td>${escapeHTML(row.status || "-")}</td>
-            <td><strong>${escapeHTML(row.sku || "-")}</strong></td>
-            <td>${escapeHTML(row.product || "")}</td>
-            <td class="center">${formatNumber(row.quantity || 0)}</td>
+            <td><strong>${row.receivedDate ? formatDateLabel(row.receivedDate) : "—"}</strong></td>
+            <td><span class="returns-v51-order">${escapeHTML(row.orderId || "—")}</span></td>
+            <td><strong>${escapeHTML(row.itemCode || "—")}</strong></td>
+            <td class="center returns-v51-qty-good">+${formatNumber(row.quantity || 0)}</td>
+            <td>${escapeHTML(row.confirmedEmail || "—")}</td>
+            <td>${escapeHTML(row.note || row.sourceStatus || "—")}</td>
+            <td class="right">
+                ${hasPermissionV40("INVENTORY_WRITE")
+                    ? `<button type="button" class="returns-v51-reverse-btn" data-return-reverse-v51="${escapeHTML(row.id)}">Hoàn tác</button>`
+                    : ""}
+            </td>
         </tr>
     `).join("");
+}
+
+function renderCancelledReturnsV51(candidates) {
+    const body = $("returnCancelledBodyV51");
+    if (!body) return;
+
+    const rows = candidates.filter(x => x.bucket === "cancelled");
+    if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="5" class="empty-table">Chưa có đơn hủy trong snapshot hiện tại.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = rows.map(row => `
+        <tr>
+            <td><span class="returns-v51-order">${escapeHTML(row.orderId)}</span></td>
+            <td><strong>${escapeHTML(row.itemCode)}</strong></td>
+            <td>${escapeHTML(row.itemName || "")}</td>
+            <td class="center">${formatNumber(row.quantity)}</td>
+            <td><span class="returns-v51-cancelled-badge">Đã hủy · không cộng kho</span><div class="returns-v51-status-sub">${escapeHTML(row.status || "")}</div></td>
+        </tr>
+    `).join("");
+}
+
+function renderReturnsTab() {
+    const body = $("returnTableBody");
+    const summary = $("returnTableSummary");
+    const notice = $("returnV51Notice");
+    if (!body || !summary) return;
+
+    const candidates = buildReturnCandidatesV51();
+    renderReturnKpisV51(candidates);
+    renderReturnReceiptsV51();
+    renderCancelledReturnsV51(candidates);
+
+    if (notice) {
+        if (!inventoryState.transitSnapshot?.rows?.length) {
+            notice.className = "returns-v51-notice warning";
+            notice.innerHTML = '⚠ Chưa có snapshot luân chuyển. Hãy vào <strong>Tồn kho & luân chuyển → Upload đơn luân chuyển</strong> để xác định hàng đang hoàn.';
+        } else if (!inventoryState.returnReceiptCloudReady && state.user) {
+            notice.className = "returns-v51-notice warning";
+            notice.innerHTML = '⚠ Chưa đọc được bảng Cloud V51. Nếu bạn chưa chạy SQL V51, hãy chạy trước rồi bấm <strong>Đồng bộ lại</strong>.';
+        } else {
+            notice.className = "returns-v51-notice good";
+            notice.innerHTML = `✓ Snapshot <strong>${escapeHTML(inventoryState.transitSnapshot.fileName || "")}</strong> · ${formatNumber(inventoryState.returnReceipts?.length || 0)} lần nhập hoàn đã lưu Cloud.`;
+        }
+    }
+
+    let rows = candidates.filter(x => x.bucket === "returning");
+    const search = normalizeText($("returnSearchV51")?.value || returnStateV51.search || "");
+    const filter = $("returnStatusFilterV51")?.value || returnStateV51.filter || "all";
+    returnStateV51.search = $("returnSearchV51")?.value || "";
+    returnStateV51.filter = filter;
+
+    if (search) {
+        rows = rows.filter(row => normalizeText([
+            row.orderId,
+            row.itemCode,
+            row.itemName,
+            row.status,
+            ...(row.rawSkus || [])
+        ].join(" ")).includes(search));
+    }
+
+    if (filter === "waiting") rows = rows.filter(row => !row.receipt);
+    if (filter === "confirmed") rows = rows.filter(row => Boolean(row.receipt));
+
+    summary.textContent = `${formatNumber(rows.length)} dòng hoàn · ${formatNumber(new Set(rows.map(x => x.orderId)).size)} mã đơn`;
+
+    if (!rows.length) {
+        body.innerHTML = `
+            <tr><td colspan="9" class="empty-table">
+                ${candidates.some(x => x.bucket === "returning")
+                    ? "Không có dòng phù hợp bộ lọc."
+                    : "Snapshot hiện tại chưa có hàng ở trạng thái hoàn đang về."}
+            </td></tr>`;
+        return;
+    }
+
+    body.innerHTML = rows.map((row, index) => {
+        const receipt = row.receipt;
+        return `
+            <tr class="${receipt ? "returns-v51-row-confirmed" : ""}">
+                <td>${index + 1}</td>
+                <td><span class="returns-v51-order">${escapeHTML(row.orderId)}</span></td>
+                <td><span class="returns-v51-returning-badge">Hoàn đang về</span><div class="returns-v51-status-sub">${escapeHTML(row.status || "")}</div></td>
+                <td><strong>${escapeHTML(row.itemCode)}</strong>${row.rawSkus?.length ? `<div class="returns-v51-status-sub">${escapeHTML(row.rawSkus.join(", "))}</div>` : ""}</td>
+                <td>${escapeHTML(row.itemName || "")}</td>
+                <td class="center"><strong>${formatNumber(row.quantity)}</strong></td>
+                <td>${row.snapshotDate ? formatDateLabel(row.snapshotDate) : "—"}</td>
+                <td>
+                    ${receipt
+                        ? `<span class="returns-v51-confirmed-badge">✓ Đã nhập kho +${formatNumber(receipt.quantity)}</span><div class="returns-v51-status-sub">${formatDateLabel(receipt.receivedDate)}</div>`
+                        : '<span class="returns-v51-waiting-badge">Chưa cộng tồn</span>'}
+                </td>
+                <td>
+                    ${receipt
+                        ? '<span class="returns-v51-done-text">Đã xác nhận</span>'
+                        : hasPermissionV40("INVENTORY_WRITE")
+                            ? `<button type="button" class="returns-v51-confirm-btn" data-return-confirm-v51="${escapeHTML(row.key)}">✓ Xác nhận nhập kho</button>`
+                            : '<span class="returns-v51-done-text">Chỉ ADMIN/KHO</span>'}
+                </td>
+            </tr>
+        `;
+    }).join("");
 }
 
 function refreshNavCounts() {
@@ -4035,10 +4287,14 @@ function refreshNavCounts() {
     }
 
     if (returnBadge) {
+        const candidates = inventoryState.transitSnapshot?.rows?.length
+            ? buildReturnCandidatesV51()
+            : [];
+
         returnBadge.textContent = formatNumber(
-            uniqueOrderCount(
-                state.skuRows.filter(row => isReturnOrCancelStatus(row.status))
-            )
+            candidates.length
+                ? new Set(candidates.map(row => row.orderId)).size
+                : uniqueOrderCount(state.skuRows.filter(row => isReturnOrCancelStatus(row.status)))
         );
     }
 }
@@ -4046,6 +4302,171 @@ function refreshNavCounts() {
 if ($("orderSearch")) {
     $("orderSearch").addEventListener("input", renderOrdersTab);
 }
+
+
+function closeReturnConfirmModalV51() {
+    const modal = $("returnConfirmModalV51");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("return-v51-modal-open");
+    returnStateV51.selected = null;
+}
+
+function openReturnConfirmModalV51(candidateKey) {
+    if (!requirePermissionV40("INVENTORY_WRITE")) return;
+
+    const candidate = buildReturnCandidatesV51().find(row => row.key === candidateKey);
+    if (!candidate) {
+        alert("Không còn tìm thấy dòng hoàn này trong snapshot hiện tại.");
+        return;
+    }
+    if (candidate.receipt) {
+        alert("Dòng này đã được xác nhận nhập hoàn trước đó.");
+        return;
+    }
+
+    returnStateV51.selected = candidate;
+    const modal = $("returnConfirmModalV51");
+    if (!modal) return;
+
+    if ($("returnReceivedDateV51")) $("returnReceivedDateV51").value = getLocalTodayKey();
+    if ($("returnReceivedQtyV51")) $("returnReceivedQtyV51").value = String(candidate.quantity || "");
+    if ($("returnReceivedNoteV51")) $("returnReceivedNoteV51").value = "";
+
+    if ($("returnConfirmContextV51")) {
+        $("returnConfirmContextV51").innerHTML = `
+            <div><span>Mã đơn</span><strong>${escapeHTML(candidate.orderId)}</strong></div>
+            <div><span>SKU kho</span><strong>${escapeHTML(candidate.itemCode)}</strong></div>
+            <div><span>Sản phẩm</span><strong>${escapeHTML(candidate.itemName || "—")}</strong></div>
+            <div><span>SL snapshot</span><strong>${formatNumber(candidate.quantity)}</strong></div>
+        `;
+    }
+
+    modal.classList.remove("hidden");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("return-v51-modal-open");
+}
+
+async function confirmReturnToStockV51() {
+    if (!requirePermissionV40("INVENTORY_WRITE")) return;
+    const candidate = returnStateV51.selected;
+    if (!candidate) return;
+
+    const receivedDate = $("returnReceivedDateV51")?.value || "";
+    const quantity = Number($("returnReceivedQtyV51")?.value || 0);
+    const note = String($("returnReceivedNoteV51")?.value || "").trim();
+
+    if (!receivedDate) {
+        alert("Hãy chọn ngày thực tế hàng nhập lại kho.");
+        return;
+    }
+    if (!(quantity > 0)) {
+        alert("Số lượng thực nhận phải lớn hơn 0.");
+        return;
+    }
+    if (quantity > Number(candidate.quantity || 0)) {
+        if (!confirm(`Bạn đang xác nhận ${formatNumber(quantity)} SP, lớn hơn SL hoàn trong snapshot ${formatNumber(candidate.quantity)}. Vẫn tiếp tục?`)) {
+            return;
+        }
+    }
+
+    const button = $("btnReturnConfirmSaveV51");
+    if (button) {
+        button.disabled = true;
+        button.textContent = "Đang lưu...";
+    }
+
+    try {
+        const client = initSupabaseClient();
+        const { data, error } = await client.rpc("confirm_inventory_return_v51", {
+            p_order_id: candidate.orderId,
+            p_item_code: candidate.itemCode,
+            p_quantity: quantity,
+            p_received_date: receivedDate,
+            p_source_status: candidate.status || "",
+            p_note: note
+        });
+
+        if (error) throw error;
+
+        closeReturnConfirmModalV51();
+        await loadInventoryData();
+        renderReturnsTab();
+        renderInventoryModule();
+        refreshNavCounts();
+
+        alert(`Đã nhập hoàn ${formatNumber(quantity)} SP vào ${candidate.itemCode}. Tồn lý thuyết đã được cộng lại.`);
+        return data;
+    } catch (error) {
+        console.error("V51 confirm return error:", error);
+        const message = String(error?.message || error || "");
+        if (message.includes("RETURN_ALREADY_CONFIRMED")) {
+            alert("Đơn/SKU này đã được xác nhận nhập hoàn trước đó. Hệ thống không cộng kho lần thứ hai.");
+        } else {
+            alert(`Không lưu được nhập hoàn. ${message}`);
+        }
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = "✓ Xác nhận nhập kho";
+        }
+    }
+}
+
+async function reverseReturnReceiptV51(receiptId) {
+    if (!requirePermissionV40("INVENTORY_WRITE")) return;
+    const receipt = (inventoryState.returnReceipts || []).find(row => row.id === receiptId);
+    if (!receipt) return;
+
+    if (!confirm(`Hoàn tác nhập hoàn ${formatNumber(receipt.quantity)} SP của đơn ${receipt.orderId}?\n\nNghiệp vụ + Hoàn nhập sẽ bị xóa và tồn lý thuyết giảm lại.`)) {
+        return;
+    }
+
+    try {
+        const client = initSupabaseClient();
+        const { error } = await client.rpc("reverse_inventory_return_v51", {
+            p_receipt_id: receiptId
+        });
+        if (error) throw error;
+
+        await loadInventoryData();
+        renderReturnsTab();
+        renderInventoryModule();
+        refreshNavCounts();
+    } catch (error) {
+        console.error("V51 reverse return error:", error);
+        alert(`Không hoàn tác được. ${error?.message || error}`);
+    }
+}
+
+$("returnSearchV51")?.addEventListener("input", renderReturnsTab);
+$("returnStatusFilterV51")?.addEventListener("change", renderReturnsTab);
+$("btnReturnRefreshV51")?.addEventListener("click", async () => {
+    await loadInventoryData();
+    renderReturnsTab();
+    refreshNavCounts();
+});
+$("btnReturnModalCloseV51")?.addEventListener("click", closeReturnConfirmModalV51);
+$("btnReturnModalCancelV51")?.addEventListener("click", closeReturnConfirmModalV51);
+$("btnReturnConfirmSaveV51")?.addEventListener("click", confirmReturnToStockV51);
+
+$("returnConfirmModalV51")?.addEventListener("click", event => {
+    if (event.target === $("returnConfirmModalV51")) closeReturnConfirmModalV51();
+});
+
+document.addEventListener("click", event => {
+    const confirmButton = event.target.closest("[data-return-confirm-v51]");
+    if (confirmButton) {
+        openReturnConfirmModalV51(confirmButton.dataset.returnConfirmV51 || "");
+        return;
+    }
+
+    const reverseButton = event.target.closest("[data-return-reverse-v51]");
+    if (reverseButton) {
+        reverseReturnReceiptV51(reverseButton.dataset.returnReverseV51 || "");
+    }
+});
 
 /* ======================== EXPORT ======================== */
 $("btnExportSku").addEventListener("click", () => {
@@ -4624,18 +5045,27 @@ function getTransitSnapshotRowsForInventory() {
 function classifyInventoryShopeeStatus(status) {
     const textValue = normalizeText(status);
 
-    // Trạng thái "người mua đã nhận nhưng vẫn có thể yêu cầu trả hàng" vẫn là ĐÃ GIAO.
+    // V51: trạng thái hoàn thật phải được nhận trước "đã giao".
+    // Câu "người mua đã nhận ... vẫn có thể gửi yêu cầu trả hàng" chỉ là thời hạn khiếu nại,
+    // không được xem là hàng đang hoàn.
+    const isReturnWindowOnly =
+        textValue.includes("nguoimuaxacnhandanhanduochang") &&
+        textValue.includes("vancotheguiyeucautrahang");
+
+    const isExplicitReturn =
+        textValue.includes("dangtrahang") ||
+        textValue.includes("yeucautrahanghoantien") ||
+        textValue.includes("trahangthanhcong") ||
+        textValue.includes("dahoantien") ||
+        textValue.includes("returning") ||
+        textValue.includes("returned");
+
+    if (isExplicitReturn && !isReturnWindowOnly) return "returning";
+    if (textValue.includes("dahuy") || textValue.includes("cancel")) return "cancelled";
     if (textValue.includes("nguoimuaxacnhandanhanduochang")) return "delivered";
     if (textValue.includes("dagiao") || textValue.includes("delivered")) return "delivered";
     if (textValue.includes("danggiao") || textValue.includes("shipping") || textValue.includes("intransit")) return "in_transit";
     if (textValue.includes("chogiaohang") || textValue.includes("choxacnhan") || textValue.includes("topickup")) return "reserved";
-    if (textValue.includes("dahuy") || textValue.includes("cancel")) return "cancelled";
-    if (
-        textValue.includes("dangtrahang") ||
-        textValue.includes("yeucautrahang") ||
-        textValue.includes("trahangthanhcong") ||
-        textValue.includes("returning")
-    ) return "returning";
     return "other";
 }
 
