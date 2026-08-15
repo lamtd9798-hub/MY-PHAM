@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=52">
+    <link rel="stylesheet" href="style.css?v=53">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -243,6 +243,7 @@
             </button>
             <button class="nav-item" data-view="fees">
                 <span class="nav-icon">💳</span><span>Phí sàn</span>
+                <span class="nav-badge" id="navFeeCount">0</span>
             </button>
             <button class="nav-item" data-view="returns">
                 <span class="nav-icon">↩️</span><span>Hoàn / Hủy</span>
@@ -250,9 +251,11 @@
             </button>
             <button class="nav-item" data-view="payments">
                 <span class="nav-icon">💰</span><span>Thanh toán</span>
+                <span class="nav-badge" id="navPaymentCount">0</span>
             </button>
             <button class="nav-item" data-view="issues">
                 <span class="nav-icon">⚠️</span><span>Sai lệch</span>
+                <span class="nav-badge warning" id="navIssueCount">0</span>
             </button>
         </nav>
 
@@ -266,7 +269,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V52.0</span>
+                <span class="v38-sidebar-version">V53.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -2386,13 +2389,74 @@
             </div>
         </section>
 
-        <!-- ======================== PHÍ SÀN ======================== -->
+        <!-- ======================== PHÍ SÀN / TÀI CHÍNH SHOPEE - V53 ======================== -->
         <section id="view-fees" class="view">
-            <div class="panel placeholder-panel">
-                <div class="placeholder-icon">💳</div>
-                <h2>Phí sàn</h2>
-                <p>Tab này đã hoạt động. Hiện bạn chưa cần nhập file tài chính nên phần phí chỉ để sẵn khung.</p>
-                <div class="placeholder-note">Khi có file báo cáo thu nhập/đối soát Shopee, tôi sẽ nối dữ liệu vào đây.</div>
+            <div class="panel finance-v53-upload-panel">
+                <div class="panel-header finance-v53-header">
+                    <div>
+                        <h2>💳 Đối soát tài chính Shopee</h2>
+                        <p>Upload file thu nhập / đối soát / thanh toán của Shopee. Hệ thống tự nhận diện cột, gom phí theo đơn và lưu Cloud để nhiều máy cùng xem.</p>
+                    </div>
+                    <div class="finance-v53-actions">
+                        <select id="financeImportSelectV53" class="finance-v53-select" title="Chọn snapshot tài chính">
+                            <option value="">Chưa có snapshot</option>
+                        </select>
+                        <button type="button" class="btn btn-primary" id="btnFinanceChooseV53">⬆ Upload file tài chính</button>
+                        <input id="financeFileInputV53" type="file" accept=".xlsx,.xls,.csv" hidden>
+                        <button type="button" class="btn btn-light" id="btnFinanceRefreshV53">↻ Đồng bộ Cloud</button>
+                        <button type="button" class="btn btn-danger-outline" id="btnFinanceDeleteV53">Xóa snapshot</button>
+                    </div>
+                </div>
+
+                <div id="financeNoticeV53" class="finance-v53-notice">Chưa có dữ liệu tài chính. Hãy upload file Shopee để bắt đầu đối soát.</div>
+                <div id="financeMappingV53" class="finance-v53-mapping"></div>
+
+                <div class="finance-v53-kpis">
+                    <div class="finance-v53-kpi gross"><span>TỔNG TIỀN ĐƠN</span><strong id="financeGrossV53">0 đ</strong><small>Theo cột doanh thu/tổng tiền nhận diện được</small></div>
+                    <div class="finance-v53-kpi fee"><span>TỔNG PHÍ SÀN</span><strong id="financeFeesV53">0 đ</strong><small>Hoa hồng + dịch vụ + thanh toán + vận chuyển + phí khác</small></div>
+                    <div class="finance-v53-kpi discount"><span>GIẢM GIÁ SELLER</span><strong id="financeDiscountV53">0 đ</strong><small>Voucher/khuyến mại do người bán chịu</small></div>
+                    <div class="finance-v53-kpi refund"><span>HOÀN / HOÀN TIỀN</span><strong id="financeRefundV53">0 đ</strong><small>Giá trị hoàn tiền nhận diện từ file</small></div>
+                    <div class="finance-v53-kpi net"><span>THỰC NHẬN</span><strong id="financeNetV53">0 đ</strong><small id="financeFeeRateV53">Tỷ lệ phí: —</small></div>
+                </div>
+            </div>
+
+            <div class="finance-v53-grid">
+                <div class="panel finance-v53-panel">
+                    <div class="panel-header"><div><h2>Cơ cấu phí</h2><p>Chi phí được cộng theo toàn bộ dòng của snapshot đang chọn.</p></div></div>
+                    <div id="financeFeeBreakdownV53" class="finance-v53-breakdown"></div>
+                </div>
+                <div class="panel finance-v53-panel">
+                    <div class="panel-header"><div><h2>Kiểm tra snapshot</h2><p>Đánh giá khả năng đối chiếu theo Mã đơn và công thức tiền.</p></div></div>
+                    <div id="financeQualityV53" class="finance-v53-quality"></div>
+                </div>
+            </div>
+
+            <div class="panel finance-v53-panel">
+                <div class="panel-header finance-v53-table-toolbar">
+                    <div>
+                        <h2>Chi tiết tài chính theo đơn</h2>
+                        <p id="financeOrderSummaryV53">0 đơn</p>
+                    </div>
+                    <div class="finance-v53-filters">
+                        <input id="financeOrderSearchV53" type="search" placeholder="Tìm Mã đơn / mã thanh toán...">
+                        <select id="financeOrderStatusV53">
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="paid">Đã thanh toán</option>
+                            <option value="pending">Đang/chờ thanh toán</option>
+                            <option value="unknown">Chưa rõ trạng thái</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="finance-v53-table-wrap">
+                    <table class="finance-v53-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th><th>Mã đơn</th><th>Ngày GD</th><th>Tổng tiền</th><th>Phí sàn</th><th>Voucher</th><th>Hoàn tiền</th><th>Thực nhận</th><th>Mã thanh toán</th><th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="financeOrderBodyV53"><tr><td colspan="10" class="empty-table">Chưa có dữ liệu tài chính.</td></tr></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
@@ -2535,23 +2599,61 @@
             </div>
         </section>
 
-        <!-- ======================== THANH TOÁN ======================== -->
+        <!-- ======================== THANH TOÁN - V53 ======================== -->
         <section id="view-payments" class="view">
-            <div class="panel placeholder-panel">
-                <div class="placeholder-icon">💰</div>
-                <h2>Thanh toán</h2>
-                <p>Tab này đã hoạt động. Hiện chưa có file thanh toán/thu nhập nên chưa có số liệu để hiển thị.</p>
-                <div class="placeholder-note">Không ảnh hưởng tới chức năng nhập file và thống kê SKU hiện tại.</div>
+            <div class="panel finance-v53-panel">
+                <div class="panel-header finance-v53-table-toolbar">
+                    <div>
+                        <h2>💰 Thanh toán / Settlement Shopee</h2>
+                        <p id="financePaymentSnapshotV53">Dùng snapshot tài chính đang chọn ở tab Phí sàn.</p>
+                    </div>
+                    <button type="button" class="btn btn-light" id="btnOpenFinanceFromPaymentsV53">Mở Phí sàn / Upload file →</button>
+                </div>
+                <div class="finance-v53-kpis payments">
+                    <div class="finance-v53-kpi"><span>ĐỢT THANH TOÁN</span><strong id="financePayoutBatchCountV53">0</strong><small>Số mã đợt/ngày thanh toán</small></div>
+                    <div class="finance-v53-kpi net"><span>ĐÃ THANH TOÁN</span><strong id="financePaidAmountV53">0 đ</strong><small id="financePaidRowsV53">0 dòng</small></div>
+                    <div class="finance-v53-kpi warning"><span>CHỜ THANH TOÁN</span><strong id="financePendingAmountV53">0 đ</strong><small id="financePendingRowsV53">0 dòng</small></div>
+                    <div class="finance-v53-kpi"><span>CHƯA RÕ TRẠNG THÁI</span><strong id="financeUnknownAmountV53">0 đ</strong><small id="financeUnknownRowsV53">0 dòng</small></div>
+                </div>
+                <div class="finance-v53-table-wrap">
+                    <table class="finance-v53-table">
+                        <thead><tr><th>STT</th><th>Mã đợt / Settlement</th><th>Ngày thanh toán</th><th>Trạng thái</th><th>Số đơn</th><th>Tổng tiền</th><th>Tổng phí</th><th>Hoàn tiền</th><th>Thực nhận</th></tr></thead>
+                        <tbody id="financePayoutBodyV53"><tr><td colspan="9" class="empty-table">Chưa có dữ liệu thanh toán.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel finance-v53-panel">
+                <div class="panel-header"><div><h2>Đơn đã giao nhưng chưa thấy trong file tài chính</h2><p>Đối chiếu Mã đơn Shopee đã giao với snapshot tài chính đang chọn. Chỉ dùng khi file tài chính có Mã đơn.</p></div></div>
+                <div class="finance-v53-table-wrap compact">
+                    <table class="finance-v53-table">
+                        <thead><tr><th>STT</th><th>Mã đơn Shopee</th><th>Ngày đơn</th><th>Trạng thái</th><th>SKU / SL</th><th>Kết luận</th></tr></thead>
+                        <tbody id="financeMissingPaymentBodyV53"><tr><td colspan="6" class="empty-table">Chưa có dữ liệu.</td></tr></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
-        <!-- ======================== SAI LỆCH ======================== -->
+        <!-- ======================== SAI LỆCH TÀI CHÍNH - V53 ======================== -->
         <section id="view-issues" class="view">
-            <div class="panel placeholder-panel">
-                <div class="placeholder-icon">⚠️</div>
-                <h2>Sai lệch</h2>
-                <p>Tab này đã hoạt động. Muốn kiểm tra chênh lệch tiền cần thêm file tài chính Shopee ở giai đoạn sau.</p>
-                <div class="placeholder-note">Phần thống kê SKU vẫn chạy độc lập chỉ bằng file Order.all...xlsx.</div>
+            <div class="panel finance-v53-panel">
+                <div class="panel-header finance-v53-table-toolbar">
+                    <div><h2>⚠️ Sai lệch tài chính</h2><p>Gom các vấn đề phát hiện từ file tài chính và dữ liệu Shopee Cloud. Không tự kết luận sai tiền nếu file thiếu cột.</p></div>
+                    <button type="button" class="btn btn-light" id="btnOpenFinanceFromIssuesV53">Mở Phí sàn / Upload file →</button>
+                </div>
+                <div class="finance-v53-kpis issues">
+                    <div class="finance-v53-kpi danger"><span>TỔNG CẢNH BÁO</span><strong id="financeIssueCountV53">0</strong><small>Các mục cần xem</small></div>
+                    <div class="finance-v53-kpi warning"><span>THIẾU MÃ ĐƠN</span><strong id="financeMissingOrderIdV53">0</strong><small>Dòng tài chính không có khóa đối chiếu</small></div>
+                    <div class="finance-v53-kpi warning"><span>KHÔNG THẤY TRÊN SHOPEE</span><strong id="financeUnknownOrderV53">0</strong><small>Mã đơn tài chính không có trong Cloud</small></div>
+                    <div class="finance-v53-kpi warning"><span>ĐÃ GIAO CHƯA THẤY TÀI CHÍNH</span><strong id="financeDeliveredMissingV53">0</strong><small>Đơn đã giao chưa xuất hiện trong snapshot</small></div>
+                    <div class="finance-v53-kpi danger"><span>CHÊNH CÔNG THỨC</span><strong id="financeFormulaMismatchV53">0</strong><small>Theo các cột đã nhận diện</small></div>
+                </div>
+                <div class="finance-v53-table-wrap">
+                    <table class="finance-v53-table issues-table">
+                        <thead><tr><th>STT</th><th>Mức</th><th>Loại cảnh báo</th><th>Mã đơn</th><th>Số tiền liên quan</th><th>Chi tiết</th></tr></thead>
+                        <tbody id="financeIssueBodyV53"><tr><td colspan="6" class="empty-table">Chưa có dữ liệu để kiểm tra.</td></tr></tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </main>
@@ -2661,6 +2763,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=52"></script>
+    <script src="script.js?v=53"></script>
 </body>
 </html>

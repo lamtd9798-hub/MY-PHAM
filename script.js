@@ -171,20 +171,20 @@ const PAGE_INFO = {
         subtitle: "Danh sách dữ liệu đọc trực tiếp từ file đơn hàng Shopee"
     },
     fees: {
-        title: "Phí sàn",
-        subtitle: "Khung đối soát phí - chờ dữ liệu tài chính ở giai đoạn sau"
+        title: "Phí sàn & tài chính Shopee",
+        subtitle: "Upload file tài chính → phân tích phí → thực nhận → lưu Cloud"
     },
     returns: {
         title: "Hoàn / Hủy & nhập lại kho",
         subtitle: "Theo dõi hàng hoàn đang về → xác nhận thực nhận → cộng lại tồn kho đúng thời điểm"
     },
     payments: {
-        title: "Thanh toán",
-        subtitle: "Khung thanh toán - chờ file thu nhập/settlement ở giai đoạn sau"
+        title: "Thanh toán Shopee",
+        subtitle: "Theo dõi các đợt settlement, số tiền đã/chờ thanh toán và đơn chưa thấy trong file"
     },
     issues: {
-        title: "Sai lệch",
-        subtitle: "Khung phát hiện sai lệch tài chính - triển khai khi có dữ liệu đối soát"
+        title: "Sai lệch tài chính",
+        subtitle: "Phát hiện thiếu mã đơn, đơn không khớp Cloud, chênh công thức và đơn đã giao chưa thấy tài chính"
     }
 };
 
@@ -221,9 +221,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V52.0";
+const APP_VERSION = "V53.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "52";
+const APP_CACHE_VERSION = "53";
 
 const systemHealthStateV38 = {
     running: false,
@@ -991,7 +991,9 @@ const ROLE_PERMISSIONS_V40 = {
         "INVENTORY_WRITE",
         "TRANSIT_UPLOAD",
         "MANAGE_USERS",
-        "MANAGE_INVOICE_LINKS"
+        "MANAGE_INVOICE_LINKS",
+        "UPLOAD_FINANCE",
+        "DELETE_FINANCE"
     ]),
 
     KHO: new Set([
@@ -1003,7 +1005,8 @@ const ROLE_PERMISSIONS_V40 = {
     KETOAN: new Set([
         "VIEW",
         "UPLOAD_INVOICE",
-        "MANAGE_INVOICE_LINKS"
+        "MANAGE_INVOICE_LINKS",
+        "UPLOAD_FINANCE"
     ]),
 
     NHAN_VIEN: new Set([
@@ -1038,7 +1041,9 @@ function permissionMessageV40(permission) {
         INVENTORY_WRITE: "Chỉ ADMIN hoặc KHO được cập nhật tồn kho, nhập/xuất và kiểm kê.",
         TRANSIT_UPLOAD: "Chỉ ADMIN hoặc KHO được upload snapshot luân chuyển.",
         MANAGE_USERS: "Chỉ ADMIN được phân quyền người dùng.",
-        MANAGE_INVOICE_LINKS: "Chỉ ADMIN hoặc KẾ TOÁN được tạo/sửa liên kết Mã đơn Shopee ↔ Số hóa đơn MISA."
+        MANAGE_INVOICE_LINKS: "Chỉ ADMIN hoặc KẾ TOÁN được tạo/sửa liên kết Mã đơn Shopee ↔ Số hóa đơn MISA.",
+        UPLOAD_FINANCE: "Chỉ ADMIN hoặc KẾ TOÁN được upload file tài chính Shopee.",
+        DELETE_FINANCE: "Chỉ ADMIN được xóa snapshot tài chính Cloud."
     };
 
     return map[permission] || "Tài khoản hiện tại không có quyền thực hiện thao tác này.";
@@ -1184,6 +1189,9 @@ function applyRoleUiV40() {
     applyPermissionElementV40("btnInventoryMisaChooseFile", "UPLOAD_INVOICE");
     applyPermissionElementV40("v50BridgeFileInput", "MANAGE_INVOICE_LINKS");
     applyPermissionElementV40("btnV50ManualLink", "MANAGE_INVOICE_LINKS");
+    applyPermissionElementV40("financeFileInputV53", "UPLOAD_FINANCE");
+    applyPermissionElementV40("btnFinanceChooseV53", "UPLOAD_FINANCE");
+    applyPermissionElementV40("btnFinanceDeleteV53", "DELETE_FINANCE", { hide: true });
 
     // Inventory
     applyPermissionElementV40("inventoryStockFileInput", "INVENTORY_WRITE");
@@ -1515,6 +1523,9 @@ async function enterAuthenticatedApp(session) {
 
     // V50: tải bảng cầu nối Mã đơn Shopee ↔ Số hóa đơn.
     await loadInvoiceOrderLinksV50({ silent: true });
+
+    // V53: tải snapshot tài chính Shopee mới nhất nếu SQL V53 đã sẵn sàng.
+    await loadFinanceCloudV53({ silent: true });
 
     const savedUi = readUiStateV17();
 
@@ -1874,6 +1885,9 @@ function openView(viewName) {
     }
 
     if (viewName === "orders") renderOrdersTab();
+    if (viewName === "fees") renderFinanceAllV53();
+    if (viewName === "payments") renderFinanceAllV53();
+    if (viewName === "issues") renderFinanceAllV53();
     if (viewName === "returns") renderReturnsTab();
     if (viewName === "history") renderHistory();
     if (viewName === "invoice-stats") renderInvoiceStats();
@@ -4301,7 +4315,15 @@ function refreshNavCounts() {
                 : uniqueOrderCount(state.skuRows.filter(row => isReturnOrCancelStatus(row.status)))
         );
     }
+
+    const feeBadge = $("navFeeCount");
+    const paymentBadge = $("navPaymentCount");
+    const issueBadge = $("navIssueCount");
+    if (feeBadge) feeBadge.textContent = formatNumber(new Set(financeStateV53.rows.map(r => r.orderId).filter(Boolean)).size);
+    if (paymentBadge) paymentBadge.textContent = formatNumber(financeStateV53.rows.filter(r => normalizeFinanceStatusV53(r.paymentStatus) === "pending").length);
+    if (issueBadge) issueBadge.textContent = formatNumber(buildFinanceIssuesV53().issues.length);
 }
+
 
 if ($("orderSearch")) {
     $("orderSearch").addEventListener("input", renderOrdersTab);
@@ -7806,6 +7828,264 @@ function renderInventoryOrderAgingV49() {
 }
 
 
+
+/* =========================================================
+   V53 - ĐỐI SOÁT TÀI CHÍNH SHOPEE
+========================================================= */
+const DB_FINANCE_IMPORTS_V53 = "finance_imports";
+const DB_FINANCE_ROWS_V53 = "finance_rows";
+
+const financeStateV53 = {
+    imports: [],
+    rows: [],
+    currentImportId: "",
+    loading: false,
+    search: "",
+    statusFilter: "all"
+};
+
+const FINANCE_ALIASES_V53 = {
+    orderId: ["Mã đơn hàng","Mã đơn","Shopee Order ID","Order ID","Order No","Mã đơn Shopee"],
+    transactionDate: ["Ngày giao dịch","Ngày đơn","Ngày tạo","Transaction Date","Order Date","Ngày ghi nhận"],
+    payoutDate: ["Ngày thanh toán","Ngày chuyển khoản","Payout Date","Settlement Date","Ngày đối soát","Ngày giải ngân"],
+    payoutId: ["Mã thanh toán","Mã đối soát","Payout ID","Settlement ID","Mã đợt thanh toán","Mã giao dịch"],
+    paymentStatus: ["Trạng thái thanh toán","Payment Status","Payout Status","Settlement Status","Trạng thái"],
+    gross: ["Tổng tiền đơn hàng","Tổng tiền người mua thanh toán","Tổng số tiền người mua thanh toán","Buyer Paid","Order Amount","Gross Amount","Doanh thu","Tổng tiền hàng"],
+    commissionFee: ["Phí hoa hồng","Commission Fee","Commission"],
+    serviceFee: ["Phí dịch vụ","Service Fee","Service Fees"],
+    transactionFee: ["Phí thanh toán","Transaction Fee","Payment Fee","Phí giao dịch"],
+    shippingFee: ["Phí vận chuyển","Shipping Fee","Actual Shipping Fee","Phí vận chuyển thực tế"],
+    voucherCost: ["Mã giảm giá của Người bán","Voucher người bán","Seller Voucher","Seller Discount","Giảm giá người bán","Khuyến mãi người bán"],
+    refundAmount: ["Hoàn tiền","Refund","Refund Amount","Số tiền hoàn","Trả hàng hoàn tiền"],
+    otherFee: ["Phí khác","Other Fee","Other Fees","Chi phí khác"],
+    adjustment: ["Điều chỉnh","Adjustment","Other Adjustment","Điều chỉnh khác"],
+    netAmount: ["Tiền thực nhận","Số tiền thanh toán","Net Income","Payout Amount","Settlement Amount","Net Amount","Thực nhận","Tổng thanh toán"]
+};
+
+function parseFinanceNumberV53(value) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    let text = String(value ?? "").trim();
+    if (!text) return 0;
+    let negative = false;
+    if (/^\(.*\)$/.test(text)) { negative = true; text = text.slice(1,-1); }
+    text = text.replace(/\s+/g, "").replace(/₫|đ|vnd/gi, "");
+    const hasDot = text.includes(".");
+    const hasComma = text.includes(",");
+    if (hasDot && hasComma) {
+        const lastDot = text.lastIndexOf(".");
+        const lastComma = text.lastIndexOf(",");
+        if (lastComma > lastDot) text = text.replace(/\./g, "").replace(",", ".");
+        else text = text.replace(/,/g, "");
+    } else if (hasComma) {
+        const parts = text.split(",");
+        text = parts.length === 2 && parts[1].length <= 2 ? `${parts[0].replace(/\./g,"")}.${parts[1]}` : text.replace(/,/g, "");
+    } else if (hasDot) {
+        const parts = text.split(".");
+        if (!(parts.length === 2 && parts[1].length <= 2)) text = text.replace(/\./g, "");
+    }
+    text = text.replace(/[^0-9.\-]/g, "");
+    const n = Number(text);
+    if (!Number.isFinite(n)) return 0;
+    return negative ? -Math.abs(n) : n;
+}
+function financeCostV53(value){ return Math.abs(parseFinanceNumberV53(value)); }
+function financeMoneyV53(value){ return `${formatNumber(Math.round(Number(value||0)))} đ`; }
+
+function normalizeFinanceHeaderV53(value){ return normalizeText(String(value ?? "")); }
+function findFinanceColumnV53(headers, aliases){
+    const normalized = headers.map(normalizeFinanceHeaderV53);
+    for (const alias of aliases || []) {
+        const needle = normalizeFinanceHeaderV53(alias);
+        const exact = normalized.findIndex(v => v === needle);
+        if (exact >= 0) return exact;
+    }
+    for (const alias of aliases || []) {
+        const needle = normalizeFinanceHeaderV53(alias);
+        if (needle.length < 5) continue;
+        const partial = normalized.findIndex(v => v.includes(needle) || needle.includes(v));
+        if (partial >= 0) return partial;
+    }
+    return -1;
+}
+function detectFinanceHeaderV53(matrix){
+    let best = {rowIndex:-1, score:-1, map:{}, headers:[]};
+    const limit = Math.min(matrix.length, 70);
+    for (let r=0;r<limit;r++){
+        const headers = (matrix[r]||[]).map(v=>String(v??"").trim());
+        if (headers.filter(Boolean).length < 2) continue;
+        const map = {};
+        let score=0;
+        Object.entries(FINANCE_ALIASES_V53).forEach(([key,aliases])=>{
+            const col=findFinanceColumnV53(headers,aliases); map[key]=col; if(col>=0) score += ["orderId","netAmount","gross"].includes(key)?3:1;
+        });
+        if (map.orderId>=0) score += 3;
+        if (map.netAmount>=0 || map.gross>=0) score += 3;
+        if (score > best.score) best={rowIndex:r,score,map,headers};
+    }
+    return best;
+}
+async function readFinanceWorkbookV53(file){
+    if(typeof XLSX==="undefined") throw new Error("Không tải được thư viện Excel.");
+    const buffer=await file.arrayBuffer();
+    const wb=XLSX.read(new Uint8Array(buffer),{type:"array",cellDates:true});
+    let best=null;
+    wb.SheetNames.forEach(sheetName=>{
+        const matrix=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:"",raw:true});
+        const detected=detectFinanceHeaderV53(matrix);
+        if(!best || detected.score>best.detected.score) best={sheetName,matrix,detected};
+    });
+    if(!best || best.detected.score<4) throw new Error("Không nhận diện được bảng tài chính. Cần ít nhất cột tiền hoặc Mã đơn/Trạng thái rõ ràng.");
+    return best;
+}
+function financeRawObjectV53(headers,row){
+    const obj={}; headers.forEach((h,i)=>{ const key=String(h||`COL_${i+1}`).trim()||`COL_${i+1}`; obj[key]=row[i] instanceof Date?row[i].toISOString():row[i]; }); return obj;
+}
+function normalizeFinanceStatusV53(value){
+    const n=normalizeText(value||"");
+    if(!n) return "unknown";
+    if(["dathanhtoan","hoantat","completed","paid","released","dachuyenkhoan","success","successful"].some(x=>n.includes(x))) return "paid";
+    if(["cho","dangxuly","pending","processing","processingpayout","waiting","chothanhtoan"].some(x=>n.includes(x))) return "pending";
+    return "unknown";
+}
+function parseFinanceWorkbookV53(workbook,file){
+    const {matrix,detected,sheetName}=workbook;
+    const {rowIndex,map,headers}=detected;
+    const rows=[];
+    for(let i=rowIndex+1;i<matrix.length;i++){
+        const row=matrix[i]||[];
+        if(!row.some(v=>String(v??"").trim())) continue;
+        const get=key=>map[key]>=0?row[map[key]]:"";
+        const orderId=String(get("orderId")??"").trim();
+        const gross=parseFinanceNumberV53(get("gross"));
+        const commissionFee=financeCostV53(get("commissionFee"));
+        const serviceFee=financeCostV53(get("serviceFee"));
+        const transactionFee=financeCostV53(get("transactionFee"));
+        const shippingFee=financeCostV53(get("shippingFee"));
+        const voucherCost=financeCostV53(get("voucherCost"));
+        const refundAmount=financeCostV53(get("refundAmount"));
+        const otherFee=financeCostV53(get("otherFee"));
+        const adjustment=parseFinanceNumberV53(get("adjustment"));
+        const netAmount=parseFinanceNumberV53(get("netAmount"));
+        const hasMoney=[gross,commissionFee,serviceFee,transactionFee,shippingFee,voucherCost,refundAmount,otherFee,adjustment,netAmount].some(v=>Math.abs(v)>0);
+        if(!orderId && !hasMoney) continue;
+        const platformFees=commissionFee+serviceFee+transactionFee+shippingFee+otherFee;
+        const formulaComparable=map.gross>=0 && map.netAmount>=0;
+        const expectedNet=formulaComparable?gross-platformFees-voucherCost-refundAmount+adjustment:0;
+        const variance=formulaComparable?netAmount-expectedNet:0;
+        rows.push({
+            rowNo:i+1, orderId,
+            transactionDate:normalizeOrderDate(get("transactionDate"))||"",
+            payoutDate:normalizeOrderDate(get("payoutDate"))||"",
+            payoutId:String(get("payoutId")??"").trim(),
+            paymentStatus:String(get("paymentStatus")??"").trim(),
+            gross, commissionFee, serviceFee, transactionFee, shippingFee, voucherCost, refundAmount, otherFee, adjustment, netAmount,
+            platformFees, expectedNet, variance, formulaComparable,
+            raw:financeRawObjectV53(headers,row)
+        });
+    }
+    if(!rows.length) throw new Error("Không đọc được dòng tài chính nào từ sheet đã nhận diện.");
+    const mapping={sheetName,headerRow:rowIndex+1,score:detected.score};
+    Object.keys(FINANCE_ALIASES_V53).forEach(key=>mapping[key]=map[key]>=0?headers[map[key]]:"");
+    const dates=rows.flatMap(r=>[r.transactionDate,r.payoutDate]).filter(Boolean).sort();
+    const totals=financeTotalsV53(rows);
+    return {rows,mapping,periodFrom:dates[0]||"",periodTo:dates.at(-1)||"",totals};
+}
+function financeTotalsV53(rows=financeStateV53.rows){
+    return rows.reduce((a,r)=>{
+        a.gross+=Number(r.gross||0); a.commission+=Number(r.commissionFee||0); a.service+=Number(r.serviceFee||0); a.transaction+=Number(r.transactionFee||0); a.shipping+=Number(r.shippingFee||0); a.voucher+=Number(r.voucherCost||0); a.refund+=Number(r.refundAmount||0); a.other+=Number(r.otherFee||0); a.adjustment+=Number(r.adjustment||0); a.net+=Number(r.netAmount||0); return a;
+    },{gross:0,commission:0,service:0,transaction:0,shipping:0,voucher:0,refund:0,other:0,adjustment:0,net:0});
+}
+function currentFinanceImportV53(){ return financeStateV53.imports.find(x=>x.id===financeStateV53.currentImportId)||financeStateV53.imports[0]||null; }
+function mapFinanceImportCloudV53(row){ return {id:row.id,fileHash:row.file_hash||"",fileName:row.file_name||"",fileSize:Number(row.file_size||0),importedAt:row.imported_at||"",periodFrom:row.period_from||"",periodTo:row.period_to||"",rowCount:Number(row.row_count||0),grossTotal:Number(row.gross_total||0),feeTotal:Number(row.fee_total||0),discountTotal:Number(row.discount_total||0),refundTotal:Number(row.refund_total||0),netTotal:Number(row.net_total||0),mapping:row.mapping||{},createdEmail:row.created_email||""}; }
+function mapFinanceRowCloudV53(row){ return {id:row.id,rowNo:Number(row.row_no||0),orderId:row.order_id||"",transactionDate:row.transaction_date||"",payoutDate:row.payout_date||"",payoutId:row.payout_id||"",paymentStatus:row.payment_status||"",gross:Number(row.gross||0),commissionFee:Number(row.commission_fee||0),serviceFee:Number(row.service_fee||0),transactionFee:Number(row.transaction_fee||0),shippingFee:Number(row.shipping_fee||0),voucherCost:Number(row.voucher_cost||0),refundAmount:Number(row.refund_amount||0),otherFee:Number(row.other_fee||0),adjustment:Number(row.adjustment||0),netAmount:Number(row.net_amount||0),expectedNet:Number(row.expected_net||0),variance:Number(row.variance||0),formulaComparable:Boolean(row.formula_comparable),raw:row.raw||{},platformFees:Number(row.commission_fee||0)+Number(row.service_fee||0)+Number(row.transaction_fee||0)+Number(row.shipping_fee||0)+Number(row.other_fee||0)}; }
+async function fetchFinanceRowsV53(importId){
+    if(!importId) return [];
+    const client=initSupabaseClient(), result=[]; let from=0; const page=1000;
+    while(true){ const {data,error}=await client.from(DB_FINANCE_ROWS_V53).select("*").eq("import_id",importId).order("row_no",{ascending:true}).range(from,from+page-1); if(error) throw error; result.push(...(data||[])); if((data||[]).length<page) break; from+=page; }
+    return result.map(mapFinanceRowCloudV53);
+}
+async function loadFinanceCloudV53({silent=false}={}){
+    if(!state.user) return;
+    financeStateV53.loading=true;
+    try{
+        const imports=await cloudSelectAll(DB_FINANCE_IMPORTS_V53,"imported_at");
+        financeStateV53.imports=imports.map(mapFinanceImportCloudV53).sort((a,b)=>String(b.importedAt).localeCompare(String(a.importedAt)));
+        if(!financeStateV53.currentImportId || !financeStateV53.imports.some(x=>x.id===financeStateV53.currentImportId)) financeStateV53.currentImportId=financeStateV53.imports[0]?.id||"";
+        financeStateV53.rows=await fetchFinanceRowsV53(financeStateV53.currentImportId);
+        renderFinanceAllV53(); refreshNavCounts();
+    }catch(error){ if(!silent){console.error(error); alert("Không đọc được dữ liệu tài chính Cloud.\n\n"+(error?.message||""));} else console.warn("Finance V53 chưa sẵn sàng:",error?.message||error); }
+    finally{financeStateV53.loading=false;}
+}
+async function selectFinanceImportV53(importId){ financeStateV53.currentImportId=importId||""; financeStateV53.rows=await fetchFinanceRowsV53(financeStateV53.currentImportId); renderFinanceAllV53(); refreshNavCounts(); }
+async function importFinanceFileV53(file){
+    if(!requirePermissionV40("UPLOAD_FINANCE")) return;
+    if(!file) return;
+    const button=$("btnFinanceChooseV53"); if(button){button.disabled=true;button.textContent="Đang đọc...";}
+    try{
+        const wb=await readFinanceWorkbookV53(file); const parsed=parseFinanceWorkbookV53(wb,file); const hash=await createFileFingerprint(file); const t=parsed.totals; const feeTotal=t.commission+t.service+t.transaction+t.shipping+t.other;
+        const client=initSupabaseClient();
+        const {data:begin,error:beginError}=await client.rpc("begin_finance_import_v53",{p_import:{fileHash:hash,fileName:file.name,fileSize:file.size,periodFrom:parsed.periodFrom||null,periodTo:parsed.periodTo||null,rowCount:parsed.rows.length,grossTotal:t.gross,feeTotal,discountTotal:t.voucher,refundTotal:t.refund,netTotal:t.net,mapping:parsed.mapping}}); if(beginError) throw beginError;
+        const importId=begin?.import_id||begin?.importId||begin; if(!importId) throw new Error("RPC không trả về import_id.");
+        for(let i=0;i<parsed.rows.length;i+=400){ const chunk=parsed.rows.slice(i,i+400); const {error}=await client.rpc("append_finance_rows_v53",{p_import_id:importId,p_rows:chunk}); if(error) throw error; if(button) button.textContent=`Đang lưu ${Math.min(i+chunk.length,parsed.rows.length)}/${parsed.rows.length}`; }
+        financeStateV53.currentImportId=String(importId); await loadFinanceCloudV53({silent:false}); showToast(`Đã lưu ${formatNumber(parsed.rows.length)} dòng tài chính lên Cloud.`);
+    }catch(error){ console.error("Import finance V53:",error); alert("Không upload được file tài chính.\n\n"+(error?.message||"")); }
+    finally{ if(button){button.disabled=false;button.textContent="⬆ Upload file tài chính";} if($("financeFileInputV53")) $("financeFileInputV53").value=""; }
+}
+async function deleteFinanceImportV53(){
+    if(!requirePermissionV40("DELETE_FINANCE")) return; const current=currentFinanceImportV53(); if(!current) return;
+    if(!confirm(`Xóa snapshot tài chính:\n${current.fileName}\n\nDữ liệu chi tiết của snapshot này cũng sẽ bị xóa.`)) return;
+    try{ const client=initSupabaseClient(); const {error}=await client.rpc("admin_delete_finance_import_v53",{p_import_id:current.id}); if(error) throw error; financeStateV53.currentImportId=""; await loadFinanceCloudV53(); showToast("Đã xóa snapshot tài chính."); }catch(error){alert("Không xóa được snapshot.\n\n"+(error?.message||""));}
+}
+function buildFinanceOrderGroupsV53(){
+    const map=new Map(); financeStateV53.rows.forEach((r,idx)=>{ const key=r.orderId||`__ROW_${idx+1}`; if(!map.has(key)) map.set(key,{orderId:r.orderId||"",transactionDate:r.transactionDate||"",payoutIds:new Set(),statuses:[],gross:0,fees:0,voucher:0,refund:0,net:0,variance:0,formulaComparable:false,rows:0}); const g=map.get(key); g.rows++; if(r.transactionDate && (!g.transactionDate || r.transactionDate<g.transactionDate)) g.transactionDate=r.transactionDate; if(r.payoutId) g.payoutIds.add(r.payoutId); if(r.paymentStatus) g.statuses.push(r.paymentStatus); g.gross+=r.gross||0; g.fees+=r.platformFees||0; g.voucher+=r.voucherCost||0; g.refund+=r.refundAmount||0; g.net+=r.netAmount||0; g.variance+=r.variance||0; g.formulaComparable=g.formulaComparable||r.formulaComparable; });
+    return [...map.values()].map(g=>{ const cls=g.statuses.map(normalizeFinanceStatusV53); g.statusClass=cls.includes("paid")?"paid":cls.includes("pending")?"pending":"unknown"; g.statusLabel=g.statuses.filter(Boolean)[0]||(g.statusClass==="paid"?"Đã thanh toán":g.statusClass==="pending"?"Chờ thanh toán":"Chưa rõ"); return g; });
+}
+function buildFinancePayoutGroupsV53(){
+    const map=new Map(); financeStateV53.rows.forEach((r,idx)=>{ const status=normalizeFinanceStatusV53(r.paymentStatus); const key=r.payoutId||r.payoutDate||`NO_BATCH_${status}`; if(!map.has(key)) map.set(key,{key,payoutId:r.payoutId||"",payoutDate:r.payoutDate||"",statusClass:status,statusLabel:r.paymentStatus||"",orders:new Set(),gross:0,fees:0,refund:0,net:0,rows:0}); const g=map.get(key); g.rows++; if(r.orderId)g.orders.add(r.orderId); if(r.payoutDate && (!g.payoutDate||r.payoutDate<g.payoutDate))g.payoutDate=r.payoutDate; if(g.statusClass==="unknown" && status!=="unknown")g.statusClass=status; if(!g.statusLabel&&r.paymentStatus)g.statusLabel=r.paymentStatus; g.gross+=r.gross||0;g.fees+=r.platformFees||0;g.refund+=(r.refundAmount||0)+(r.voucherCost||0);g.net+=r.netAmount||0; }); return [...map.values()].sort((a,b)=>String(b.payoutDate).localeCompare(String(a.payoutDate))); }
+function buildFinanceIssuesV53(){
+    const issues=[]; const financeOrders=new Set(financeStateV53.rows.map(r=>String(r.orderId||"").trim()).filter(Boolean)); const shopeeOrders=new Set(state.skuRows.map(r=>String(r.orderId||"").trim()).filter(Boolean));
+    const missingOrderRows=financeStateV53.rows.filter(r=>!String(r.orderId||"").trim()); if(missingOrderRows.length) issues.push({level:"medium",type:"Thiếu Mã đơn",orderId:"—",amount:missingOrderRows.reduce((s,r)=>s+Math.abs(r.netAmount||0),0),detail:`${formatNumber(missingOrderRows.length)} dòng tài chính không có Mã đơn nên không thể ghép chính xác với Shopee.`});
+    const unknown=[...financeOrders].filter(id=>!shopeeOrders.has(id)); unknown.slice(0,300).forEach(id=>{ const rows=financeStateV53.rows.filter(r=>r.orderId===id); issues.push({level:"medium",type:"Mã đơn không thấy trên Shopee Cloud",orderId:id,amount:rows.reduce((s,r)=>s+(r.netAmount||0),0),detail:"Mã đơn có trong file tài chính nhưng không có trong dữ liệu Shopee đang lưu."}); });
+    const deliveredMap=new Map(); state.skuRows.forEach(r=>{ if(classifyInventoryShopeeStatus(r.status)!=="delivered")return; const id=String(r.orderId||"").trim(); if(!id)return; if(!deliveredMap.has(id))deliveredMap.set(id,{orderId:id,orderDate:r.sourceOrderDate||r.orderDate||"",status:r.status||"",qty:0,skus:new Map()}); const g=deliveredMap.get(id); g.qty+=Number(r.quantity||0); g.skus.set(r.sku,Number(g.skus.get(r.sku)||0)+Number(r.quantity||0)); });
+    const deliveredMissing=[...deliveredMap.values()].filter(o=>!financeOrders.has(o.orderId)); deliveredMissing.slice(0,300).forEach(o=>issues.push({level:"info",type:"Đã giao chưa thấy tài chính",orderId:o.orderId,amount:0,detail:`Đơn đã giao ${o.orderDate?formatDateLabel(o.orderDate):""} nhưng chưa xuất hiện trong snapshot tài chính đang chọn.`}));
+    const formula=buildFinanceOrderGroupsV53().filter(g=>g.formulaComparable&&Math.abs(g.variance)>1); formula.slice(0,300).forEach(g=>issues.push({level:"high",type:"Chênh công thức tiền",orderId:g.orderId||"—",amount:g.variance,detail:`Thực nhận lệch ${financeMoneyV53(g.variance)} so với công thức từ các cột đã nhận diện. Cần kiểm tra các cột phí/điều chỉnh còn thiếu.`}));
+    return {issues,missingOrderRows,unknown,deliveredMissing,formula,deliveredMap};
+}
+function renderFinanceMappingV53(current){
+    const box=$("financeMappingV53"); if(!box)return; if(!current){box.innerHTML="";return;} const labels={orderId:"Mã đơn",gross:"Tổng tiền",commissionFee:"Hoa hồng",serviceFee:"Dịch vụ",transactionFee:"Thanh toán",shippingFee:"Vận chuyển",voucherCost:"Voucher Seller",refundAmount:"Hoàn tiền",netAmount:"Thực nhận",payoutId:"Mã settlement",paymentStatus:"Trạng thái"}; box.innerHTML=Object.entries(labels).map(([k,l])=>{const v=current.mapping?.[k]||"";return `<span class="finance-v53-map-chip ${v?"":"missing"}"><b>${escapeHTML(l)}</b>${v?`→ ${escapeHTML(v)}`:"chưa nhận diện"}</span>`}).join("");
+}
+function renderFinanceFeeBreakdownV53(t){
+    const box=$("financeFeeBreakdownV53");if(!box)return; const rows=[['Phí hoa hồng',t.commission],['Phí dịch vụ',t.service],['Phí thanh toán/giao dịch',t.transaction],['Phí vận chuyển',t.shipping],['Phí khác',t.other],['Voucher người bán',t.voucher],['Hoàn tiền',t.refund]]; const max=Math.max(1,...rows.map(x=>x[1])); box.innerHTML=rows.map(([name,val])=>`<div class="finance-v53-fee-row"><strong>${escapeHTML(name)}</strong><div class="finance-v53-fee-track"><div class="finance-v53-fee-bar" style="width:${Math.min(100,val/max*100)}%"></div></div><span class="finance-v53-fee-amount">${financeMoneyV53(val)}</span><span class="finance-v53-fee-rate">${t.gross?((val/t.gross)*100).toFixed(2):'0.00'}%</span></div>`).join("");
+}
+function renderFinanceQualityV53(current,issuesInfo){
+    const box=$("financeQualityV53");if(!box)return; if(!current){box.innerHTML='<div class="empty-table">Chưa có snapshot.</div>';return;} const hasOrder=Boolean(current.mapping?.orderId); const hasNet=Boolean(current.mapping?.netAmount); const formula=issuesInfo.formula.length; box.innerHTML=`<div class="finance-v53-quality-item ${hasOrder?'':'warning'}"><div class="finance-v53-quality-icon">${hasOrder?'✓':'!'}</div><div><strong>${hasOrder?'Có Mã đơn để đối chiếu':'Chưa nhận diện Mã đơn'}</strong><span>${hasOrder?'Có thể so với dữ liệu đơn Shopee Cloud.':'Các bảng đối chiếu đơn sẽ bị hạn chế.'}</span></div></div><div class="finance-v53-quality-item ${hasNet?'':'warning'}"><div class="finance-v53-quality-icon">${hasNet?'✓':'!'}</div><div><strong>${hasNet?'Có cột Thực nhận':'Chưa nhận diện Thực nhận'}</strong><span>${hasNet?'Có thể tổng hợp số tiền settlement.':'Cần kiểm tra tên cột trong file.'}</span></div></div><div class="finance-v53-quality-item ${formula?'warning':''}"><div class="finance-v53-quality-icon">${formula?'!':'✓'}</div><div><strong>${formula?`${formatNumber(formula)} đơn chênh công thức`:'Chưa thấy chênh công thức rõ ràng'}</strong><span>Chỉ tính trên các cột hệ thống đã nhận diện; không thay thế đối soát chính thức.</span></div></div>`;
+}
+function renderFinanceOrdersV53(){
+    const body=$("financeOrderBodyV53"),summary=$("financeOrderSummaryV53");if(!body)return; let rows=buildFinanceOrderGroupsV53(); const search=normalizeText($("financeOrderSearchV53")?.value||""); const status=$("financeOrderStatusV53")?.value||"all"; if(search)rows=rows.filter(g=>normalizeText(`${g.orderId} ${[...g.payoutIds].join(' ')} ${g.statusLabel}`).includes(search)); if(status!=="all")rows=rows.filter(g=>g.statusClass===status); if(summary)summary.textContent=`${formatNumber(rows.length)} nhóm đơn · ${formatNumber(financeStateV53.rows.length)} dòng tài chính`; if(!rows.length){body.innerHTML='<tr><td colspan="10" class="empty-table">Không có dữ liệu phù hợp.</td></tr>';return;} body.innerHTML=rows.map((g,i)=>`<tr><td>${i+1}</td><td><strong>${escapeHTML(g.orderId||'—')}</strong>${g.rows>1?`<div class="muted">${g.rows} dòng</div>`:''}</td><td>${g.transactionDate?formatDateLabel(g.transactionDate):'—'}</td><td class="finance-v53-money">${financeMoneyV53(g.gross)}</td><td class="finance-v53-money negative">${financeMoneyV53(g.fees)}</td><td>${financeMoneyV53(g.voucher)}</td><td>${financeMoneyV53(g.refund)}</td><td class="finance-v53-money">${financeMoneyV53(g.net)}</td><td>${escapeHTML([...g.payoutIds].join(', ')||'—')}</td><td><span class="finance-v53-status ${g.statusClass}">${escapeHTML(g.statusLabel||'Chưa rõ')}</span></td></tr>`).join("");
+}
+function renderFinancePaymentsV53(){
+    const current=currentFinanceImportV53(); if($("financePaymentSnapshotV53"))$("financePaymentSnapshotV53").textContent=current?`${current.fileName} · ${formatNumber(financeStateV53.rows.length)} dòng · ${current.periodFrom?formatDateLabel(current.periodFrom):'—'} → ${current.periodTo?formatDateLabel(current.periodTo):'—'}`:'Chưa có snapshot tài chính.'; const groups=buildFinancePayoutGroupsV53(); const paidRows=financeStateV53.rows.filter(r=>normalizeFinanceStatusV53(r.paymentStatus)==='paid'),pendingRows=financeStateV53.rows.filter(r=>normalizeFinanceStatusV53(r.paymentStatus)==='pending'),unknownRows=financeStateV53.rows.filter(r=>normalizeFinanceStatusV53(r.paymentStatus)==='unknown'); const sum=a=>a.reduce((s,r)=>s+Number(r.netAmount||0),0); if($("financePayoutBatchCountV53"))$("financePayoutBatchCountV53").textContent=formatNumber(groups.length); if($("financePaidAmountV53"))$("financePaidAmountV53").textContent=financeMoneyV53(sum(paidRows)); if($("financePaidRowsV53"))$("financePaidRowsV53").textContent=`${formatNumber(paidRows.length)} dòng`; if($("financePendingAmountV53"))$("financePendingAmountV53").textContent=financeMoneyV53(sum(pendingRows)); if($("financePendingRowsV53"))$("financePendingRowsV53").textContent=`${formatNumber(pendingRows.length)} dòng`; if($("financeUnknownAmountV53"))$("financeUnknownAmountV53").textContent=financeMoneyV53(sum(unknownRows)); if($("financeUnknownRowsV53"))$("financeUnknownRowsV53").textContent=`${formatNumber(unknownRows.length)} dòng`; const body=$("financePayoutBodyV53"); if(body)body.innerHTML=groups.length?groups.map((g,i)=>`<tr><td>${i+1}</td><td><strong>${escapeHTML(g.payoutId||g.key||'—')}</strong></td><td>${g.payoutDate?formatDateLabel(g.payoutDate):'—'}</td><td><span class="finance-v53-status ${g.statusClass}">${escapeHTML(g.statusLabel||'Chưa rõ')}</span></td><td>${formatNumber(g.orders.size)}</td><td>${financeMoneyV53(g.gross)}</td><td>${financeMoneyV53(g.fees)}</td><td>${financeMoneyV53(g.refund)}</td><td class="finance-v53-money">${financeMoneyV53(g.net)}</td></tr>`).join(""):'<tr><td colspan="9" class="empty-table">Chưa có dữ liệu thanh toán.</td></tr>'; const missingBody=$("financeMissingPaymentBodyV53"),info=buildFinanceIssuesV53(); if(missingBody){const rows=[...info.deliveredMap.values()].filter(o=>!new Set(financeStateV53.rows.map(r=>r.orderId).filter(Boolean)).has(o.orderId)); missingBody.innerHTML=rows.length?rows.slice(0,300).map((o,i)=>`<tr><td>${i+1}</td><td><strong>${escapeHTML(o.orderId)}</strong></td><td>${o.orderDate?formatDateLabel(o.orderDate):'—'}</td><td>${escapeHTML(o.status||'Đã giao')}</td><td>${[...o.skus.entries()].map(([s,q])=>`${escapeHTML(s)} × ${formatNumber(q)}`).join('<br>')}</td><td><span class="finance-v53-status pending">Chưa thấy trong snapshot</span></td></tr>`).join(""):'<tr><td colspan="6" class="empty-table">Không có đơn đã giao bị thiếu trong phạm vi dữ liệu hiện có.</td></tr>';}
+}
+function renderFinanceIssuesV53(){
+    const info=buildFinanceIssuesV53(); if($("financeIssueCountV53"))$("financeIssueCountV53").textContent=formatNumber(info.issues.length); if($("financeMissingOrderIdV53"))$("financeMissingOrderIdV53").textContent=formatNumber(info.missingOrderRows.length); if($("financeUnknownOrderV53"))$("financeUnknownOrderV53").textContent=formatNumber(info.unknown.length); if($("financeDeliveredMissingV53"))$("financeDeliveredMissingV53").textContent=formatNumber(info.deliveredMissing.length); if($("financeFormulaMismatchV53"))$("financeFormulaMismatchV53").textContent=formatNumber(info.formula.length); const body=$("financeIssueBodyV53"); if(body)body.innerHTML=info.issues.length?info.issues.slice(0,600).map((x,i)=>`<tr><td>${i+1}</td><td><span class="finance-v53-issue-level ${x.level}">${x.level==='high'?'CAO':x.level==='medium'?'CẦN XEM':'THÔNG TIN'}</span></td><td><strong>${escapeHTML(x.type)}</strong></td><td>${escapeHTML(x.orderId||'—')}</td><td class="finance-v53-money ${Number(x.amount)<0?'negative':''}">${x.amount?financeMoneyV53(x.amount):'—'}</td><td>${escapeHTML(x.detail||'')}</td></tr>`).join(""):'<tr><td colspan="6" class="empty-table">Chưa phát hiện cảnh báo tài chính từ snapshot hiện tại.</td></tr>';
+}
+function renderFinanceAllV53(){
+    const current=currentFinanceImportV53(),t=financeTotalsV53(),feeTotal=t.commission+t.service+t.transaction+t.shipping+t.other,issuesInfo=buildFinanceIssuesV53(); const select=$("financeImportSelectV53"); if(select){select.innerHTML=financeStateV53.imports.length?financeStateV53.imports.map(x=>`<option value="${escapeHTML(x.id)}" ${x.id===financeStateV53.currentImportId?'selected':''}>${escapeHTML(x.fileName)} · ${x.periodFrom?formatDateLabel(x.periodFrom):'—'}${x.periodTo&&x.periodTo!==x.periodFrom?' → '+formatDateLabel(x.periodTo):''}</option>`).join(''):'<option value="">Chưa có snapshot</option>';}
+    const notice=$("financeNoticeV53"); if(notice){notice.className='finance-v53-notice'+(current?' good':''); notice.innerHTML=current?`✓ Đang xem <strong>${escapeHTML(current.fileName)}</strong> · ${formatNumber(financeStateV53.rows.length)} dòng · upload ${current.importedAt?formatDateTimeVi(current.importedAt):'—'}${current.createdEmail?' · '+escapeHTML(current.createdEmail):''}`:'Chưa có dữ liệu tài chính. Hãy upload file thu nhập/đối soát của Shopee.';}
+    if($("financeGrossV53"))$("financeGrossV53").textContent=financeMoneyV53(t.gross); if($("financeFeesV53"))$("financeFeesV53").textContent=financeMoneyV53(feeTotal); if($("financeDiscountV53"))$("financeDiscountV53").textContent=financeMoneyV53(t.voucher); if($("financeRefundV53"))$("financeRefundV53").textContent=financeMoneyV53(t.refund); if($("financeNetV53"))$("financeNetV53").textContent=financeMoneyV53(t.net); if($("financeFeeRateV53"))$("financeFeeRateV53").textContent=`Tỷ lệ phí: ${t.gross?((feeTotal/t.gross)*100).toFixed(2):'—'}%`;
+    renderFinanceMappingV53(current); renderFinanceFeeBreakdownV53(t); renderFinanceQualityV53(current,issuesInfo); renderFinanceOrdersV53(); renderFinancePaymentsV53(); renderFinanceIssuesV53();
+}
+
+$("btnFinanceChooseV53")?.addEventListener("click",()=>$("financeFileInputV53")?.click());
+$("financeFileInputV53")?.addEventListener("change",e=>importFinanceFileV53(e.target.files?.[0]));
+$("btnFinanceRefreshV53")?.addEventListener("click",()=>loadFinanceCloudV53({silent:false}));
+$("btnFinanceDeleteV53")?.addEventListener("click",deleteFinanceImportV53);
+$("financeImportSelectV53")?.addEventListener("change",e=>selectFinanceImportV53(e.target.value));
+$("financeOrderSearchV53")?.addEventListener("input",renderFinanceOrdersV53);
+$("financeOrderStatusV53")?.addEventListener("change",renderFinanceOrdersV53);
+$("btnOpenFinanceFromPaymentsV53")?.addEventListener("click",()=>openView("fees"));
+$("btnOpenFinanceFromIssuesV53")?.addEventListener("click",()=>openView("fees"));
+
 /* =========================================================
    V52 - DỰ BÁO TỒN KHO & ĐỀ XUẤT NHẬP HÀNG
 ========================================================= */
@@ -10092,6 +10372,7 @@ async function loadInvoiceOrderLinksV50({ silent = false } = {}) {
         invoiceOrderLinkStateV50.cloudReady = true;
 
         renderInvoiceOrderLinksV50();
+    renderFinanceAllV53();
         renderInvoiceStats();
 
         if (!silent) {
@@ -12704,6 +12985,7 @@ async function v39ProbeSystemHealthRpc(client) {
         const v50 = data?.v50 || {};
         const v51 = data?.v51 || {};
         const v52 = data?.v52 || {};
+        const v53 = data?.v53 || {};
 
         const requiredRpcs = [
             "app_user_context",
@@ -12756,11 +13038,13 @@ async function v39ProbeSystemHealthRpc(client) {
 
         const requiredV52 = ["inventory_lead_time_days", "inventory_target_cover_days"];
         const missingV52 = requiredV52.filter(name => v52[name] !== true);
+        const requiredV53 = ["finance_imports_ready", "finance_rows_ready", "finance_begin_rpc", "finance_append_rpc", "finance_delete_rpc"];
+        const missingV53 = requiredV53.filter(name => v53[name] !== true);
 
-        if (missingRpcs.length || missingTables.length || missingV41.length || missingV47.length || missingV50.length || missingV51.length || missingV52.length) {
+        if (missingRpcs.length || missingTables.length || missingV41.length || missingV47.length || missingV50.length || missingV51.length || missingV52.length || missingV53.length) {
             return v38HealthCheckItem(
                 "rpc",
-                "RPC & SQL V52",
+                "RPC & SQL V53",
                 "error",
                 [
                     missingRpcs.length ? `Thiếu RPC: ${missingRpcs.join(", ")}` : "",
@@ -12769,23 +13053,24 @@ async function v39ProbeSystemHealthRpc(client) {
                     missingV47.length ? `Thiếu cột kiểm kê V47: ${missingV47.join(", ")}` : "",
                     missingV50.length ? `Thiếu V50: ${missingV50.join(", ")}` : "",
                     missingV51.length ? `Thiếu V51: ${missingV51.join(", ")}` : "",
-                    missingV52.length ? `Thiếu V52: ${missingV52.join(", ")}` : ""
+                    missingV52.length ? `Thiếu V52: ${missingV52.join(", ")}` : "",
+                    missingV53.length ? `Thiếu V53: ${missingV53.join(", ")}` : ""
                 ].filter(Boolean).join(" · ")
             );
         }
 
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V52",
+            "RPC & SQL V53",
             "ok",
-            `Role ${roleLabelV40()} + kiểm kê V47 + cầu nối V50 + hoàn kho V51 + dự báo nhập hàng V52 đã sẵn sàng.`
+            `Role ${roleLabelV40()} + kiểm kê + cầu nối HĐ + hoàn kho + dự báo tồn + đối soát tài chính V53 đã sẵn sàng.`
         );
     } catch (error) {
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V52",
+            "RPC & SQL V53",
             "error",
-            `Chưa chạy SQL V52 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
+            `Chưa chạy SQL V53 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
         );
     }
 }
@@ -12927,6 +13212,13 @@ async function runSystemHealthCheckV38({ silent = false } = {}) {
                 "invoice-links-cloud",
                 "Cầu nối đơn ↔ hóa đơn V50",
                 [DB_INVOICE_ORDER_LINKS]
+            ),
+
+            v38ProbeTableGroup(
+                client,
+                "finance-cloud-v53",
+                "Đối soát tài chính Cloud V53",
+                [DB_FINANCE_IMPORTS_V53, DB_FINANCE_ROWS_V53]
             ),
 
             v39ProbeSystemHealthRpc(client)
