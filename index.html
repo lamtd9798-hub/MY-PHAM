@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- V39: Lịch sử hóa đơn Supabase Cloud + chống trùng + health check RPC an toàn -->
+    <!-- V40: Phân quyền ADMIN / KHO / KẾ TOÁN / NHÂN VIÊN + giữ nguyên V39 -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=39">
+    <link rel="stylesheet" href="style.css?v=40">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -96,7 +96,7 @@
 
             <div class="admin-delete-field">
                 <label>TÀI KHOẢN ADMIN</label>
-                <div class="admin-email-box">lamtd9798@gmail.com</div>
+                <div id="adminDeleteEmailBox" class="admin-email-box">-</div>
             </div>
 
             <div class="admin-delete-field">
@@ -119,6 +119,78 @@
             <button type="button" id="btnConfirmAdminDelete" class="btn-danger-solid">
                 XÁC NHẬN XÓA
             </button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ======================== V40 - QUẢN LÝ PHÂN QUYỀN ======================== -->
+<div id="roleManagerModal" class="v40-role-overlay hidden">
+    <div class="v40-role-modal">
+        <div class="v40-role-header">
+            <div>
+                <h2>👥 Phân quyền người dùng</h2>
+                <p>Vai trò được lưu trên Supabase Cloud và áp dụng trên tất cả máy.</p>
+            </div>
+            <button type="button" id="btnCloseRoleManager" class="v40-role-close">×</button>
+        </div>
+
+        <div class="v40-role-explain">
+            <div class="v40-role-explain-item admin">
+                <strong>ADMIN</strong>
+                <span>Toàn quyền: xóa dữ liệu, sửa quy đổi, kho, MISA và phân quyền.</span>
+            </div>
+            <div class="v40-role-explain-item warehouse">
+                <strong>KHO</strong>
+                <span>Cập nhật tồn, nhập/xuất kho, kiểm kê và snapshot luân chuyển.</span>
+            </div>
+            <div class="v40-role-explain-item accountant">
+                <strong>KẾ TOÁN</strong>
+                <span>Upload MISA/hóa đơn và xem dữ liệu đối chiếu.</span>
+            </div>
+            <div class="v40-role-explain-item staff">
+                <strong>NHÂN VIÊN</strong>
+                <span>Xem dữ liệu và upload file Shopee Sáng/Chiều.</span>
+            </div>
+        </div>
+
+        <div class="v40-role-toolbar">
+            <div>
+                <strong>Danh sách tài khoản Authentication</strong>
+                <span id="v40RoleManagerInfo">Đang tải...</span>
+            </div>
+            <button type="button" id="btnRefreshRoleManager" class="btn btn-light">Làm mới</button>
+        </div>
+
+        <div class="v40-role-table-wrap">
+            <table class="v40-role-table">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Email</th>
+                        <th>Vai trò hiện tại</th>
+                        <th>Đổi vai trò</th>
+                        <th>Cập nhật</th>
+                    </tr>
+                </thead>
+                <tbody id="v40RoleTableBody">
+                    <tr>
+                        <td colspan="5" class="empty-table">Đang tải danh sách tài khoản...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="v40-role-note">
+            <strong>Lưu ý:</strong>
+            tài khoản <b>lamtd9798@gmail.com</b> được giữ ADMIN gốc và không thể hạ quyền bằng giao diện.
+            Tạo tài khoản mới vẫn thực hiện tại Supabase → Authentication → Users; V40 chỉ phân quyền tài khoản đã tồn tại.
+        </div>
+
+        <div id="v40RoleManagerError" class="v40-role-error"></div>
+
+        <div class="v40-role-footer">
+            <button type="button" id="btnCloseRoleManagerFooter" class="btn btn-light">Đóng</button>
         </div>
     </div>
 </div>
@@ -192,7 +264,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V39.0</span>
+                <span class="v38-sidebar-version">V40.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -212,10 +284,12 @@
                     <span class="file-dot"></span>
                     <span id="topFileText">Chưa có dữ liệu Shopee</span>
                 </div>
-                <div class="cloud-user" title="Tài khoản đang đăng nhập">
+                <div class="cloud-user v40-cloud-user" title="Tài khoản đang đăng nhập">
                     <span class="cloud-user-dot"></span>
                     <span class="cloud-user-email" id="cloudUserEmail">-</span>
+                    <span id="cloudUserRole" class="v40-role-badge role-loading">ĐANG TẢI QUYỀN</span>
                 </div>
+                <button class="btn btn-light v40-admin-only hidden" id="btnManageRoles">👥 Phân quyền</button>
                 <button class="btn btn-light" id="btnGoImport">Nhập file</button>
                 <button class="btn btn-danger-outline" id="btnReset">Xóa dữ liệu cloud</button>
                 <button class="btn-logout" id="btnLogout">Đăng xuất</button>
@@ -287,7 +361,7 @@
                         <div>
                             <h2>🩺 Kiểm tra hệ thống</h2>
                             <p>
-                                <strong id="v38VersionText">V39.0</strong>
+                                <strong id="v38VersionText">V40.0</strong>
                                 · <span id="v38HealthCheckedAt">Chưa kiểm tra</span>
                             </p>
                         </div>
@@ -1833,6 +1907,6 @@
 </div>
 
 <div id="toast" class="toast"></div>
-    <script src="script.js?v=39"></script>
+    <script src="script.js?v=40"></script>
 </body>
 </html>

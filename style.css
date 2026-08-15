@@ -4365,3 +4365,274 @@ button{cursor:pointer}
     background:#f7fbfc!important;
     color:#71858d
 }
+
+
+/* =========================================================
+   V40 - PHÂN QUYỀN NGƯỜI DÙNG
+========================================================= */
+.v40-cloud-user{
+    gap:6px;
+}
+.v40-role-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:20px;
+    padding:0 7px;
+    border-radius:999px;
+    font-size:6.3px;
+    font-weight:900;
+    white-space:nowrap;
+    letter-spacing:.02em;
+    border:1px solid #dce5e8;
+    background:#f2f5f6;
+    color:#647880;
+}
+.v40-role-badge.role-admin{
+    background:#fff0f0;
+    color:#bc3e43;
+    border-color:#f1c6c8;
+}
+.v40-role-badge.role-kho{
+    background:#edf8f5;
+    color:#087863;
+    border-color:#bfe0d7;
+}
+.v40-role-badge.role-ketoan{
+    background:#eef5ff;
+    color:#2f70a8;
+    border-color:#c7dbec;
+}
+.v40-role-badge.role-nhan-vien{
+    background:#fff8e9;
+    color:#966315;
+    border-color:#efd9a8;
+}
+.v40-role-badge.role-loading{
+    background:#f1f3f4;
+    color:#839399;
+}
+
+.v40-permission-locked{
+    opacity:.48!important;
+    cursor:not-allowed!important;
+    filter:grayscale(.15);
+}
+.v40-permission-hidden{
+    display:none!important;
+}
+.v40-readonly-note{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    min-height:22px;
+    padding:0 7px;
+    border-radius:6px;
+    background:#fff8e9;
+    border:1px solid #efd9a8;
+    color:#936313;
+    font-size:6.6px;
+    font-weight:800;
+}
+
+/* Role manager */
+.v40-role-overlay{
+    position:fixed;
+    inset:0;
+    z-index:12000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(11,28,35,.62);
+    backdrop-filter:blur(2px);
+}
+.v40-role-overlay.hidden{
+    display:none!important;
+}
+.v40-role-modal{
+    width:min(980px,96vw);
+    max-height:90vh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    border-radius:13px;
+    background:#fff;
+    box-shadow:0 24px 70px rgba(0,0,0,.28);
+}
+.v40-role-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    padding:15px 16px 12px;
+    border-bottom:1px solid #e4eaed;
+}
+.v40-role-header h2{
+    margin:0;
+    color:#203943;
+    font-size:14px;
+}
+.v40-role-header p{
+    margin:4px 0 0;
+    color:#768a92;
+    font-size:7.5px;
+}
+.v40-role-close{
+    width:30px;
+    height:30px;
+    border:1px solid #dce5e8;
+    border-radius:8px;
+    background:#fff;
+    color:#61747c;
+    font-size:17px;
+    cursor:pointer;
+}
+.v40-role-explain{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:7px;
+    padding:12px 16px 0;
+}
+.v40-role-explain-item{
+    padding:9px 10px;
+    border:1px solid #e0e7e9;
+    border-radius:8px;
+    background:#fafcfc;
+}
+.v40-role-explain-item strong{
+    display:block;
+    font-size:8px;
+    color:#29434e;
+}
+.v40-role-explain-item span{
+    display:block;
+    margin-top:3px;
+    color:#7a8b92;
+    font-size:6.8px;
+    line-height:1.45;
+}
+.v40-role-explain-item.admin{background:#fff7f7;border-color:#f0cecf}
+.v40-role-explain-item.warehouse{background:#f3faf8;border-color:#cce5de}
+.v40-role-explain-item.accountant{background:#f4f8fc;border-color:#d3e2ed}
+.v40-role-explain-item.staff{background:#fffaf0;border-color:#eddfbd}
+.v40-role-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 16px 8px;
+}
+.v40-role-toolbar strong{
+    display:block;
+    color:#2a434d;
+    font-size:8.5px;
+}
+.v40-role-toolbar span{
+    display:block;
+    margin-top:2px;
+    color:#7f9097;
+    font-size:6.8px;
+}
+.v40-role-table-wrap{
+    margin:0 16px;
+    overflow:auto;
+    border:1px solid #dfe7e9;
+    border-radius:9px;
+}
+.v40-role-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:720px;
+}
+.v40-role-table th{
+    padding:8px 9px;
+    background:#f6f8f9;
+    color:#5f747d;
+    font-size:7px;
+    text-align:left;
+    border-bottom:1px solid #dfe7e9;
+}
+.v40-role-table td{
+    padding:9px;
+    color:#324a54;
+    font-size:7.7px;
+    border-bottom:1px solid #edf1f2;
+}
+.v40-role-table tr:last-child td{
+    border-bottom:none;
+}
+.v40-role-table select{
+    min-width:150px;
+    height:30px;
+    padding:0 8px;
+    border:1px solid #cfdce0;
+    border-radius:7px;
+    background:#fff;
+    color:#2f4650;
+    font:inherit;
+}
+.v40-role-current{
+    display:inline-flex;
+    align-items:center;
+    min-height:23px;
+    padding:0 7px;
+    border-radius:999px;
+    font-size:6.8px;
+    font-weight:900;
+}
+.v40-role-current.ADMIN{background:#fff0f0;color:#bc3e43}
+.v40-role-current.KHO{background:#edf8f5;color:#087863}
+.v40-role-current.KETOAN{background:#eef5ff;color:#2f70a8}
+.v40-role-current.NHAN_VIEN{background:#fff8e9;color:#966315}
+.v40-role-save{
+    height:29px;
+    padding:0 9px;
+    border:0;
+    border-radius:7px;
+    background:#0e9a82;
+    color:#fff;
+    font-size:7px;
+    font-weight:850;
+    cursor:pointer;
+}
+.v40-role-save:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+}
+.v40-role-note{
+    margin:10px 16px 0;
+    padding:8px 10px;
+    border-radius:8px;
+    background:#fff9eb;
+    border:1px solid #ecd9ac;
+    color:#84601e;
+    font-size:7px;
+    line-height:1.5;
+}
+.v40-role-error{
+    display:none;
+    margin:8px 16px 0;
+    padding:8px 10px;
+    border-radius:7px;
+    background:#ffeded;
+    color:#b93d42;
+    font-size:7px;
+}
+.v40-role-error.show{
+    display:block;
+}
+.v40-role-footer{
+    display:flex;
+    justify-content:flex-end;
+    padding:11px 16px 14px;
+}
+
+@media(max-width:900px){
+    .v40-role-explain{
+        grid-template-columns:1fr 1fr;
+    }
+    .v40-role-badge{
+        display:none;
+    }
+}

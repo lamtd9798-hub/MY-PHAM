@@ -51,7 +51,12 @@ const state = {
 
     // Supabase Cloud
     user: null,
-    cloudReady: false
+    cloudReady: false,
+
+    // V40 - phân quyền
+    userRole: "NHAN_VIEN",
+    roleSource: "default",
+    roleLoaded: false
 };
 
 const INVENTORY_LOCAL_KEY = "rucos_inventory_v28";
@@ -210,9 +215,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V39.0";
+const APP_VERSION = "V40.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "39";
+const APP_CACHE_VERSION = "40";
 
 const systemHealthStateV38 = {
     running: false,
@@ -227,7 +232,7 @@ const DB_ROWS = "shopee_rows";
 const DB_IMPORTS = "imports";
 const DB_TARGETS = "conversion_targets";
 const DB_RULES = "conversion_rules";
-const ADMIN_EMAIL = "lamtd9798@gmail.com";
+const BOOTSTRAP_ADMIN_EMAIL = "lamtd9798@gmail.com";
 
 let supabaseClient = null;
 
@@ -533,6 +538,7 @@ async function loadInventoryData() {
 }
 
 async function saveInventoryItems({ createStocktake = true } = {}) {
+    assertPermissionV40("INVENTORY_WRITE");
     inventoryState.items = inventoryState.items
         .filter(item => item.name && item.itemCode)
         .map((item, index) => ({ ...item, sortOrder: index + 1 }));
@@ -890,6 +896,483 @@ async function loadSavedDataFromDb({ resetFilters = false } = {}) {
     }
 }
 
+
+/* =========================================================
+   V40 - PHÂN QUYỀN NGƯỜI DÙNG
+========================================================= */
+
+const ROLE_LABELS_V40 = {
+    ADMIN: "ADMIN",
+    KHO: "KHO",
+    KETOAN: "KẾ TOÁN",
+    NHAN_VIEN: "NHÂN VIÊN"
+};
+
+const ROLE_PERMISSIONS_V40 = {
+    ADMIN: new Set([
+        "VIEW",
+        "UPLOAD_SHOPEE",
+        "EDIT_CONVERSION",
+        "DELETE_SHOPEE",
+        "UPLOAD_INVOICE",
+        "DELETE_INVOICE",
+        "INVENTORY_WRITE",
+        "TRANSIT_UPLOAD",
+        "MANAGE_USERS"
+    ]),
+
+    KHO: new Set([
+        "VIEW",
+        "INVENTORY_WRITE",
+        "TRANSIT_UPLOAD"
+    ]),
+
+    KETOAN: new Set([
+        "VIEW",
+        "UPLOAD_INVOICE"
+    ]),
+
+    NHAN_VIEN: new Set([
+        "VIEW",
+        "UPLOAD_SHOPEE"
+    ])
+};
+
+function normalizeRoleV40(role) {
+    const value = String(role || "").trim().toUpperCase();
+    return Object.prototype.hasOwnProperty.call(ROLE_LABELS_V40, value)
+        ? value
+        : "NHAN_VIEN";
+}
+
+function roleLabelV40(role = state.userRole) {
+    return ROLE_LABELS_V40[normalizeRoleV40(role)] || "NHÂN VIÊN";
+}
+
+function hasPermissionV40(permission) {
+    const role = normalizeRoleV40(state.userRole);
+    return ROLE_PERMISSIONS_V40[role]?.has(permission) || false;
+}
+
+function permissionMessageV40(permission) {
+    const map = {
+        UPLOAD_SHOPEE: "Chỉ ADMIN hoặc NHÂN VIÊN được upload file Shopee Sáng/Chiều.",
+        EDIT_CONVERSION: "Chỉ ADMIN được sửa hệ số/quy đổi SKU.",
+        DELETE_SHOPEE: "Chỉ ADMIN được xóa dữ liệu Shopee Cloud.",
+        UPLOAD_INVOICE: "Chỉ ADMIN hoặc KẾ TOÁN được upload file MISA/hóa đơn.",
+        DELETE_INVOICE: "Chỉ ADMIN được xóa lịch sử hóa đơn Cloud.",
+        INVENTORY_WRITE: "Chỉ ADMIN hoặc KHO được cập nhật tồn kho, nhập/xuất và kiểm kê.",
+        TRANSIT_UPLOAD: "Chỉ ADMIN hoặc KHO được upload snapshot luân chuyển.",
+        MANAGE_USERS: "Chỉ ADMIN được phân quyền người dùng."
+    };
+
+    return map[permission] || "Tài khoản hiện tại không có quyền thực hiện thao tác này.";
+}
+
+function requirePermissionV40(permission, { alertUser = true } = {}) {
+    if (hasPermissionV40(permission)) return true;
+
+    if (alertUser) {
+        alert(
+            `${permissionMessageV40(permission)}\n\n` +
+            `Vai trò hiện tại: ${roleLabelV40()}.`
+        );
+    }
+
+    return false;
+}
+
+function assertPermissionV40(permission) {
+    if (!hasPermissionV40(permission)) {
+        throw new Error(
+            `ROLE_FORBIDDEN: ${permissionMessageV40(permission)} ` +
+            `(Vai trò: ${roleLabelV40()})`
+        );
+    }
+}
+
+async function loadUserAccessV40() {
+    if (!state.user) {
+        state.userRole = "NHAN_VIEN";
+        state.roleSource = "none";
+        state.roleLoaded = false;
+        return;
+    }
+
+    const email = String(state.user.email || "").trim().toLowerCase();
+
+    try {
+        const client = initSupabaseClient();
+        const { data, error } = await client.rpc("app_user_context");
+
+        if (error) throw error;
+
+        const payload = Array.isArray(data) ? data[0] : data;
+        state.userRole = normalizeRoleV40(payload?.role);
+        state.roleSource = "cloud";
+        state.roleLoaded = true;
+    } catch (error) {
+        console.warn("V40 chưa đọc được role Cloud, dùng fallback:", error);
+
+        // Fallback chỉ để tránh khóa chính chủ nếu SQL V40 chưa chạy.
+        // Bảo mật thật nằm ở SQL/RLS V40.
+        state.userRole =
+            email === BOOTSTRAP_ADMIN_EMAIL.toLowerCase()
+                ? "ADMIN"
+                : "NHAN_VIEN";
+
+        state.roleSource = "fallback";
+        state.roleLoaded = false;
+    }
+}
+
+function applyPermissionElementV40(id, permission, { hide = false } = {}) {
+    const element = $(id);
+    if (!element) return;
+
+    const allowed = hasPermissionV40(permission);
+
+    if (hide) {
+        element.classList.toggle("v40-permission-hidden", !allowed);
+        element.classList.toggle("hidden", !allowed && id === "btnManageRoles");
+    } else {
+        element.classList.toggle("v40-permission-locked", !allowed);
+
+        if ("disabled" in element) {
+            element.disabled = !allowed;
+        }
+
+        const parentLabel =
+            element.tagName === "INPUT" && element.type === "file"
+                ? element.closest("label")
+                : null;
+
+        if (parentLabel) {
+            parentLabel.classList.toggle("v40-permission-locked", !allowed);
+            parentLabel.title = allowed
+                ? ""
+                : permissionMessageV40(permission);
+        }
+
+        if (!allowed) {
+            element.title = permissionMessageV40(permission);
+        } else if (
+            element.title === permissionMessageV40(permission)
+        ) {
+            element.removeAttribute("title");
+        }
+    }
+}
+
+function applyRoleUiV40() {
+    const role = normalizeRoleV40(state.userRole);
+    const badge = $("cloudUserRole");
+
+    if (badge) {
+        badge.className =
+            "v40-role-badge " +
+            (
+                role === "ADMIN"
+                    ? "role-admin"
+                    : role === "KHO"
+                        ? "role-kho"
+                        : role === "KETOAN"
+                            ? "role-ketoan"
+                            : "role-nhan-vien"
+            );
+
+        badge.textContent = roleLabelV40(role);
+        badge.title =
+            `Vai trò Cloud: ${roleLabelV40(role)}` +
+            (state.roleSource === "fallback"
+                ? " · đang dùng fallback vì chưa đọc được SQL V40"
+                : "");
+    }
+
+    if ($("adminDeleteEmailBox")) {
+        $("adminDeleteEmailBox").textContent = state.user?.email || "-";
+    }
+
+    // Admin-only
+    applyPermissionElementV40("btnReset", "DELETE_SHOPEE", { hide: true });
+    applyPermissionElementV40("btnManageRoles", "MANAGE_USERS", { hide: true });
+    applyPermissionElementV40("btnAddBaseSku", "EDIT_CONVERSION", { hide: true });
+    applyPermissionElementV40("btnResetConversions", "EDIT_CONVERSION", { hide: true });
+
+    // Shopee upload
+    applyPermissionElementV40("morningFile", "UPLOAD_SHOPEE");
+    applyPermissionElementV40("afternoonFile", "UPLOAD_SHOPEE");
+
+    // Invoice / MISA
+    applyPermissionElementV40("invoiceFileInput", "UPLOAD_INVOICE");
+    applyPermissionElementV40("inventoryMisaFileInput", "UPLOAD_INVOICE");
+    applyPermissionElementV40("btnInventoryMisaChooseFile", "UPLOAD_INVOICE");
+
+    // Inventory
+    applyPermissionElementV40("inventoryStockFileInput", "INVENTORY_WRITE");
+    applyPermissionElementV40("btnInventoryEdit", "INVENTORY_WRITE");
+    applyPermissionElementV40("btnInventoryAddTransaction", "INVENTORY_WRITE");
+    applyPermissionElementV40("btnInventoryCommitReconcile", "INVENTORY_WRITE");
+    applyPermissionElementV40("btnInventoryAddItem", "INVENTORY_WRITE");
+    applyPermissionElementV40("btnInventoryEditorSave", "INVENTORY_WRITE");
+
+    // Transit snapshot
+    applyPermissionElementV40("inventoryTransitFileInput", "TRANSIT_UPLOAD");
+    applyPermissionElementV40("btnInventoryTransitChooseFile", "TRANSIT_UPLOAD");
+
+    // Dynamic conversion cells
+    document.querySelectorAll(".conversion-input").forEach(input => {
+        const allowed = hasPermissionV40("EDIT_CONVERSION");
+        input.disabled = !allowed;
+        input.classList.toggle("v40-permission-locked", !allowed);
+        if (!allowed) input.title = permissionMessageV40("EDIT_CONVERSION");
+    });
+
+    document.querySelectorAll(".remove-base-sku").forEach(button => {
+        button.classList.toggle(
+            "v40-permission-hidden",
+            !hasPermissionV40("EDIT_CONVERSION")
+        );
+    });
+
+    // Dynamic delete transaction
+    document.querySelectorAll("[data-inventory-tx-delete]").forEach(button => {
+        button.classList.toggle(
+            "v40-permission-hidden",
+            !hasPermissionV40("INVENTORY_WRITE")
+        );
+    });
+
+    // Dynamic invoice-history delete
+    document.querySelectorAll("[data-invoice-history-delete]").forEach(button => {
+        button.classList.toggle(
+            "v40-permission-hidden",
+            !hasPermissionV40("DELETE_INVOICE")
+        );
+    });
+}
+
+/* ======================== ROLE MANAGER ======================== */
+
+const roleManagerStateV40 = {
+    users: [],
+    loading: false
+};
+
+function showRoleManagerErrorV40(message = "") {
+    const box = $("v40RoleManagerError");
+    if (!box) return;
+    box.textContent = message;
+    box.classList.toggle("show", Boolean(message));
+}
+
+function roleOptionsV40(selectedRole, locked = false) {
+    return Object.keys(ROLE_LABELS_V40).map(role => `
+        <option value="${role}" ${role === selectedRole ? "selected" : ""}>
+            ${escapeHTML(ROLE_LABELS_V40[role])}
+        </option>
+    `).join("");
+}
+
+function renderRoleManagerV40() {
+    const body = $("v40RoleTableBody");
+    const info = $("v40RoleManagerInfo");
+
+    if (!body) return;
+
+    if (roleManagerStateV40.loading) {
+        body.innerHTML =
+            '<tr><td colspan="5" class="empty-table">Đang tải danh sách tài khoản...</td></tr>';
+        if (info) info.textContent = "Đang tải...";
+        return;
+    }
+
+    const users = roleManagerStateV40.users || [];
+
+    if (info) {
+        info.textContent = `${users.length} tài khoản`;
+    }
+
+    if (!users.length) {
+        body.innerHTML =
+            '<tr><td colspan="5" class="empty-table">Chưa có tài khoản để phân quyền.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = users.map((user, index) => {
+        const role = normalizeRoleV40(user.role);
+        const email = String(user.email || "");
+        const bootstrap =
+            email.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL.toLowerCase();
+
+        return `
+            <tr>
+                <td>${index + 1}</td>
+
+                <td>
+                    <strong>${escapeHTML(email || "-")}</strong>
+                    ${bootstrap
+                        ? '<div class="v40-bootstrap-admin">ADMIN GỐC</div>'
+                        : ""}
+                </td>
+
+                <td>
+                    <span class="v40-role-current ${role}">
+                        ${escapeHTML(roleLabelV40(role))}
+                    </span>
+                </td>
+
+                <td>
+                    <select
+                        data-v40-role-select="${escapeHTML(user.user_id || "")}"
+                        ${bootstrap ? "disabled" : ""}
+                    >
+                        ${roleOptionsV40(role, bootstrap)}
+                    </select>
+                </td>
+
+                <td>
+                    <button
+                        type="button"
+                        class="v40-role-save"
+                        data-v40-role-save="${escapeHTML(user.user_id || "")}"
+                        ${bootstrap ? "disabled" : ""}
+                    >
+                        ${bootstrap ? "Đã khóa" : "Lưu quyền"}
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+async function loadRoleManagerV40() {
+    if (!requirePermissionV40("MANAGE_USERS")) return;
+
+    roleManagerStateV40.loading = true;
+    showRoleManagerErrorV40("");
+    renderRoleManagerV40();
+
+    try {
+        const client = initSupabaseClient();
+        const { data, error } = await client.rpc("admin_list_user_roles");
+
+        if (error) throw error;
+
+        roleManagerStateV40.users = Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error("Load role manager V40:", error);
+        roleManagerStateV40.users = [];
+        showRoleManagerErrorV40(
+            error?.message || "Không tải được danh sách phân quyền."
+        );
+    } finally {
+        roleManagerStateV40.loading = false;
+        renderRoleManagerV40();
+    }
+}
+
+async function saveUserRoleV40(userId) {
+    if (!requirePermissionV40("MANAGE_USERS")) return;
+
+    const select = document.querySelector(
+        `[data-v40-role-select="${CSS.escape(userId)}"]`
+    );
+
+    const button = document.querySelector(
+        `[data-v40-role-save="${CSS.escape(userId)}"]`
+    );
+
+    if (!select) return;
+
+    const role = normalizeRoleV40(select.value);
+
+    if (!confirm(
+        `Đổi quyền tài khoản này thành ${roleLabelV40(role)}?`
+    )) return;
+
+    if (button) {
+        button.disabled = true;
+        button.textContent = "Đang lưu...";
+    }
+
+    showRoleManagerErrorV40("");
+
+    try {
+        const client = initSupabaseClient();
+        const { error } = await client.rpc(
+            "admin_set_user_role",
+            {
+                p_user_id: userId,
+                p_role: role
+            }
+        );
+
+        if (error) throw error;
+
+        await loadRoleManagerV40();
+
+        // Nếu admin vừa đổi chính tài khoản đang đăng nhập (trừ admin gốc),
+        // nạp lại context ngay.
+        if (userId === state.user?.id) {
+            await loadUserAccessV40();
+            updateUserUi();
+            applyRoleUiV40();
+        }
+
+        showToast("Đã cập nhật quyền người dùng.");
+    } catch (error) {
+        console.error("Save role V40:", error);
+        showRoleManagerErrorV40(
+            error?.message || "Không lưu được quyền người dùng."
+        );
+    } finally {
+        if (button && document.body.contains(button)) {
+            button.disabled = false;
+            button.textContent = "Lưu quyền";
+        }
+    }
+}
+
+async function openRoleManagerV40() {
+    if (!requirePermissionV40("MANAGE_USERS")) return;
+
+    $("roleManagerModal")?.classList.remove("hidden");
+    await loadRoleManagerV40();
+}
+
+function closeRoleManagerV40() {
+    $("roleManagerModal")?.classList.add("hidden");
+    showRoleManagerErrorV40("");
+}
+
+$("btnManageRoles")?.addEventListener("click", openRoleManagerV40);
+$("btnCloseRoleManager")?.addEventListener("click", closeRoleManagerV40);
+$("btnCloseRoleManagerFooter")?.addEventListener("click", closeRoleManagerV40);
+$("btnRefreshRoleManager")?.addEventListener("click", loadRoleManagerV40);
+
+$("roleManagerModal")?.addEventListener("click", event => {
+    if (event.target === $("roleManagerModal")) {
+        closeRoleManagerV40();
+    }
+});
+
+$("v40RoleTableBody")?.addEventListener("click", event => {
+    const button = event.target.closest("[data-v40-role-save]");
+    if (!button) return;
+    saveUserRoleV40(button.dataset.v40RoleSave);
+});
+
+document.addEventListener("keydown", event => {
+    if (
+        event.key === "Escape" &&
+        !$("roleManagerModal")?.classList.contains("hidden")
+    ) {
+        closeRoleManagerV40();
+    }
+});
+
+
 /* ======================== AUTHENTICATION ======================== */
 function showAuthError(message = "") {
     const box = $("authError");
@@ -906,6 +1389,7 @@ function setAuthGateVisible(visible) {
 function updateUserUi() {
     const email = state.user?.email || "-";
     if ($("cloudUserEmail")) $("cloudUserEmail").textContent = email;
+    applyRoleUiV40();
 }
 
 async function signInUser(email, password) {
@@ -934,6 +1418,7 @@ async function enterAuthenticatedApp(session) {
         return;
     }
 
+    await loadUserAccessV40();
     updateUserUi();
     setAuthGateVisible(false);
 
@@ -1027,7 +1512,7 @@ async function enterAuthenticatedApp(session) {
     // V38: kiểm tra hệ thống nền sau khi toàn bộ dữ liệu Cloud đã tải.
     setTimeout(() => {
         runSystemHealthCheckV38({ silent: true }).catch(error => {
-            console.warn("V39 health check:", error);
+            console.warn("V40 health check:", error);
         });
     }, 150);
 
@@ -1073,6 +1558,9 @@ $("btnLogout")?.addEventListener("click", async () => {
         await signOutUser();
 
         state.user = null;
+        state.userRole = "NHAN_VIEN";
+        state.roleSource = "none";
+        state.roleLoaded = false;
         state.skuRows = [];
         state.imports = [];
         state.skuStats = [];
@@ -1299,7 +1787,10 @@ function openView(viewName) {
     if (viewName === "returns") renderReturnsTab();
     if (viewName === "history") renderHistory();
     if (viewName === "invoice-stats") renderInvoiceStats();
-    if (viewName === "inventory-flow") renderInventoryModule();
+    if (viewName === "inventory-flow") {
+        renderInventoryModule();
+        applyRoleUiV40();
+    }
 
     if (viewName === "overview") {
         renderOperationalAlertsV38();
@@ -1714,6 +2205,11 @@ function renderUploadSlotStatuses() {
 }
 
 async function processShopeeUpload(file, slot, inputElement) {
+    if (!requirePermissionV40("UPLOAD_SHOPEE")) {
+        if (inputElement) inputElement.value = "";
+        return;
+    }
+
     if (!file) return;
 
     const reportDate = getSelectedReportDate();
@@ -2809,6 +3305,8 @@ function getConversionFactor(sourceSku, baseSku) {
 }
 
 async function setConversionFactor(sourceSku, baseSku, value) {
+    assertPermissionV40("EDIT_CONVERSION");
+
     const client = initSupabaseClient();
     const number = Math.max(0, Number(value) || 0);
 
@@ -2844,6 +3342,8 @@ async function setConversionFactor(sourceSku, baseSku, value) {
 }
 
 async function addConversionTargetCloud(sku) {
+    assertPermissionV40("EDIT_CONVERSION");
+
     const client = initSupabaseClient();
 
     const { error } = await client
@@ -2862,6 +3362,8 @@ async function addConversionTargetCloud(sku) {
 }
 
 async function removeConversionTargetCloud(sku) {
+    assertPermissionV40("EDIT_CONVERSION");
+
     const client = initSupabaseClient();
 
     const { error: ruleError } = await client
@@ -2888,6 +3390,8 @@ async function removeConversionTargetCloud(sku) {
 }
 
 async function resetConversionCloud() {
+    assertPermissionV40("EDIT_CONVERSION");
+
     const client = initSupabaseClient();
 
     const { error: ruleError } = await client
@@ -3085,9 +3589,23 @@ function renderConversionTable() {
     }
 
     document.querySelectorAll(".conversion-input").forEach(input => {
-        input.addEventListener("focus", () => input.select());
+        const canEditConversion = hasPermissionV40("EDIT_CONVERSION");
+        input.disabled = !canEditConversion;
+        input.classList.toggle("v40-permission-locked", !canEditConversion);
+        if (!canEditConversion) {
+            input.title = permissionMessageV40("EDIT_CONVERSION");
+        }
+
+        input.addEventListener("focus", () => {
+            if (hasPermissionV40("EDIT_CONVERSION")) input.select();
+        });
 
         input.addEventListener("change", async () => {
+            if (!requirePermissionV40("EDIT_CONVERSION")) {
+                await loadConversionConfigFromCloud();
+                rebuildSkuStatistics();
+                return;
+            }
             const raw = String(input.value || "").trim();
             const finalValue = raw === ""
                 ? 0
@@ -3120,7 +3638,13 @@ function renderConversionTable() {
 
 function bindRemoveBaseSkuButtons() {
     document.querySelectorAll(".remove-base-sku").forEach(button => {
+        button.classList.toggle(
+            "v40-permission-hidden",
+            !hasPermissionV40("EDIT_CONVERSION")
+        );
+
         button.addEventListener("click", async () => {
+            if (!requirePermissionV40("EDIT_CONVERSION")) return;
             const sku = button.dataset.baseSku;
             if (!confirm(`Xóa cột quy đổi ${sku} khỏi dữ liệu cloud?`)) return;
 
@@ -3139,6 +3663,7 @@ function bindRemoveBaseSkuButtons() {
 }
 
 $("btnAddBaseSku").addEventListener("click", async () => {
+    if (!requirePermissionV40("EDIT_CONVERSION")) return;
     const value = prompt("Nhập SKU kho / SKU quy đổi muốn thêm:");
     if (!value) return;
 
@@ -3163,6 +3688,7 @@ $("btnAddBaseSku").addEventListener("click", async () => {
 });
 
 $("btnResetConversions").addEventListener("click", async () => {
+    if (!requirePermissionV40("EDIT_CONVERSION")) return;
     if (!confirm("Khôi phục bảng quy đổi mẫu trên CLOUD? Thay đổi quy đổi hiện tại sẽ bị ghi lại.")) return;
 
     try {
@@ -3661,6 +4187,7 @@ function renderAdminDeleteTargets() {
 }
 
 function openAdminDeleteModal() {
+    if (!requirePermissionV40("DELETE_SHOPEE")) return;
     showAdminDeleteError("");
     if ($("adminDeletePassword")) $("adminDeletePassword").value = "";
 
@@ -3677,36 +4204,51 @@ function closeAdminDeleteModal() {
 }
 
 async function verifyAdminAndDelete(scope, target, password) {
+    assertPermissionV40("DELETE_SHOPEE");
+
     if (!password) throw new Error("Hãy nhập mật khẩu admin.");
+
+    const adminEmail = String(state.user?.email || "").trim();
+    if (!adminEmail) throw new Error("Không xác định được tài khoản admin đang đăng nhập.");
 
     const adminClient = createAdminVerificationClient();
 
-    const { data, error: loginError } = await adminClient.auth.signInWithPassword({
-        email: ADMIN_EMAIL,
-        password
-    });
+    try {
+        const { data, error: loginError } = await adminClient.auth.signInWithPassword({
+            email: adminEmail,
+            password
+        });
 
-    if (loginError || !data?.user) {
-        throw new Error("Mật khẩu admin không đúng.");
-    }
-
-    if (String(data.user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-        await adminClient.auth.signOut().catch(() => {});
-        throw new Error("Tài khoản xác thực không phải admin.");
-    }
-
-    const { data: result, error: deleteError } = await adminClient.rpc(
-        "admin_delete_shopee_data",
-        {
-            p_scope: scope,
-            p_target: target
+        if (loginError || !data?.user) {
+            throw new Error("Mật khẩu admin không đúng.");
         }
-    );
 
-    await adminClient.auth.signOut().catch(() => {});
+        const { data: context, error: contextError } =
+            await adminClient.rpc("app_user_context");
 
-    if (deleteError) throw deleteError;
-    return result;
+        if (contextError) throw contextError;
+
+        const role = normalizeRoleV40(
+            (Array.isArray(context) ? context[0] : context)?.role
+        );
+
+        if (role !== "ADMIN") {
+            throw new Error("Tài khoản xác thực không có vai trò ADMIN.");
+        }
+
+        const { data: result, error: deleteError } = await adminClient.rpc(
+            "admin_delete_shopee_data",
+            {
+                p_scope: scope,
+                p_target: target
+            }
+        );
+
+        if (deleteError) throw deleteError;
+        return result;
+    } finally {
+        await adminClient.auth.signOut().catch(() => {});
+    }
 }
 
 async function refreshAfterAdminDelete(scope, target) {
@@ -4386,6 +4928,8 @@ function renderInventoryTransitSourceCard() {
 }
 
 async function saveInventoryTransitSnapshotCloud(snapshot) {
+    assertPermissionV40("TRANSIT_UPLOAD");
+
     if (!inventoryState.cloudReady || !state.user) {
         return null;
     }
@@ -4452,6 +4996,11 @@ async function saveInventoryTransitSnapshotCloud(snapshot) {
 }
 
 async function processInventoryTransitUpload(file) {
+    if (!requirePermissionV40("TRANSIT_UPLOAD")) {
+        if ($("inventoryTransitFileInput")) $("inventoryTransitFileInput").value = "";
+        return;
+    }
+
     if (!file) return;
 
     const sourceCard = $("inventoryTransitSourceCard");
@@ -4937,6 +5486,8 @@ function inventoryTransactionDbPayload(tx) {
 }
 
 async function addInventoryTransactionFromForm() {
+    if (!requirePermissionV40("INVENTORY_WRITE")) return;
+
     const transactionDate = $("inventoryTxDate")?.value || getLocalTodayKey();
     const itemCode = $("inventoryTxItem")?.value || "";
     const type = $("inventoryTxType")?.value || "INBOUND";
@@ -5017,6 +5568,8 @@ async function addInventoryTransactionFromForm() {
 }
 
 async function deleteInventoryTransaction(id) {
+    if (!requirePermissionV40("INVENTORY_WRITE")) return;
+
     const tx = inventoryState.transactions.find(row => row.id === id);
     if (!tx) return;
 
@@ -5368,6 +5921,8 @@ function renderInventoryTransactions() {
     document.querySelectorAll("[data-inventory-tx-delete]").forEach(button => {
         button.addEventListener("click", () => deleteInventoryTransaction(button.dataset.inventoryTxDelete));
     });
+
+    applyRoleUiV40();
 }
 
 function renderInventoryReconciliation() {
@@ -5506,6 +6061,8 @@ function renderInventoryReconciliation() {
 }
 
 async function commitInventoryReconciliation() {
+    if (!requirePermissionV40("INVENTORY_WRITE")) return;
+
     const asOfDate = $("inventoryReconcileDate")?.value || getLocalTodayKey();
     const rows = buildInventoryLedgerAsOf(asOfDate);
 
@@ -6145,6 +6702,8 @@ function addInventoryEditorItem() {
 }
 
 async function saveInventoryEditor() {
+    if (!requirePermissionV40("INVENTORY_WRITE")) return;
+
     const button = $("btnInventoryEditorSave");
     const items = collectInventoryEditorItems();
     if (!items.length) {
@@ -6234,6 +6793,11 @@ function parseInventoryWorkbook(matrix) {
 }
 
 async function importInventoryExcel(file) {
+    if (!requirePermissionV40("INVENTORY_WRITE")) {
+        if ($("inventoryStockFileInput")) $("inventoryStockFileInput").value = "";
+        return;
+    }
+
     try {
         const matrix = await readInventoryWorkbook(file);
         const parsed = parseInventoryWorkbook(matrix);
@@ -6293,10 +6857,10 @@ $("btnInventoryClearCounts")?.addEventListener("click", clearInventoryReconcileC
 $("btnInventoryCommitReconcile")?.addEventListener("click", commitInventoryReconciliation);
 $("btnInventoryOpenInvoiceV31")?.addEventListener("click", () => openView("invoice-stats"));
 
-$("btnInventoryEdit")?.addEventListener("click", openInventoryEditor);
+$("btnInventoryEdit")?.addEventListener("click", () => { if (requirePermissionV40("INVENTORY_WRITE")) openInventoryEditor(); });
 $("btnInventoryEditorClose")?.addEventListener("click", closeInventoryEditor);
 $("btnInventoryEditorCancel")?.addEventListener("click", closeInventoryEditor);
-$("btnInventoryAddItem")?.addEventListener("click", addInventoryEditorItem);
+$("btnInventoryAddItem")?.addEventListener("click", () => { if (requirePermissionV40("INVENTORY_WRITE")) addInventoryEditorItem(); });
 $("btnInventoryEditorSave")?.addEventListener("click", saveInventoryEditor);
 $("inventoryEditorModal")?.addEventListener("click", e => { if (e.target === $("inventoryEditorModal")) closeInventoryEditor(); });
 $("inventorySearchInput")?.addEventListener("input", renderInventoryModule);
@@ -6325,6 +6889,7 @@ $("inventoryTransitFileInput")?.addEventListener("change", e => {
 });
 
 $("btnInventoryTransitChooseFile")?.addEventListener("click", () => {
+    if (!requirePermissionV40("TRANSIT_UPLOAD")) return;
     $("inventoryTransitFileInput")?.click();
 });
 
@@ -6353,6 +6918,7 @@ $("inventoryMisaFileInput")?.addEventListener("change", e => {
 });
 
 $("btnInventoryMisaChooseFile")?.addEventListener("click", () => {
+    if (!requirePermissionV40("UPLOAD_INVOICE")) return;
     $("inventoryMisaFileInput")?.click();
 });
 
@@ -7068,6 +7634,8 @@ function invoiceLineToCloudV39(item, index) {
 }
 
 async function saveInvoiceHistoryToCloudV39(item) {
+    assertPermissionV40("UPLOAD_INVOICE");
+
     if (!state.user) {
         throw new Error("Chưa đăng nhập nên không thể lưu lịch sử hóa đơn lên Cloud.");
     }
@@ -7205,7 +7773,11 @@ async function syncInvoiceHistoryCloudV39({
     );
 
     try {
-        if (migrateLocal && localBeforeCloud.length) {
+        if (
+            migrateLocal &&
+            localBeforeCloud.length &&
+            hasPermissionV40("UPLOAD_INVOICE")
+        ) {
             await migrateLocalInvoiceHistoryToCloudV39(localBeforeCloud);
         }
 
@@ -7487,6 +8059,8 @@ function renderInvoiceHistory() {
             await deleteInvoiceHistoryItem(button.dataset.invoiceHistoryDelete);
         });
     });
+
+    applyRoleUiV40();
 }
 
 async function openInvoiceHistoryModal() {
@@ -7578,13 +8152,18 @@ async function loadInvoiceHistoryItem(historyId, options = {}) {
 }
 
 async function verifyAdminAndDeleteInvoiceHistoryV39(historyId, password) {
+    assertPermissionV40("DELETE_INVOICE");
+
     if (!password) throw new Error("Hãy nhập mật khẩu admin.");
+
+    const adminEmail = String(state.user?.email || "").trim();
+    if (!adminEmail) throw new Error("Không xác định được tài khoản admin đang đăng nhập.");
 
     const adminClient = createAdminVerificationClient();
 
     try {
         const { data, error: loginError } = await adminClient.auth.signInWithPassword({
-            email: ADMIN_EMAIL,
+            email: adminEmail,
             password
         });
 
@@ -7592,8 +8171,17 @@ async function verifyAdminAndDeleteInvoiceHistoryV39(historyId, password) {
             throw new Error("Mật khẩu admin không đúng.");
         }
 
-        if (String(data.user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-            throw new Error("Tài khoản xác thực không phải admin.");
+        const { data: context, error: contextError } =
+            await adminClient.rpc("app_user_context");
+
+        if (contextError) throw contextError;
+
+        const role = normalizeRoleV40(
+            (Array.isArray(context) ? context[0] : context)?.role
+        );
+
+        if (role !== "ADMIN") {
+            throw new Error("Tài khoản xác thực không có vai trò ADMIN.");
         }
 
         const { data: result, error } = await adminClient.rpc(
@@ -7609,6 +8197,7 @@ async function verifyAdminAndDeleteInvoiceHistoryV39(historyId, password) {
 }
 
 async function deleteInvoiceHistoryItem(historyId) {
+    if (!requirePermissionV40("DELETE_INVOICE")) return;
     ensureInvoiceHistoryLoaded();
 
     const item = invoiceHistoryState.items.find(row => row.id === historyId);
@@ -7627,7 +8216,7 @@ async function deleteInvoiceHistoryItem(historyId) {
     if (!ok) return;
 
     const password = prompt(
-        `Nhập mật khẩu ADMIN (${ADMIN_EMAIL}) để xác nhận xóa:`
+        `Nhập mật khẩu ADMIN (${state.user?.email || "-"}) để xác nhận xóa:`
     );
 
     if (password === null) return;
@@ -7639,7 +8228,7 @@ async function deleteInvoiceHistoryItem(historyId) {
             // Cache cũ chưa migrate: vẫn xác thực admin trước khi xóa local.
             const adminClient = createAdminVerificationClient();
             const { data, error } = await adminClient.auth.signInWithPassword({
-                email: ADMIN_EMAIL,
+                email: state.user?.email || "",
                 password
             });
             await adminClient.auth.signOut().catch(() => {});
@@ -7883,6 +8472,12 @@ function renderInvoiceStats() {
 }
 
 async function handleInvoiceUpload(file) {
+    if (!requirePermissionV40("UPLOAD_INVOICE")) {
+        if ($("invoiceFileInput")) $("invoiceFileInput").value = "";
+        if ($("inventoryMisaFileInput")) $("inventoryMisaFileInput").value = "";
+        return;
+    }
+
     if (!file) return;
 
     const info = $("invoiceFileInfo");
@@ -8932,6 +9527,9 @@ async function v39ProbeSystemHealthRpc(client) {
         const tables = data?.tables || {};
 
         const requiredRpcs = [
+            "app_user_context",
+            "admin_list_user_roles",
+            "admin_set_user_role",
             "replace_shift_data",
             "admin_delete_shopee_data",
             "save_invoice_history",
@@ -8941,6 +9539,7 @@ async function v39ProbeSystemHealthRpc(client) {
         const missingRpcs = requiredRpcs.filter(name => rpcs[name] !== true);
 
         const requiredTables = [
+            "app_user_roles",
             "invoice_imports",
             "invoice_groups",
             "invoice_lines"
@@ -8951,7 +9550,7 @@ async function v39ProbeSystemHealthRpc(client) {
         if (missingRpcs.length || missingTables.length) {
             return v38HealthCheckItem(
                 "rpc",
-                "RPC & SQL V39",
+                "RPC & SQL V40",
                 "error",
                 [
                     missingRpcs.length ? `Thiếu RPC: ${missingRpcs.join(", ")}` : "",
@@ -8962,16 +9561,16 @@ async function v39ProbeSystemHealthRpc(client) {
 
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V39",
+            "RPC & SQL V40",
             "ok",
-            "RPC upload/xóa + 3 bảng lịch sử hóa đơn Cloud đã sẵn sàng."
+            `Role ${roleLabelV40()} + RPC upload/xóa + lịch sử hóa đơn Cloud đã sẵn sàng.`
         );
     } catch (error) {
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V39",
+            "RPC & SQL V40",
             "error",
-            `Chưa chạy SQL V39 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
+            `Chưa chạy SQL V40 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
         );
     }
 }
@@ -8991,18 +9590,18 @@ async function runSystemHealthCheckV38({ silent = false } = {}) {
     systemHealthStateV38.checks = [
         v38HealthCheckItem(
             "version",
-            "Phiên bản V39",
+            "Phiên bản V40",
             (
-                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=39") &&
-                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=39")
+                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=40") &&
+                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=40")
             )
                 ? "ok"
                 : "warning",
             (
-                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=39") &&
-                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=39")
+                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=40") &&
+                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=40")
             )
-                ? "index.html đang gọi style.css?v=39 và script.js?v=39."
+                ? "index.html đang gọi style.css?v=40 và script.js?v=40."
                 : "Trình duyệt có thể đang dùng file cache hoặc index cũ."
         ),
 
@@ -9031,6 +9630,15 @@ async function runSystemHealthCheckV38({ silent = false } = {}) {
             state.user
                 ? `Đã đăng nhập: ${state.user.email || "user"}.`
                 : "Chưa có session đăng nhập."
+        ),
+
+        v38HealthCheckItem(
+            "role-v40",
+            "Phân quyền V40",
+            state.roleLoaded ? "ok" : "warning",
+            state.roleLoaded
+                ? `Vai trò Cloud: ${roleLabelV40()}.`
+                : `Đang dùng fallback ${roleLabelV40()}; hãy kiểm tra SQL V40.`
         )
     ];
 
@@ -9164,9 +9772,12 @@ function renderAll() {
     refreshNavCounts();
     renderInvoiceStats();
 
-    // V38
+    // V38/V39
     renderOperationalAlertsV38();
     renderSystemHealthPanelV38();
+
+    // V40
+    applyRoleUiV40();
 }
 
 async function initApp() {
