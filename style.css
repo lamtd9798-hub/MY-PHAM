@@ -5288,3 +5288,71 @@ body.sidebar-collapsed .sidebar-collapse-handle{
 @media(max-width:1280px){
     .v38-operations-grid{grid-template-columns:1fr;}
 }
+
+
+/* =========================================================
+   V44 - FIX CACHE + READABILITY + SIDEBAR CONTROL
+========================================================= */
+/* Nút thu gọn: nhỏ, tròn, gắn sát mép sidebar nhưng không lấn nội dung */
+.sidebar-collapse-handle{
+    top:54px!important;
+    right:-15px!important;
+    width:30px!important;
+    height:30px!important;
+    border:3px solid var(--bg)!important;
+    border-radius:50%!important;
+    background:#0f9b81!important;
+    color:#fff!important;
+    box-shadow:0 5px 14px rgba(7,68,58,.24)!important;
+    font-size:0!important;
+    padding:0!important;
+}
+.sidebar-collapse-handle:hover{
+    background:#087863!important;
+    transform:scale(1.06);
+}
+.sidebar-toggle-chevron{
+    display:block!important;
+    font-size:22px!important;
+    line-height:22px!important;
+    font-weight:800!important;
+    color:#fff!important;
+    transform:none!important;
+    margin-top:-1px;
+}
+.sidebar-collapse-handle.collapsed .sidebar-toggle-chevron{transform:none!important;}
+body.sidebar-collapsed .sidebar-collapse-handle{right:-15px!important;transform:none!important;}
+
+/* Tồn kho: tăng nốt các dòng mô tả/cảnh báo/snapshot còn quá nhỏ */
+.inventory-hero-copy p{font-size:11.5px!important;line-height:1.6!important;}
+.inventory-cloud-badge,
+.inventory-file-button,
+.inventory-transit-upload-button{font-size:10.5px!important;}
+.inventory-warning-box{font-size:11.5px!important;line-height:1.65!important;padding:11px 13px!important;}
+.inventory-module-tabs{gap:7px!important;}
+.inventory-tab-btn{font-size:11px!important;min-height:35px!important;padding:0 13px!important;}
+.inventory-transit-source-copy strong{font-size:12.5px!important;}
+.inventory-transit-source-copy span{font-size:10.5px!important;line-height:1.55!important;}
+.inventory-transit-status-chip{font-size:9.5px!important;min-height:25px!important;padding:0 8px!important;}
+.inventory-transit-status-chip strong{font-size:10px!important;}
+.inventory-transit-source-badge{font-size:9px!important;}
+
+/* Đối chiếu kho gần nhất */
+.inventory-reconcile-overview-title strong{font-size:14px!important;}
+.inventory-reconcile-overview-title span{font-size:10.5px!important;line-height:1.5!important;}
+.inventory-reconcile-overview-card{padding:11px 12px!important;}
+.inventory-reconcile-overview-card span{font-size:9.5px!important;}
+.inventory-reconcile-overview-card strong{font-size:20px!important;}
+.inventory-reconcile-overview-card.value strong{font-size:16px!important;}
+.inventory-reconcile-overview-hint{font-size:10.5px!important;line-height:1.55!important;padding:9px 10px!important;}
+.inventory-stock-variance{font-size:10.5px!important;min-height:28px!important;}
+.inventory-stock-result-v36{font-size:9.5px!important;min-height:27px!important;}
+.inventory-stock-result-date-v36,
+.inventory-theory-date-v36{font-size:9px!important;line-height:1.4!important;}
+
+/* Dòng chữ nhỏ trong tên SP bảng tồn */
+.inventory-summary-table td:nth-child(3) small,
+.inventory-summary-table td:nth-child(3) .muted,
+.inventory-summary-table td:nth-child(3) span{
+    font-size:10px;
+}

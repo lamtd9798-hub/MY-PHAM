@@ -215,9 +215,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V43.0";
+const APP_VERSION = "V44.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "43";
+const APP_CACHE_VERSION = "44";
 
 const systemHealthStateV38 = {
     running: false,
@@ -10690,7 +10690,7 @@ $("btnV38RunHealthCheck")?.addEventListener("click", () => {
 /* =========================================================
    V42 - SIDEBAR THU GỌN
 ========================================================= */
-const V42_SIDEBAR_KEY = "rucos_sidebar_collapsed_v42";
+const V42_SIDEBAR_KEY = "rucos_sidebar_collapsed_v44";
 
 function applySidebarCollapsedV42(collapsed, persist = true) {
     const isCollapsed = Boolean(collapsed);
