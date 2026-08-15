@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style-v56-fixed.css?v=561">
+    <link rel="stylesheet" href="style-v56-2.css?v=562">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -269,7 +269,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V56.1</span>
+                <span class="v38-sidebar-version">V56.2</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -1883,6 +1883,75 @@
         <!-- ======================== THỐNG KÊ HÓA ĐƠN ======================== -->
         <section id="view-invoice-stats" class="view">
 
+            <!-- V56.2: Bảng thống kê hóa đơn đưa lên đầu tab theo yêu cầu -->
+            <div class="panel invoice-summary-panel">
+                <div class="panel-header invoice-table-toolbar">
+                    <div>
+                        <h2>Bảng thống kê hóa đơn theo tên hàng</h2>
+                        <p id="invoiceSummarySubtitle">
+                            Chưa có dữ liệu.
+                        </p>
+                    </div>
+
+                    <div class="invoice-toolbar-actions">
+                        <div class="invoice-search-box">
+                            🔎
+                            <input
+                                id="invoiceSearchInput"
+                                type="text"
+                                placeholder="Tìm tên sản phẩm..."
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <button type="button" id="btnExportInvoiceStats" class="btn btn-primary">
+                            Xuất Excel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="invoice-table-wrap">
+                    <table class="invoice-summary-table">
+                        <colgroup>
+                            <col class="invoice-col-stt">
+                            <col class="invoice-col-name">
+                            <col class="invoice-col-qty">
+                            <col class="invoice-col-money">
+                            <col class="invoice-col-money">
+                            <col class="invoice-col-money">
+                        </colgroup>
+
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên hàng</th>
+                                <th>Số lượng</th>
+                                <th>Tiền thuế GTGT</th>
+                                <th>Tổng tiền TT</th>
+                                <th>Tiền trước thuế</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="invoiceStatsBody">
+                            <tr>
+                                <td colspan="6" class="empty-table">
+                                    Chưa có dữ liệu hóa đơn.
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <tfoot id="invoiceStatsFoot"></tfoot>
+                    </table>
+                </div>
+
+                <div class="invoice-note">
+                    <strong>Quy tắc:</strong>
+                    dòng có chữ “Hàng khuyến mại không thu tiền” vẫn cộng
+                    <strong>Số lượng</strong>, nhưng Thuế GTGT / Tổng tiền TT / Tiền trước thuế = 0.
+                </div>
+            </div>
+
+
             <div class="panel invoice-upload-panel v54-invoice-hub">
                 <div class="v54-hub-heading">
                     <div>
@@ -2394,72 +2463,6 @@
                 </div>
             </div>
 
-            <div class="panel invoice-summary-panel">
-                <div class="panel-header invoice-table-toolbar">
-                    <div>
-                        <h2>Bảng thống kê hóa đơn theo tên hàng</h2>
-                        <p id="invoiceSummarySubtitle">
-                            Chưa có dữ liệu.
-                        </p>
-                    </div>
-
-                    <div class="invoice-toolbar-actions">
-                        <div class="invoice-search-box">
-                            🔎
-                            <input
-                                id="invoiceSearchInput"
-                                type="text"
-                                placeholder="Tìm tên sản phẩm..."
-                                autocomplete="off"
-                            >
-                        </div>
-
-                        <button type="button" id="btnExportInvoiceStats" class="btn btn-primary">
-                            Xuất Excel
-                        </button>
-                    </div>
-                </div>
-
-                <div class="invoice-table-wrap">
-                    <table class="invoice-summary-table">
-                        <colgroup>
-                            <col class="invoice-col-stt">
-                            <col class="invoice-col-name">
-                            <col class="invoice-col-qty">
-                            <col class="invoice-col-money">
-                            <col class="invoice-col-money">
-                            <col class="invoice-col-money">
-                        </colgroup>
-
-                        <thead>
-                            <tr>
-                                <th>STT</th>
-                                <th>Tên hàng</th>
-                                <th>Số lượng</th>
-                                <th>Tiền thuế GTGT</th>
-                                <th>Tổng tiền TT</th>
-                                <th>Tiền trước thuế</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="invoiceStatsBody">
-                            <tr>
-                                <td colspan="6" class="empty-table">
-                                    Chưa có dữ liệu hóa đơn.
-                                </td>
-                            </tr>
-                        </tbody>
-
-                        <tfoot id="invoiceStatsFoot"></tfoot>
-                    </table>
-                </div>
-
-                <div class="invoice-note">
-                    <strong>Quy tắc:</strong>
-                    dòng có chữ “Hàng khuyến mại không thu tiền” vẫn cộng
-                    <strong>Số lượng</strong>, nhưng Thuế GTGT / Tổng tiền TT / Tiền trước thuế = 0.
-                </div>
-            </div>
         </section>
 
 <section id="view-history" class="view">
@@ -2928,6 +2931,6 @@
         </div>
     </div>
 
-    <script src="script-v56-fixed.js?v=561"></script>
+    <script src="script-v56-2.js?v=562"></script>
 </body>
 </html>
