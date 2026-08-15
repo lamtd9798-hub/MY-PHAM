@@ -215,9 +215,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V40.0";
+const APP_VERSION = "V41.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "40";
+const APP_CACHE_VERSION = "41";
 
 const systemHealthStateV38 = {
     running: false,
@@ -1512,7 +1512,7 @@ async function enterAuthenticatedApp(session) {
     // V38: kiểm tra hệ thống nền sau khi toàn bộ dữ liệu Cloud đã tải.
     setTimeout(() => {
         runSystemHealthCheckV38({ silent: true }).catch(error => {
-            console.warn("V40 health check:", error);
+            console.warn("V41 health check:", error);
         });
     }, 150);
 
@@ -6946,6 +6946,11 @@ const invoiceState = {
     unissuedLineCount: 0,
     invoiceCount: 0,
     currentHistoryId: "",
+
+    // V41 - cột tham chiếu Mã đơn Shopee nếu file MISA có.
+    orderRefHeader: "",
+    orderRefLineCount: 0,
+
     rows: [],
     lineRows: []
 };
@@ -7102,6 +7107,86 @@ function isIssuedMisaInvoiceLine(invoiceNo, taxStatus, invoiceStatus) {
     return true;
 }
 
+
+function detectInvoiceOrderRefColumnV41(headers) {
+    const normalized = (headers || []).map(value => normalizeText(value));
+
+    const strongAliases = [
+        "Mã đơn Shopee",
+        "Mã đơn hàng Shopee",
+        "Shopee Order ID",
+        "Shopee OrderID",
+        "Order ID Shopee",
+        "Mã đơn TMĐT",
+        "Mã đơn thương mại điện tử"
+    ];
+
+    const genericAliases = [
+        "Mã đơn hàng",
+        "Mã đơn",
+        "Order ID",
+        "Mã tham chiếu đơn",
+        "Mã đơn tham chiếu"
+    ];
+
+    for (const alias of strongAliases) {
+        const needle = normalizeText(alias);
+        const index = normalized.findIndex(value => value === needle);
+
+        if (index >= 0) {
+            return {
+                index,
+                header: String(headers[index] ?? "").trim(),
+                source: "strong"
+            };
+        }
+    }
+
+    for (const alias of genericAliases) {
+        const needle = normalizeText(alias);
+        const index = normalized.findIndex(value => value === needle);
+
+        if (index >= 0) {
+            return {
+                index,
+                header: String(headers[index] ?? "").trim(),
+                source: "generic"
+            };
+        }
+    }
+
+    // Chỉ cho phép partial match với alias Shopee rõ ràng.
+    const partialIndex = normalized.findIndex(value =>
+        (
+            value.includes("shopee") &&
+            (value.includes("madon") || value.includes("orderid"))
+        )
+    );
+
+    if (partialIndex >= 0) {
+        return {
+            index: partialIndex,
+            header: String(headers[partialIndex] ?? "").trim(),
+            source: "strong"
+        };
+    }
+
+    return {
+        index: -1,
+        header: "",
+        source: ""
+    };
+}
+
+function normalizeOrderReferenceV41(value) {
+    return String(value ?? "")
+        .trim()
+        .toUpperCase()
+        .replace(/^['"`]+/, "")
+        .replace(/\s+/g, "");
+}
+
+
 function parseInvoiceMatrix(matrix, fileName) {
     if (!Array.isArray(matrix) || !matrix.length) {
         throw new Error("File hóa đơn không có dữ liệu.");
@@ -7124,6 +7209,7 @@ function parseInvoiceMatrix(matrix, fileName) {
     }
 
     const headers = matrix[headerRowIndex] || [];
+    const orderRefColumnV41 = detectInvoiceOrderRefColumnV41(headers);
 
     const col = {
         stt: findInvoiceHeaderIndex(headers, ["STT"]),
@@ -7136,7 +7222,8 @@ function parseInvoiceMatrix(matrix, fileName) {
         payment: findInvoiceHeaderIndex(headers, ["Tổng tiền TT", "Tổng tiền thanh toán"]),
         taxStatus: findInvoiceHeaderIndex(headers, ["Trạng thái gửi CQT"]),
         promoFlag: findInvoiceHeaderIndex(headers, ["Hàng KM"]),
-        invoiceStatus: findInvoiceHeaderIndex(headers, ["Trạng thái HĐ", "Trạng thái hóa đơn"])
+        invoiceStatus: findInvoiceHeaderIndex(headers, ["Trạng thái HĐ", "Trạng thái hóa đơn"]),
+        orderRef: orderRefColumnV41.index
     };
 
     const requiredMissing = [];
@@ -7240,6 +7327,11 @@ function parseInvoiceMatrix(matrix, fileName) {
             if (dateKey) dateKeys.push(dateKey);
         }
 
+        const orderRef =
+            col.orderRef >= 0
+                ? String(row[col.orderRef] ?? "").trim()
+                : "";
+
         sourceRows.push({
             invoiceNo,
             invoiceDate: dateKey,
@@ -7253,7 +7345,13 @@ function parseInvoiceMatrix(matrix, fileName) {
             promoFlag,
             taxStatus,
             invoiceStatus,
-            issued
+            issued,
+
+            // V41
+            orderRef,
+            orderRefSource: orderRef
+                ? (orderRefColumnV41.source || "generic")
+                : ""
         });
     }
 
@@ -7316,6 +7414,13 @@ function parseInvoiceMatrix(matrix, fileName) {
         issuedLineCount: issuedRows.length,
         unissuedLineCount: sourceRows.length - issuedRows.length,
         invoiceCount: invoiceNumbers.size,
+
+        // V41
+        orderRefHeader: orderRefColumnV41.header || "",
+        orderRefLineCount: issuedRows.filter(row =>
+            Boolean(normalizeOrderReferenceV41(row.orderRef))
+        ).length,
+
         rows,
         lineRows: sourceRows
     };
@@ -7335,6 +7440,8 @@ function saveInvoiceStatsLocal() {
                 unissuedLineCount: invoiceState.unissuedLineCount,
                 invoiceCount: invoiceState.invoiceCount,
                 currentHistoryId: invoiceState.currentHistoryId,
+                orderRefHeader: invoiceState.orderRefHeader || "",
+                orderRefLineCount: Number(invoiceState.orderRefLineCount || 0),
                 rows: invoiceState.rows,
                 lineRows: invoiceState.lineRows
             })
@@ -7365,6 +7472,8 @@ function ensureInvoiceStatsLoaded() {
         invoiceState.unissuedLineCount = Number(saved.unissuedLineCount || 0);
         invoiceState.invoiceCount = Number(saved.invoiceCount || 0);
         invoiceState.currentHistoryId = saved.currentHistoryId || "";
+        invoiceState.orderRefHeader = saved.orderRefHeader || "";
+        invoiceState.orderRefLineCount = Number(saved.orderRefLineCount || 0);
         invoiceState.rows = saved.rows.filter(item =>
             Number(item?.quantity || 0) > 0
         );
@@ -7426,6 +7535,8 @@ function buildInvoiceHistoryItem(source = invoiceState) {
         issuedLineCount: Number(source.issuedLineCount || 0),
         unissuedLineCount: Number(source.unissuedLineCount || 0),
         invoiceCount: Number(source.invoiceCount || 0),
+        orderRefHeader: source.orderRefHeader || "",
+        orderRefLineCount: Number(source.orderRefLineCount || 0),
         productCount: rows.length,
         totalQuantity: totals.quantity,
         vatTotal: totals.vat,
@@ -7535,16 +7646,32 @@ function stableInvoiceLineForFingerprintV39(row) {
 }
 
 function buildInvoiceFingerprintPayloadV39(source) {
-    const lines = cloneInvoiceRows(source?.lineRows || [])
+    const sourceLines = cloneInvoiceRows(source?.lineRows || []);
+
+    const lines = sourceLines
         .map(stableInvoiceLineForFingerprintV39)
         .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
 
-    return JSON.stringify({
+    const payload = {
         dateFrom: source?.dateFrom || "",
         dateTo: source?.dateTo || "",
         invoiceCount: Number(source?.invoiceCount || 0),
         lines
-    });
+    };
+
+    // V41: chỉ thêm orderRefs khi file thật sự có mã đơn.
+    // Nhờ vậy file V39 cũ không có mã đơn vẫn giữ fingerprint cũ,
+    // tránh tạo lịch sử trùng chỉ vì nâng phiên bản.
+    const orderRefs = sourceLines
+        .map(row => normalizeOrderReferenceV41(row?.orderRef))
+        .filter(Boolean)
+        .sort();
+
+    if (orderRefs.length) {
+        payload.orderRefs = orderRefs;
+    }
+
+    return JSON.stringify(payload);
 }
 
 async function sha256TextV39(text) {
@@ -7587,6 +7714,8 @@ function mapInvoiceImportFromCloudV39(row, existingDetail = null) {
         issuedLineCount: Number(row.issued_line_count || 0),
         unissuedLineCount: Number(row.unissued_line_count || 0),
         invoiceCount: Number(row.invoice_count || 0),
+        orderRefHeader: row.order_ref_header || "",
+        orderRefLineCount: Number(row.order_ref_line_count || 0),
         productCount: Number(row.product_count || 0),
         totalQuantity: Number(row.total_quantity || 0),
         vatTotal: Number(row.vat_total || 0),
@@ -7629,7 +7758,11 @@ function invoiceLineToCloudV39(item, index) {
         promoFlag: item.promoFlag || "",
         taxStatus: item.taxStatus || "",
         invoiceStatus: item.invoiceStatus || "",
-        issued: item.issued !== false
+        issued: item.issued !== false,
+
+        // V41
+        orderRef: item.orderRef || "",
+        orderRefSource: item.orderRefSource || ""
     };
 }
 
@@ -7653,6 +7786,8 @@ async function saveInvoiceHistoryToCloudV39(item) {
         issuedLineCount: Number(item.issuedLineCount || 0),
         unissuedLineCount: Number(item.unissuedLineCount || 0),
         invoiceCount: Number(item.invoiceCount || 0),
+        orderRefHeader: item.orderRefHeader || "",
+        orderRefLineCount: Number(item.orderRefLineCount || 0),
         productCount: Number(item.productCount || item.rows?.length || 0),
         totalQuantity: Number(item.totalQuantity || 0),
         vatTotal: Number(item.vatTotal || 0),
@@ -7727,7 +7862,11 @@ async function fetchInvoiceHistoryDetailsV39(historyId) {
         promoFlag: row.promo_flag || "",
         taxStatus: row.tax_status || "",
         invoiceStatus: row.invoice_status || "",
-        issued: row.issued !== false
+        issued: row.issued !== false,
+
+        // V41
+        orderRef: row.order_ref || "",
+        orderRefSource: row.order_ref_source || ""
     }));
 
     return { rows, lineRows };
@@ -8122,6 +8261,8 @@ async function loadInvoiceHistoryItem(historyId, options = {}) {
     invoiceState.issuedLineCount = Number(item.issuedLineCount || 0);
     invoiceState.unissuedLineCount = Number(item.unissuedLineCount || 0);
     invoiceState.invoiceCount = Number(item.invoiceCount || 0);
+    invoiceState.orderRefHeader = item.orderRefHeader || "";
+    invoiceState.orderRefLineCount = Number(item.orderRefLineCount || 0);
     invoiceState.rows = cloneInvoiceRows(item.rows);
     invoiceState.lineRows = cloneInvoiceRows(item.lineRows || []);
 
@@ -8249,6 +8390,8 @@ async function deleteInvoiceHistoryItem(historyId) {
             invoiceState.issuedLineCount = 0;
             invoiceState.unissuedLineCount = 0;
             invoiceState.invoiceCount = 0;
+            invoiceState.orderRefHeader = "";
+            invoiceState.orderRefLineCount = 0;
             invoiceState.rows = [];
             invoiceState.lineRows = [];
             saveInvoiceStatsLocal();
@@ -8288,6 +8431,776 @@ function getInvoiceTotals() {
         }
     );
 }
+
+
+/* =========================================================
+   V41 - ĐỐI CHIẾU TỪNG ĐƠN SHOPEE ↔ HÓA ĐƠN MISA
+========================================================= */
+
+const v41ReconcileState = {
+    lookbackDays: 7,
+    search: "",
+    resultFilter: "all"
+};
+
+function v41AddDays(dateKey, days) {
+    const parts = String(dateKey || "").split("-").map(Number);
+
+    if (parts.length !== 3 || parts.some(Number.isNaN)) {
+        return "";
+    }
+
+    const date = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+    date.setUTCDate(date.getUTCDate() + Number(days || 0));
+
+    return [
+        date.getUTCFullYear(),
+        String(date.getUTCMonth() + 1).padStart(2, "0"),
+        String(date.getUTCDate()).padStart(2, "0")
+    ].join("-");
+}
+
+function v41ResolveMisaBaseSku(line) {
+    const activeItems = (inventoryState?.items || []).filter(
+        item => item.active !== false
+    );
+
+    const matchedItem = activeItems.find(item =>
+        isMisaLineMatchedToInventoryItem(line, item)
+    );
+
+    if (matchedItem) {
+        const preferred = String(matchedItem.shopeeSku || "").trim();
+
+        if (preferred) {
+            return {
+                sku: preferred,
+                itemName: matchedItem.name || line.productName || "",
+                method: "inventory-map"
+            };
+        }
+
+        const code = String(matchedItem.itemCode || "")
+            .replace(/^WH-/i, "")
+            .trim();
+
+        if (code) {
+            return {
+                sku: code,
+                itemName: matchedItem.name || line.productName || "",
+                method: "inventory-code"
+            };
+        }
+    }
+
+    const directCode = String(line?.productCode || "").trim();
+
+    if (directCode) {
+        return {
+            sku: directCode,
+            itemName: line?.productName || "",
+            method: "misa-code"
+        };
+    }
+
+    return {
+        sku: "",
+        itemName: line?.productName || "",
+        method: "unmapped"
+    };
+}
+
+function v41GetLatestShopeeLines() {
+    const latest = new Map();
+
+    (state.skuRows || []).forEach(row => {
+        const orderId = String(row.orderId || "").trim();
+        const sku = String(row.sku || "").trim();
+
+        if (!orderId || !sku) return;
+
+        const reportDate = row.reportDate || row.orderDate || "";
+        const slotRank = normalizeRowSlot(row) === "afternoon" ? 2 : 1;
+        const rank =
+            `${reportDate}|${slotRank}|${row.updatedAt || ""}|${row.importedAt || ""}`;
+
+        const key = `${normalizeOrderReferenceV41(orderId)}|${sku}`;
+        const previous = latest.get(key);
+
+        if (!previous || rank > previous.__rank) {
+            latest.set(key, {
+                ...row,
+                __rank: rank
+            });
+        }
+    });
+
+    return [...latest.values()];
+}
+
+function buildShopeeDeliveredOrdersV41() {
+    const allLatestLines = v41GetLatestShopeeLines();
+    const orderMap = new Map();
+
+    allLatestLines.forEach(row => {
+        const orderId = String(row.orderId || "").trim();
+        const normalizedOrderId = normalizeOrderReferenceV41(orderId);
+
+        if (!normalizedOrderId) return;
+
+        const bucket = classifyInventoryShopeeStatus(row.status);
+
+        if (bucket !== "delivered") {
+            return;
+        }
+
+        if (!orderMap.has(normalizedOrderId)) {
+            orderMap.set(normalizedOrderId, {
+                orderId,
+                normalizedOrderId,
+                orderDate: row.orderDate || "",
+                status: row.status || "",
+                latestReportDate: row.reportDate || "",
+                expectedBySku: new Map(),
+                productNames: new Set()
+            });
+        }
+
+        const order = orderMap.get(normalizedOrderId);
+
+        if (
+            row.orderDate &&
+            (!order.orderDate || row.orderDate < order.orderDate)
+        ) {
+            order.orderDate = row.orderDate;
+        }
+
+        if (
+            (row.reportDate || "") >= (order.latestReportDate || "")
+        ) {
+            order.latestReportDate = row.reportDate || order.latestReportDate;
+            order.status = row.status || order.status;
+        }
+
+        if (row.product) {
+            order.productNames.add(row.product);
+        }
+
+        expandShopeeRowToInventorySkus(row).forEach(part => {
+            const sku = String(part.baseSku || "").trim();
+
+            if (!sku) return;
+
+            order.expectedBySku.set(
+                sku,
+                Number(order.expectedBySku.get(sku) || 0) +
+                    Number(part.quantity || 0)
+            );
+        });
+    });
+
+    return orderMap;
+}
+
+function v41GetScopeDeliveredOrders(allOrders, lookbackDays) {
+    const orders = [...allOrders.values()];
+
+    if (!invoiceState.dateFrom && !invoiceState.dateTo) {
+        return orders;
+    }
+
+    const startDate = invoiceState.dateFrom
+        ? v41AddDays(invoiceState.dateFrom, -Math.abs(Number(lookbackDays || 7)))
+        : "";
+
+    const endDate = invoiceState.dateTo || invoiceState.dateFrom || "";
+
+    return orders.filter(order => {
+        const date = order.orderDate || "";
+
+        if (!date) return true;
+        if (startDate && date < startDate) return false;
+        if (endDate && date > endDate) return false;
+
+        return true;
+    });
+}
+
+function buildMisaOrderAssignmentsV41(allShopeeOrders) {
+    const issuedLines = getIssuedMisaLines();
+
+    const orderAssignments = new Map();
+    const unknownOrderRefs = [];
+    const noOrderRefLines = [];
+    let usableRefLineCount = 0;
+
+    issuedLines.forEach(line => {
+        const rawRef = String(line.orderRef || "").trim();
+        const normalizedRef = normalizeOrderReferenceV41(rawRef);
+
+        if (!normalizedRef) {
+            noOrderRefLines.push(line);
+            return;
+        }
+
+        usableRefLineCount++;
+
+        const shopeeOrder = allShopeeOrders.get(normalizedRef);
+
+        if (!shopeeOrder) {
+            unknownOrderRefs.push({
+                ...line,
+                normalizedRef
+            });
+            return;
+        }
+
+        const resolved = v41ResolveMisaBaseSku(line);
+
+        if (!orderAssignments.has(normalizedRef)) {
+            orderAssignments.set(normalizedRef, {
+                orderId: shopeeOrder.orderId,
+                invoiceNos: new Set(),
+                qtyBySku: new Map(),
+                unresolvedLines: []
+            });
+        }
+
+        const assignment = orderAssignments.get(normalizedRef);
+
+        if (line.invoiceNo) {
+            assignment.invoiceNos.add(String(line.invoiceNo).trim());
+        }
+
+        if (!resolved.sku) {
+            assignment.unresolvedLines.push(line);
+            return;
+        }
+
+        assignment.qtyBySku.set(
+            resolved.sku,
+            Number(assignment.qtyBySku.get(resolved.sku) || 0) +
+                Number(line.quantity || 0)
+        );
+    });
+
+    return {
+        issuedLines,
+        usableRefLineCount,
+        orderAssignments,
+        unknownOrderRefs,
+        noOrderRefLines
+    };
+}
+
+function v41CompareOrder(order, assignment, exactMode) {
+    const expected = order.expectedBySku;
+    const expectedTotal = [...expected.values()].reduce(
+        (sum, qty) => sum + Number(qty || 0),
+        0
+    );
+
+    if (!exactMode) {
+        return {
+            order,
+            result: "unverifiable",
+            resultLabel: "Chưa thể ghép",
+            detail: "File MISA chưa có Mã đơn Shopee.",
+            invoiceNos: [],
+            misaTotal: 0,
+            expectedTotal
+        };
+    }
+
+    if (!assignment) {
+        return {
+            order,
+            result: "missing",
+            resultLabel: "Chưa có HĐ",
+            detail: "Không tìm thấy Mã đơn này trong các dòng MISA đã phát hành.",
+            invoiceNos: [],
+            misaTotal: 0,
+            expectedTotal
+        };
+    }
+
+    const actual = assignment.qtyBySku;
+    const allSkus = new Set([
+        ...expected.keys(),
+        ...actual.keys()
+    ]);
+
+    const differences = [];
+    let misaTotal = 0;
+
+    allSkus.forEach(sku => {
+        const expectedQty = Number(expected.get(sku) || 0);
+        const misaQty = Number(actual.get(sku) || 0);
+        misaTotal += misaQty;
+
+        if (expectedQty !== misaQty) {
+            differences.push(
+                `${sku}: Shopee ${formatNumber(expectedQty)} / MISA ${formatNumber(misaQty)}`
+            );
+        }
+    });
+
+    if (assignment.unresolvedLines.length) {
+        differences.push(
+            `${assignment.unresolvedLines.length} dòng MISA chưa map được SKU`
+        );
+    }
+
+    if (!differences.length) {
+        return {
+            order,
+            result: "matched",
+            resultLabel: "Khớp",
+            detail: "Mã đơn + SKU + số lượng khớp.",
+            invoiceNos: [...assignment.invoiceNos],
+            misaTotal,
+            expectedTotal
+        };
+    }
+
+    return {
+        order,
+        result: "mismatch",
+        resultLabel: "Lệch",
+        detail: differences.slice(0, 3).join(" · "),
+        invoiceNos: [...assignment.invoiceNos],
+        misaTotal,
+        expectedTotal
+    };
+}
+
+function buildOrderReconciliationV41() {
+    const lookbackDays = Number(
+        $("v41LookbackDays")?.value ||
+        v41ReconcileState.lookbackDays ||
+        7
+    );
+
+    v41ReconcileState.lookbackDays = lookbackDays;
+
+    const allOrders = buildShopeeDeliveredOrdersV41();
+    const scopeOrders = v41GetScopeDeliveredOrders(
+        allOrders,
+        lookbackDays
+    );
+
+    const misaAssignment = buildMisaOrderAssignmentsV41(allOrders);
+
+    const exactMode =
+        misaAssignment.usableRefLineCount > 0;
+
+    // Nếu MISA có mã đơn tham chiếu đến đơn ngoài cửa sổ ngày,
+    // vẫn đưa đơn đó vào bảng để không bỏ mất một match chính xác.
+    const scopeMap = new Map(
+        scopeOrders.map(order => [order.normalizedOrderId, order])
+    );
+
+    misaAssignment.orderAssignments.forEach((assignment, normalizedOrderId) => {
+        if (
+            allOrders.has(normalizedOrderId) &&
+            !scopeMap.has(normalizedOrderId)
+        ) {
+            scopeMap.set(
+                normalizedOrderId,
+                allOrders.get(normalizedOrderId)
+            );
+        }
+    });
+
+    const rows = [...scopeMap.values()]
+        .map(order =>
+            v41CompareOrder(
+                order,
+                misaAssignment.orderAssignments.get(order.normalizedOrderId),
+                exactMode
+            )
+        )
+        .sort((a, b) => {
+            const resultRank = {
+                mismatch: 0,
+                missing: 1,
+                unverifiable: 2,
+                matched: 3
+            };
+
+            const rankA = resultRank[a.result] ?? 9;
+            const rankB = resultRank[b.result] ?? 9;
+
+            if (rankA !== rankB) return rankA - rankB;
+
+            return String(a.order.orderDate || "").localeCompare(
+                String(b.order.orderDate || "")
+            );
+        });
+
+    return {
+        lookbackDays,
+        allOrders,
+        scopeOrders: [...scopeMap.values()],
+        rows,
+        exactMode,
+        ...misaAssignment
+    };
+}
+
+function buildSkuReconciliationV41(orderReconciliation) {
+    const expectedBySku = new Map();
+    const nameBySku = new Map();
+
+    orderReconciliation.scopeOrders.forEach(order => {
+        order.expectedBySku.forEach((qty, sku) => {
+            expectedBySku.set(
+                sku,
+                Number(expectedBySku.get(sku) || 0) + Number(qty || 0)
+            );
+        });
+    });
+
+    (inventoryState?.items || []).forEach(item => {
+        const sku = String(item.shopeeSku || "").trim();
+
+        if (sku) {
+            nameBySku.set(sku, item.name || "");
+        }
+    });
+
+    const misaBySku = new Map();
+
+    getIssuedMisaLines().forEach(line => {
+        const resolved = v41ResolveMisaBaseSku(line);
+        const sku = String(resolved.sku || "").trim();
+
+        if (!sku) return;
+
+        misaBySku.set(
+            sku,
+            Number(misaBySku.get(sku) || 0) + Number(line.quantity || 0)
+        );
+
+        if (resolved.itemName && !nameBySku.has(sku)) {
+            nameBySku.set(sku, resolved.itemName);
+        }
+    });
+
+    const allSkus = new Set([
+        ...expectedBySku.keys(),
+        ...misaBySku.keys()
+    ]);
+
+    return [...allSkus]
+        .map(sku => {
+            const shopeeQty = Number(expectedBySku.get(sku) || 0);
+            const misaQty = Number(misaBySku.get(sku) || 0);
+            const diff = misaQty - shopeeQty;
+
+            return {
+                sku,
+                name: nameBySku.get(sku) || "",
+                shopeeQty,
+                misaQty,
+                diff,
+                result:
+                    diff === 0
+                        ? "matched"
+                        : "mismatch"
+            };
+        })
+        .sort((a, b) => {
+            if (a.result !== b.result) {
+                return a.result === "mismatch" ? -1 : 1;
+            }
+
+            return a.sku.localeCompare(b.sku);
+        });
+}
+
+function v41ExpectedSkuHtml(order) {
+    const entries = [...order.expectedBySku.entries()];
+
+    if (!entries.length) return "—";
+
+    return `
+        <div class="v41-order-sku-list">
+            ${entries.map(([sku, qty]) => `
+                <span class="v41-order-sku-chip">
+                    ${escapeHTML(sku)}
+                    × ${formatNumber(qty)}
+                </span>
+            `).join("")}
+        </div>
+    `;
+}
+
+function renderInvoiceOrderReconciliationV41() {
+    const body = $("v41OrderReconcileBody");
+    const skuBody = $("v41SkuReconcileBody");
+
+    if (!body || !skuBody) return;
+
+    if (!invoiceState.lineRows?.length) {
+        if ($("v41OrderRefNotice")) {
+            $("v41OrderRefNotice").className = "v41-order-ref-notice";
+            $("v41OrderRefNotice").textContent =
+                "Chưa có file MISA để đối chiếu.";
+        }
+
+        body.innerHTML =
+            '<tr><td colspan="9" class="empty-table">Hãy upload file MISA trước.</td></tr>';
+
+        skuBody.innerHTML =
+            '<tr><td colspan="7" class="empty-table">Hãy upload file MISA trước.</td></tr>';
+
+        [
+            "v41OrderCount",
+            "v41MatchedCount",
+            "v41MismatchCount",
+            "v41MissingCount"
+        ].forEach(id => {
+            if ($(id)) $(id).textContent = "0";
+        });
+
+        if ($("v41OrderRefCoverage")) $("v41OrderRefCoverage").textContent = "0/0";
+        if ($("v41OrderRefHeaderText")) $("v41OrderRefHeaderText").textContent = "Chưa phát hiện cột mã đơn";
+        if ($("v41MatchModeBadge")) {
+            $("v41MatchModeBadge").className = "v41-mode-badge";
+            $("v41MatchModeBadge").textContent = "CHỜ DỮ LIỆU";
+        }
+
+        return;
+    }
+
+    const reconciliation = buildOrderReconciliationV41();
+    const skuRows = buildSkuReconciliationV41(reconciliation);
+
+    const matched = reconciliation.rows.filter(row => row.result === "matched").length;
+    const mismatch = reconciliation.rows.filter(row => row.result === "mismatch").length;
+    const missing = reconciliation.rows.filter(row => row.result === "missing").length;
+
+    if ($("v41OrderCount")) {
+        $("v41OrderCount").textContent = formatNumber(reconciliation.rows.length);
+    }
+
+    if ($("v41MatchedCount")) {
+        $("v41MatchedCount").textContent = formatNumber(matched);
+    }
+
+    if ($("v41MismatchCount")) {
+        $("v41MismatchCount").textContent = formatNumber(mismatch);
+    }
+
+    if ($("v41MissingCount")) {
+        $("v41MissingCount").textContent = formatNumber(missing);
+    }
+
+    if ($("v41OrderRefCoverage")) {
+        $("v41OrderRefCoverage").textContent =
+            `${formatNumber(reconciliation.usableRefLineCount)}` +
+            `/` +
+            `${formatNumber(reconciliation.issuedLines.length)}`;
+    }
+
+    if ($("v41OrderRefHeaderText")) {
+        $("v41OrderRefHeaderText").textContent =
+            invoiceState.orderRefHeader
+                ? `Cột: ${invoiceState.orderRefHeader}`
+                : "Chưa phát hiện cột mã đơn";
+    }
+
+    const notice = $("v41OrderRefNotice");
+    const modeBadge = $("v41MatchModeBadge");
+
+    if (reconciliation.exactMode) {
+        if (notice) {
+            notice.className = "v41-order-ref-notice good";
+            notice.innerHTML =
+                `✓ File MISA có <strong>${formatNumber(reconciliation.usableRefLineCount)}</strong> ` +
+                `dòng có mã đơn. V41 đang ghép trực tiếp với Mã đơn Shopee đã lưu trên Cloud.` +
+                (
+                    reconciliation.unknownOrderRefs.length
+                        ? ` Có <strong>${formatNumber(reconciliation.unknownOrderRefs.length)}</strong> dòng MISA có mã đơn nhưng chưa tìm thấy trong dữ liệu Shopee đang lưu.`
+                        : ""
+                );
+        }
+
+        if (modeBadge) {
+            modeBadge.className = "v41-mode-badge exact";
+            modeBadge.textContent = "GHÉP CHÍNH XÁC";
+        }
+    } else {
+        if (notice) {
+            notice.className = "v41-order-ref-notice warning";
+            notice.innerHTML =
+                `⚠ File MISA hiện tại <strong>không có Mã đơn Shopee sử dụng được</strong>. ` +
+                `V41 không tự đoán đơn nào đã xuất hóa đơn. ` +
+                `Bảng theo từng đơn chỉ hiển thị “Chưa thể ghép”; bảng tổng SKU bên dưới vẫn dùng để kiểm tra tổng số lượng.`;
+        }
+
+        if (modeBadge) {
+            modeBadge.className = "v41-mode-badge aggregate";
+            modeBadge.textContent = "CHỈ ĐỐI CHIẾU TỔNG";
+        }
+    }
+
+    if ($("v41OrderScopeText")) {
+        const startDate = invoiceState.dateFrom
+            ? v41AddDays(invoiceState.dateFrom, -reconciliation.lookbackDays)
+            : "";
+
+        const endDate = invoiceState.dateTo || invoiceState.dateFrom || "";
+
+        $("v41OrderScopeText").textContent =
+            `MISA ${invoiceState.dateFrom ? formatDateLabel(invoiceState.dateFrom) : "-"}${invoiceState.dateTo && invoiceState.dateTo !== invoiceState.dateFrom ? " → " + formatDateLabel(invoiceState.dateTo) : ""}` +
+            (startDate || endDate
+                ? ` · xét đơn Shopee ${startDate ? formatDateLabel(startDate) : "..."} → ${endDate ? formatDateLabel(endDate) : "..."}`
+                : "") +
+            ` · cửa sổ ${reconciliation.lookbackDays} ngày`;
+    }
+
+    const search = normalizeText(
+        $("v41OrderSearch")?.value ||
+        v41ReconcileState.search ||
+        ""
+    );
+
+    const resultFilter =
+        $("v41ResultFilter")?.value ||
+        v41ReconcileState.resultFilter ||
+        "all";
+
+    v41ReconcileState.search = $("v41OrderSearch")?.value || "";
+    v41ReconcileState.resultFilter = resultFilter;
+
+    const filteredRows = reconciliation.rows.filter(row => {
+        if (resultFilter !== "all" && row.result !== resultFilter) {
+            return false;
+        }
+
+        if (!search) return true;
+
+        const haystack = normalizeText([
+            row.order.orderId,
+            row.order.status,
+            ...row.order.expectedBySku.keys(),
+            ...row.invoiceNos
+        ].join(" "));
+
+        return haystack.includes(search);
+    });
+
+    if (!filteredRows.length) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="9" class="v41-empty-explain">
+                    ${reconciliation.rows.length
+                        ? "Không có đơn phù hợp bộ lọc hiện tại."
+                        : "Không tìm thấy đơn Shopee trạng thái Đã giao trong phạm vi đang xét."}
+                </td>
+            </tr>
+        `;
+    } else {
+        body.innerHTML = filteredRows.map((row, index) => `
+            <tr>
+                <td>${index + 1}</td>
+
+                <td>
+                    <span class="v41-order-code">
+                        ${escapeHTML(row.order.orderId)}
+                    </span>
+                </td>
+
+                <td>
+                    ${row.order.orderDate
+                        ? escapeHTML(formatDateLabel(row.order.orderDate))
+                        : "—"}
+                </td>
+
+                <td>
+                    ${escapeHTML(row.order.status || "Đã giao")}
+                </td>
+
+                <td>
+                    ${v41ExpectedSkuHtml(row.order)}
+                </td>
+
+                <td>
+                    <span class="${row.result === "mismatch" ? "v41-qty-bad" : ""}">
+                        ${formatNumber(row.expectedTotal)}
+                    </span>
+                </td>
+
+                <td>
+                    <span class="v41-invoice-list">
+                        ${row.invoiceNos.length
+                            ? escapeHTML(row.invoiceNos.join(", "))
+                            : "—"}
+                    </span>
+                </td>
+
+                <td>
+                    <span class="${row.result === "matched" ? "v41-qty-good" : (row.misaTotal ? "v41-qty-bad" : "")}">
+                        ${formatNumber(row.misaTotal)}
+                    </span>
+                </td>
+
+                <td>
+                    <span class="v41-result-badge ${escapeHTML(row.result)}">
+                        ${escapeHTML(row.resultLabel)}
+                    </span>
+                    <span class="v41-result-detail">
+                        ${escapeHTML(row.detail)}
+                    </span>
+                </td>
+            </tr>
+        `).join("");
+    }
+
+    if (!skuRows.length) {
+        skuBody.innerHTML =
+            '<tr><td colspan="7" class="empty-table">Chưa map được SKU để đối chiếu tổng.</td></tr>';
+    } else {
+        skuBody.innerHTML = skuRows.map((row, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${escapeHTML(row.sku)}</td>
+                <td>${escapeHTML(row.name || "—")}</td>
+                <td>${formatNumber(row.shopeeQty)}</td>
+                <td>${formatNumber(row.misaQty)}</td>
+                <td class="${row.diff === 0 ? "v41-qty-good" : "v41-qty-bad"}">
+                    ${row.diff > 0 ? "+" : ""}${formatNumber(row.diff)}
+                </td>
+                <td>
+                    <span class="v41-result-badge ${row.result}">
+                        ${row.result === "matched" ? "Khớp tổng" : "Lệch tổng"}
+                    </span>
+                </td>
+            </tr>
+        `).join("");
+    }
+}
+
+$("v41LookbackDays")?.addEventListener("change", () => {
+    v41ReconcileState.lookbackDays = Number(
+        $("v41LookbackDays")?.value || 7
+    );
+    renderInvoiceOrderReconciliationV41();
+});
+
+$("v41OrderSearch")?.addEventListener("input", () => {
+    v41ReconcileState.search = $("v41OrderSearch")?.value || "";
+    renderInvoiceOrderReconciliationV41();
+});
+
+$("v41ResultFilter")?.addEventListener("change", () => {
+    v41ReconcileState.resultFilter =
+        $("v41ResultFilter")?.value || "all";
+    renderInvoiceOrderReconciliationV41();
+});
+
 
 function renderInvoiceStats() {
     ensureInvoiceStatsLoaded();
@@ -8384,6 +9297,9 @@ function renderInvoiceStats() {
             `;
         }
     }
+
+    // V41: render riêng trước các nhánh return của bảng thống kê hóa đơn.
+    renderInvoiceOrderReconciliationV41();
 
     if ($("invoiceSummarySubtitle")) {
         if (!invoiceState.rows.length) {
@@ -8506,6 +9422,8 @@ async function handleInvoiceUpload(file) {
         invoiceState.unissuedLineCount = result.unissuedLineCount;
         invoiceState.invoiceCount = result.invoiceCount;
         invoiceState.currentHistoryId = "";
+        invoiceState.orderRefHeader = result.orderRefHeader || "";
+        invoiceState.orderRefLineCount = Number(result.orderRefLineCount || 0);
         invoiceState.rows = result.rows;
         invoiceState.lineRows = result.lineRows;
 
@@ -8569,6 +9487,8 @@ function clearInvoiceStats() {
     invoiceState.unissuedLineCount = 0;
     invoiceState.invoiceCount = 0;
     invoiceState.currentHistoryId = "";
+    invoiceState.orderRefHeader = "";
+    invoiceState.orderRefLineCount = 0;
     invoiceState.rows = [];
     invoiceState.lineRows = [];
 
@@ -9525,6 +10445,7 @@ async function v39ProbeSystemHealthRpc(client) {
 
         const rpcs = data?.rpcs || {};
         const tables = data?.tables || {};
+        const v41 = data?.v41 || {};
 
         const requiredRpcs = [
             "app_user_context",
@@ -9547,30 +10468,40 @@ async function v39ProbeSystemHealthRpc(client) {
 
         const missingTables = requiredTables.filter(name => tables[name] !== true);
 
-        if (missingRpcs.length || missingTables.length) {
+        const requiredV41 = [
+            "invoice_import_order_ref_header",
+            "invoice_import_order_ref_line_count",
+            "invoice_line_order_ref",
+            "invoice_line_order_ref_source"
+        ];
+
+        const missingV41 = requiredV41.filter(name => v41[name] !== true);
+
+        if (missingRpcs.length || missingTables.length || missingV41.length) {
             return v38HealthCheckItem(
                 "rpc",
-                "RPC & SQL V40",
+                "RPC & SQL V41",
                 "error",
                 [
                     missingRpcs.length ? `Thiếu RPC: ${missingRpcs.join(", ")}` : "",
-                    missingTables.length ? `Thiếu bảng: ${missingTables.join(", ")}` : ""
+                    missingTables.length ? `Thiếu bảng: ${missingTables.join(", ")}` : "",
+                    missingV41.length ? `Thiếu cột V41: ${missingV41.join(", ")}` : ""
                 ].filter(Boolean).join(" · ")
             );
         }
 
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V40",
+            "RPC & SQL V41",
             "ok",
-            `Role ${roleLabelV40()} + RPC upload/xóa + lịch sử hóa đơn Cloud đã sẵn sàng.`
+            `Role ${roleLabelV40()} + RPC + lịch sử Cloud + cột Mã đơn V41 đã sẵn sàng.`
         );
     } catch (error) {
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V40",
+            "RPC & SQL V41",
             "error",
-            `Chưa chạy SQL V40 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
+            `Chưa chạy SQL V41 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
         );
     }
 }
@@ -9590,18 +10521,18 @@ async function runSystemHealthCheckV38({ silent = false } = {}) {
     systemHealthStateV38.checks = [
         v38HealthCheckItem(
             "version",
-            "Phiên bản V40",
+            "Phiên bản V41",
             (
-                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=40") &&
-                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=40")
+                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=41") &&
+                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=41")
             )
                 ? "ok"
                 : "warning",
             (
-                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=40") &&
-                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=40")
+                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=41") &&
+                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=41")
             )
-                ? "index.html đang gọi style.css?v=40 và script.js?v=40."
+                ? "index.html đang gọi style.css?v=41 và script.js?v=41."
                 : "Trình duyệt có thể đang dùng file cache hoặc index cũ."
         ),
 

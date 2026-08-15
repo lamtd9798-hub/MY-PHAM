@@ -4636,3 +4636,331 @@ button{cursor:pointer}
         display:none;
     }
 }
+
+
+/* =========================================================
+   V41 - ĐỐI CHIẾU ĐƠN SHOPEE ↔ HÓA ĐƠN MISA
+========================================================= */
+.v41-reconcile-panel{
+    overflow:hidden;
+}
+.v41-reconcile-header{
+    align-items:flex-start;
+    gap:12px;
+}
+.v41-reconcile-header h2{
+    font-size:11px;
+}
+.v41-reconcile-header p{
+    max-width:700px;
+    line-height:1.5;
+}
+.v41-reconcile-controls{
+    display:flex;
+    align-items:flex-end;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+    gap:7px;
+}
+.v41-reconcile-controls label{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+.v41-reconcile-controls label > span{
+    color:#73868e;
+    font-size:6.2px;
+    font-weight:850;
+}
+.v41-reconcile-controls select,
+.v41-reconcile-controls input{
+    height:31px;
+    min-width:105px;
+    padding:0 8px;
+    border:1px solid #d1dde1;
+    border-radius:7px;
+    outline:none;
+    background:#fff;
+    color:#2b444e;
+    font-size:7.3px;
+    font-weight:700;
+}
+.v41-search-control input{
+    min-width:180px;
+}
+.v41-reconcile-controls select:focus,
+.v41-reconcile-controls input:focus{
+    border-color:#62bfad;
+    box-shadow:0 0 0 2px rgba(43,174,145,.08);
+}
+
+.v41-order-ref-notice{
+    margin:0 11px 9px;
+    padding:8px 10px;
+    border:1px solid #dce6e9;
+    border-radius:8px;
+    background:#f8fbfc;
+    color:#526b75;
+    font-size:7.3px;
+    line-height:1.5;
+}
+.v41-order-ref-notice.good{
+    background:#eff9f6;
+    border-color:#bfe1d7;
+    color:#087863;
+}
+.v41-order-ref-notice.warning{
+    background:#fff8e9;
+    border-color:#ecd7a5;
+    color:#946215;
+}
+.v41-order-ref-notice.danger{
+    background:#fff0f0;
+    border-color:#f0c4c6;
+    color:#b93c42;
+}
+
+.v41-kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:7px;
+    padding:0 11px 10px;
+}
+.v41-kpi{
+    min-width:0;
+    padding:9px 10px;
+    border:1px solid #e0e7e9;
+    border-radius:8px;
+    background:#fff;
+}
+.v41-kpi span{
+    display:block;
+    color:#70848d;
+    font-size:6.2px;
+    font-weight:850;
+}
+.v41-kpi strong{
+    display:block;
+    margin-top:4px;
+    color:#213a45;
+    font-size:15px;
+    line-height:1.1;
+}
+.v41-kpi small{
+    display:block;
+    margin-top:4px;
+    color:#8a9aa0;
+    font-size:6.3px;
+    line-height:1.35;
+}
+.v41-kpi.good{
+    background:#f2faf7;
+    border-color:#c6e4dc;
+}
+.v41-kpi.good strong{color:#087863}
+.v41-kpi.danger{
+    background:#fff6f6;
+    border-color:#efcecf;
+}
+.v41-kpi.danger strong{color:#c14247}
+.v41-kpi.warning{
+    background:#fffaf0;
+    border-color:#ebdcb7;
+}
+.v41-kpi.warning strong{color:#9a6613}
+.v41-kpi.info{
+    background:#f3f8fc;
+    border-color:#d2e2ed;
+}
+.v41-kpi.info strong{color:#3375a4}
+
+.v41-section-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:9px 11px 7px;
+    border-top:1px solid #e6ecee;
+}
+.v41-section-title strong{
+    display:block;
+    color:#263f49;
+    font-size:8.4px;
+}
+.v41-section-title span{
+    display:block;
+    margin-top:2px;
+    color:#7c8e95;
+    font-size:6.7px;
+    line-height:1.4;
+}
+.v41-mode-badge{
+    flex:none;
+    display:inline-flex!important;
+    align-items:center;
+    justify-content:center;
+    min-height:24px;
+    padding:0 8px;
+    margin:0!important;
+    border-radius:999px;
+    background:#f1f4f5;
+    color:#6f8188!important;
+    font-size:6.3px!important;
+    font-weight:900;
+    white-space:nowrap;
+}
+.v41-mode-badge.exact{
+    background:#e9f8f3;
+    color:#087863!important;
+}
+.v41-mode-badge.aggregate{
+    background:#fff5dd;
+    color:#996516!important;
+}
+
+.v41-order-table-wrap,
+.v41-sku-table-wrap{
+    margin:0 11px 10px;
+    overflow:auto;
+    border:1px solid #e0e7e9;
+    border-radius:8px;
+}
+.v41-order-table,
+.v41-sku-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1080px;
+}
+.v41-sku-table{
+    min-width:760px;
+}
+.v41-order-table th,
+.v41-sku-table th{
+    padding:8px 8px;
+    background:#f7f9fa;
+    color:#60757e;
+    font-size:6.7px;
+    font-weight:850;
+    text-align:left;
+    white-space:nowrap;
+    border-bottom:1px solid #dfe7e9;
+}
+.v41-order-table td,
+.v41-sku-table td{
+    padding:8px;
+    color:#314a54;
+    font-size:7.4px;
+    line-height:1.4;
+    border-bottom:1px solid #edf1f2;
+    vertical-align:middle;
+}
+.v41-order-table tbody tr:last-child td,
+.v41-sku-table tbody tr:last-child td{
+    border-bottom:none;
+}
+.v41-order-code{
+    font-weight:850;
+    color:#24434f;
+}
+.v41-order-sku-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:3px;
+}
+.v41-order-sku-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    min-height:21px;
+    padding:0 6px;
+    border-radius:999px;
+    background:#f0f4f5;
+    color:#4b6570;
+    font-size:6.4px;
+    font-weight:800;
+}
+.v41-invoice-list{
+    color:#376f95;
+    font-weight:800;
+}
+.v41-result-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:23px;
+    padding:0 7px;
+    border-radius:999px;
+    font-size:6.5px;
+    font-weight:900;
+    white-space:nowrap;
+}
+.v41-result-badge.matched{
+    background:#e9f8f3;
+    color:#087863;
+}
+.v41-result-badge.mismatch{
+    background:#ffeded;
+    color:#bf3e44;
+}
+.v41-result-badge.missing{
+    background:#fff5df;
+    color:#946215;
+}
+.v41-result-badge.unverifiable{
+    background:#edf4f8;
+    color:#47758e;
+}
+.v41-result-detail{
+    display:block;
+    margin-top:3px;
+    color:#84949a;
+    font-size:6.1px;
+}
+.v41-qty-good{
+    color:#087863;
+    font-weight:900;
+}
+.v41-qty-bad{
+    color:#c13f45;
+    font-weight:900;
+}
+.v41-sku-section-title{
+    margin-top:2px;
+}
+.v41-sku-table td:nth-child(n+4),
+.v41-sku-table th:nth-child(n+4){
+    text-align:center;
+}
+.v41-sku-table td:nth-child(2){
+    font-weight:850;
+}
+.v41-empty-explain{
+    padding:18px!important;
+    color:#83949b!important;
+    text-align:center;
+}
+
+@media(max-width:1250px){
+    .v41-kpi-grid{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+    .v41-reconcile-header{
+        flex-direction:column;
+    }
+    .v41-reconcile-controls{
+        justify-content:flex-start;
+    }
+}
+@media(max-width:760px){
+    .v41-kpi-grid{
+        grid-template-columns:1fr 1fr;
+    }
+    .v41-reconcile-controls{
+        width:100%;
+    }
+    .v41-reconcile-controls label,
+    .v41-reconcile-controls select,
+    .v41-reconcile-controls input{
+        width:100%;
+    }
+}

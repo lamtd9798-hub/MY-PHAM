@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- V40: Phân quyền ADMIN / KHO / KẾ TOÁN / NHÂN VIÊN + giữ nguyên V39 -->
+    <!-- V41: Đối chiếu Mã đơn Shopee ↔ Hóa đơn MISA + giữ nguyên V40 -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=40">
+    <link rel="stylesheet" href="style.css?v=41">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -264,7 +264,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V40.0</span>
+                <span class="v38-sidebar-version">V41.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -1709,6 +1709,155 @@
                 </div>
             </div>
 
+
+            <!-- ======================== V41 - ĐỐI CHIẾU ĐƠN SHOPEE ↔ MISA ======================== -->
+            <div class="panel v41-reconcile-panel">
+                <div class="panel-header v41-reconcile-header">
+                    <div>
+                        <h2>🔗 Đối chiếu đơn Shopee ↔ Hóa đơn MISA</h2>
+                        <p>
+                            Ưu tiên ghép <strong>chính xác theo Mã đơn Shopee</strong>.
+                            Nếu file MISA không có mã đơn, hệ thống chỉ đối chiếu tổng SKU và không tự đoán đơn.
+                        </p>
+                    </div>
+
+                    <div class="v41-reconcile-controls">
+                        <label>
+                            <span>LẤY ĐƠN TRƯỚC NGÀY HĐ</span>
+                            <select id="v41LookbackDays">
+                                <option value="3">3 ngày</option>
+                                <option value="5">5 ngày</option>
+                                <option value="7" selected>7 ngày</option>
+                                <option value="10">10 ngày</option>
+                                <option value="15">15 ngày</option>
+                                <option value="30">30 ngày</option>
+                            </select>
+                        </label>
+
+                        <label class="v41-search-control">
+                            <span>TÌM ĐƠN</span>
+                            <input id="v41OrderSearch" type="text" placeholder="Mã đơn / SKU / số HĐ..." autocomplete="off">
+                        </label>
+
+                        <label>
+                            <span>KẾT QUẢ</span>
+                            <select id="v41ResultFilter">
+                                <option value="all">Tất cả</option>
+                                <option value="matched">Khớp</option>
+                                <option value="mismatch">Lệch</option>
+                                <option value="missing">Chưa có HĐ</option>
+                                <option value="unverifiable">Chưa thể ghép</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="v41OrderRefNotice" class="v41-order-ref-notice">
+                    Chưa có file MISA để đối chiếu.
+                </div>
+
+                <div class="v41-kpi-grid">
+                    <div class="v41-kpi">
+                        <span>ĐƠN SHOPEE TRONG PHẠM VI</span>
+                        <strong id="v41OrderCount">0</strong>
+                        <small>Đơn đã giao đủ điều kiện so sánh</small>
+                    </div>
+
+                    <div class="v41-kpi good">
+                        <span>KHỚP CHÍNH XÁC</span>
+                        <strong id="v41MatchedCount">0</strong>
+                        <small>Khớp mã đơn + SKU + số lượng</small>
+                    </div>
+
+                    <div class="v41-kpi danger">
+                        <span>LỆCH SKU / SỐ LƯỢNG</span>
+                        <strong id="v41MismatchCount">0</strong>
+                        <small>Có mã đơn nhưng số liệu không khớp</small>
+                    </div>
+
+                    <div class="v41-kpi warning">
+                        <span>CHƯA CÓ HĐ</span>
+                        <strong id="v41MissingCount">0</strong>
+                        <small>Đơn đã giao nhưng chưa thấy mã đơn trong MISA</small>
+                    </div>
+
+                    <div class="v41-kpi info">
+                        <span>DÒNG MISA CÓ MÃ ĐƠN</span>
+                        <strong id="v41OrderRefCoverage">0/0</strong>
+                        <small id="v41OrderRefHeaderText">Chưa phát hiện cột mã đơn</small>
+                    </div>
+                </div>
+
+                <div class="v41-section-title">
+                    <div>
+                        <strong>Đối chiếu chi tiết theo từng đơn</strong>
+                        <span id="v41OrderScopeText">Chưa có dữ liệu.</span>
+                    </div>
+                    <span class="v41-mode-badge" id="v41MatchModeBadge">CHỜ DỮ LIỆU</span>
+                </div>
+
+                <div class="v41-order-table-wrap">
+                    <table class="v41-order-table">
+                        <colgroup>
+                            <col style="width:48px">
+                            <col style="width:170px">
+                            <col style="width:100px">
+                            <col style="width:135px">
+                            <col style="width:140px">
+                            <col style="width:80px">
+                            <col style="width:150px">
+                            <col style="width:80px">
+                            <col style="width:135px">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã đơn Shopee</th>
+                                <th>Ngày đơn</th>
+                                <th>Trạng thái</th>
+                                <th>SKU cần xuất HĐ</th>
+                                <th>SL Shopee</th>
+                                <th>Số HĐ MISA</th>
+                                <th>SL MISA</th>
+                                <th>Kết quả</th>
+                            </tr>
+                        </thead>
+                        <tbody id="v41OrderReconcileBody">
+                            <tr><td colspan="9" class="empty-table">Chưa có dữ liệu đối chiếu.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="v41-section-title v41-sku-section-title">
+                    <div>
+                        <strong>Đối chiếu tổng theo SKU</strong>
+                        <span>
+                            Dùng được ngay cả khi MISA chưa có Mã đơn Shopee.
+                            Đây là kiểm tra tổng số lượng trong phạm vi, không thay thế ghép đơn chính xác.
+                        </span>
+                    </div>
+                </div>
+
+                <div class="v41-sku-table-wrap">
+                    <table class="v41-sku-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>SKU kho</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Shopee đã giao</th>
+                                <th>MISA đã xuất</th>
+                                <th>Chênh lệch</th>
+                                <th>Kết quả</th>
+                            </tr>
+                        </thead>
+                        <tbody id="v41SkuReconcileBody">
+                            <tr><td colspan="7" class="empty-table">Chưa có dữ liệu đối chiếu.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="panel invoice-summary-panel">
                 <div class="panel-header invoice-table-toolbar">
                     <div>
@@ -1907,6 +2056,6 @@
 </div>
 
 <div id="toast" class="toast"></div>
-    <script src="script.js?v=40"></script>
+    <script src="script.js?v=41"></script>
 </body>
 </html>
