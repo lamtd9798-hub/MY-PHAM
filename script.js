@@ -215,9 +215,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V42.0";
+const APP_VERSION = "V43.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "42";
+const APP_CACHE_VERSION = "43";
 
 const systemHealthStateV38 = {
     running: false,
@@ -10698,7 +10698,8 @@ function applySidebarCollapsedV42(collapsed, persist = true) {
 
     const button = $("sidebarToggleBtn");
     if (button) {
-        button.textContent = isCollapsed ? "⟩" : "⟨";
+        button.classList.toggle("collapsed", isCollapsed);
+        button.innerHTML = `<span class="sidebar-toggle-chevron">${isCollapsed ? "›" : "‹"}</span>`;
         button.title = isCollapsed ? "Mở rộng menu" : "Thu gọn menu";
         button.setAttribute("aria-label", button.title);
     }

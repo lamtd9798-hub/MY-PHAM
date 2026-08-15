@@ -5166,3 +5166,125 @@ body.sidebar-collapsed .sidebar-collapse-handle{
 @media(max-width:850px){
     .sidebar-collapse-handle{display:none!important;}
 }
+
+
+/* =========================================================
+   V43 - DỄ ĐỌC HƠN + NÚT THU GỌN SIDEBAR ĐẸP HƠN
+========================================================= */
+body{
+    font-size:15px;
+}
+
+/* Nút thu gọn sidebar */
+.sidebar-collapse-handle{
+    top:16px;
+    right:-18px;
+    width:36px;
+    height:44px;
+    border:1px solid #d5e1e6;
+    border-left:0;
+    border-radius:0 14px 14px 0;
+    background:linear-gradient(180deg,#ffffff 0%,#f3f8f9 100%);
+    color:#114656;
+    box-shadow:0 10px 22px rgba(16,47,59,.16);
+    font-size:0;
+}
+.sidebar-collapse-handle:hover{
+    background:linear-gradient(180deg,#ffffff 0%,#eaf8f4 100%);
+    color:#0a7d67;
+    box-shadow:0 12px 24px rgba(16,47,59,.2);
+}
+.sidebar-toggle-chevron{
+    display:block;
+    font-size:24px;
+    font-weight:800;
+    line-height:1;
+    transform:translateX(-1px);
+}
+.sidebar-collapse-handle.collapsed .sidebar-toggle-chevron{
+    transform:translateX(1px);
+}
+body.sidebar-collapsed .sidebar-collapse-handle{
+    right:-18px;
+    transform:none;
+}
+
+/* Tổng quan - Việc cần xử lý + Kiểm tra hệ thống */
+.v38-panel-header h2{font-size:18px!important;}
+.v38-panel-header p{font-size:12px!important; line-height:1.6;}
+.v38-alert-summary{gap:8px;}
+.v38-alert-count{min-height:32px; padding:0 10px; font-size:11px!important;}
+.v38-alert-count b{font-size:13px!important;}
+.v38-alert-list{padding:12px 14px 14px;}
+.v38-alert-item{grid-template-columns:38px minmax(0,1fr) auto; gap:12px; padding:12px 12px;}
+.v38-alert-icon{width:36px;height:36px;font-size:16px;}
+.v38-alert-copy strong{font-size:13px!important; line-height:1.45;}
+.v38-alert-copy span{font-size:11px!important; line-height:1.55;}
+.v38-alert-action{min-width:92px;height:34px;padding:0 12px;font-size:11px!important;}
+.v38-health-refresh{min-height:34px;padding:0 12px;font-size:11px!important;}
+.v38-health-overall{gap:10px; margin:12px 12px 6px; padding:11px 12px;}
+.v38-health-dot{width:14px;height:14px;}
+.v38-health-overall strong{font-size:13px!important;}
+.v38-health-overall small{font-size:11px!important; line-height:1.5;}
+.v38-health-list{padding:6px 12px 12px;}
+.v38-health-row{grid-template-columns:28px minmax(0,1fr); gap:10px; padding:9px 2px;}
+.v38-health-status{width:24px;height:24px;font-size:11px;}
+.v38-health-row strong{font-size:12px!important;}
+.v38-health-row small{font-size:10px!important; line-height:1.5;}
+
+/* Thống kê SKU - bộ lọc ngày / trạng thái */
+.stats-shift-filter-header strong{font-size:13px!important;}
+.stats-shift-filter-header span{font-size:11px!important;}
+.stats-filter-date-label{font-size:11px!important; min-width:95px!important;}
+.stats-filter-date-control input[type="date"]{height:40px!important; font-size:13px!important;}
+.stats-filter-date-buttons .available-date-btn,
+.date-check{min-height:34px;}
+.stats-filter-date-buttons .available-date-btn{padding:6px 10px!important;font-size:11px!important;}
+.stats-filter-status-title strong{font-size:11px!important;}
+.stats-filter-status-actions .shift-status-action{height:28px;font-size:10px!important;padding:0 9px;}
+.stats-filter-status-grid{gap:8px!important;}
+.stats-filter-status-grid .shift-status-check{padding:8px 10px!important;min-height:40px;max-width:320px;}
+.stats-filter-status-grid .shift-status-check span{font-size:10.5px!important;line-height:1.45!important;}
+.stats-shift-filter-footer span{font-size:11px!important;}
+.stats-shift-filter-footer strong{font-size:13px!important;}
+.date-check-main strong{font-size:12px!important;}
+.date-check-main small{font-size:10px!important;}
+.status-check{padding:10px 12px;}
+.status-check-text strong{font-size:11px;}
+.status-check-text small{font-size:10px;}
+
+/* Tồn kho / đối chiếu - card + bảng */
+.inventory-kpi-card{min-height:98px; padding:14px 15px;}
+.inventory-kpi-card span{font-size:11px!important;}
+.inventory-kpi-card strong{font-size:30px!important;}
+.inventory-kpi-card small{font-size:10.5px!important; line-height:1.5;}
+.inventory-summary-toolbar h2{font-size:16px!important;}
+.inventory-summary-toolbar p{font-size:12px!important; line-height:1.5;}
+.inventory-search-box{height:38px;}
+.inventory-search-box input{font-size:12px!important;}
+.inventory-summary-table th{padding:11px 9px; font-size:12px!important;}
+.inventory-summary-table td{padding:12px 9px; font-size:13px!important; line-height:1.5;}
+.inventory-summary-table td:nth-child(3){min-width:240px;}
+.inventory-summary-table td:nth-child(3) small,
+.inventory-summary-table td:nth-child(3) .muted,
+.inventory-summary-table .inventory-unmapped{font-size:10.5px!important; line-height:1.45;}
+.inventory-summary-table .inventory-num{font-size:13px!important;}
+.inventory-summary-table tfoot td{font-size:13px!important;}
+.inventory-table-note{font-size:11px!important; line-height:1.6;}
+.inventory-alert-pill{height:26px; padding:0 10px; font-size:10px!important;}
+
+/* Mã đơn / đối chiếu MISA */
+.v41-kpi strong{font-size:30px;}
+.v41-order-table th,
+.v41-sku-table th{font-size:12px!important;}
+.v41-order-table td,
+.v41-sku-table td{font-size:13px!important; line-height:1.55;}
+.v41-order-code{font-size:13px!important;}
+.v41-order-sku-chip{min-height:26px; font-size:11px!important;}
+.v41-result-badge{min-height:28px; font-size:11px!important;}
+.v41-result-detail{font-size:10.5px!important; line-height:1.5;}
+
+/* Responsive nhẹ */
+@media(max-width:1280px){
+    .v38-operations-grid{grid-template-columns:1fr;}
+}
