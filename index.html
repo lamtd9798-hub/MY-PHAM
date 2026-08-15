@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=55">
+    <link rel="stylesheet" href="style.css?v=56">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -269,7 +269,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V55.0</span>
+                <span class="v38-sidebar-version">V56.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -1052,7 +1052,7 @@
                                 <th colspan="10" class="inventory-group-stock">📦 KHO TẠI CHỖ & CÔNG THỨC TỒN</th>
                                 <th colspan="3" class="inventory-group-reconcile-v36">🔎 ĐỐI CHIẾU KIỂM KÊ</th>
                                 <th colspan="3" class="inventory-group-transit">🚚 LUÂN CHUYỂN HIỆN TẠI</th>
-                                <th colspan="2" class="inventory-group-invoice">🧾 ĐỐI CHIẾU HÓA ĐƠN</th>
+                                <th colspan="4" class="inventory-group-invoice">🧾 ĐỐI CHIẾU HÓA ĐƠN THEO ĐƠN + SKU</th>
                                 <th colspan="3" class="inventory-group-value">💰 GIÁ TRỊ & CẢNH BÁO</th>
                             </tr>
                             <tr class="inventory-column-header">
@@ -1072,15 +1072,17 @@
                                 <th class="center inventory-col-transit">Đang giao</th>
                                 <th class="center inventory-col-delivered">Đã giao</th>
                                 <th class="center inventory-col-returning">Hoàn đang về</th>
-                                <th class="center inventory-col-invoice">Đã xuất HĐ</th>
-                                <th class="center inventory-col-waiting">Chờ HĐ*</th>
+                                <th class="center inventory-v56-order-status" title="Trạng thái hóa đơn của các đơn Shopee có chứa SKU kho này.">Tình trạng HĐ theo đơn</th>
+                                <th class="center inventory-v56-invoice-no" title="Số hóa đơn phát hành gần nhất tìm được theo Mã ĐH của sàn.">Số HĐ gần nhất</th>
+                                <th class="center inventory-col-invoice">Đã xuất HĐ (SL)</th>
+                                <th class="center inventory-col-waiting">Chờ HĐ (SL)*</th>
                                 <th class="right">Đơn giá</th>
                                 <th class="right">Giá trị tồn LT</th>
                                 <th class="center">Cảnh báo</th>
                             </tr>
                         </thead>
                         <tbody id="inventorySummaryBody">
-                            <tr><td colspan="24" class="empty-table">Chưa có dữ liệu tồn kho.</td></tr>
+                            <tr><td colspan="26" class="empty-table">Chưa có dữ liệu tồn kho.</td></tr>
                         </tbody>
                         <tfoot id="inventorySummaryFoot"></tfoot>
                     </table>
@@ -2500,29 +2502,52 @@
 
         <!-- ======================== ĐƠN HÀNG ======================== -->
         <section id="view-orders" class="view">
+            <div class="order-v56-kpis">
+                <div class="order-v56-kpi"><span>TỔNG ĐƠN</span><strong id="orderV56Total">0</strong><small>Đơn Shopee đang lưu</small></div>
+                <div class="order-v56-kpi done"><span>ĐÃ PHÁT HÀNH HĐ</span><strong id="orderV56Published">0</strong><small>Ghép theo Mã ĐH của sàn</small></div>
+                <div class="order-v56-kpi wait"><span>CHƯA PHÁT HÀNH</span><strong id="orderV56Unpublished">0</strong><small>Có trong file MISA chưa phát hành</small></div>
+                <div class="order-v56-kpi danger"><span>ĐÃ GIAO CHƯA THẤY MISA</span><strong id="orderV56Missing">0</strong><small>Cần xử lý hóa đơn</small></div>
+                <div class="order-v56-kpi cqt"><span>CQT CẦN THEO DÕI</span><strong id="orderV56Cqt">0</strong><small>HĐ đã phát hành nhưng CQT chưa hoàn tất</small></div>
+            </div>
+
             <div class="panel">
-                <div class="panel-header table-toolbar">
+                <div class="panel-header table-toolbar order-v56-toolbar">
                     <div>
-                        <h2>Danh sách đơn hàng từ file Shopee</h2>
+                        <h2>Danh sách đơn hàng Shopee + trạng thái hóa đơn</h2>
                         <p id="orderTableSummary">0 dòng sản phẩm</p>
                     </div>
                     <div class="toolbar">
-                        <input type="text" id="orderSearch" class="search-input" placeholder="Tìm mã đơn, SKU, tên sản phẩm...">
+                        <select id="orderInvoiceFilterV56" class="select-control order-v56-filter">
+                            <option value="all">Tất cả trạng thái HĐ</option>
+                            <option value="published">Đã phát hành</option>
+                            <option value="unpublished">Chưa phát hành</option>
+                            <option value="missing">Chưa thấy MISA</option>
+                            <option value="cqt">CQT cần theo dõi</option>
+                        </select>
+                        <input type="text" id="orderSearch" class="search-input" placeholder="Tìm mã đơn, SKU, số HĐ...">
                     </div>
                 </div>
-                <div class="table-scroll large-table">
-                    <table>
+                <div class="order-v56-source-note" id="orderInvoiceSourceV56">
+                    Trạng thái HĐ lấy từ 2 danh sách MISA V54; Số HĐ/chi tiết SKU lấy từ nguồn hóa đơn đang lưu.
+                </div>
+                <div class="table-scroll large-table order-v56-table-wrap">
+                    <table class="order-v56-table">
                         <thead>
                             <tr>
                                 <th>Mã đơn</th>
-                                <th>Trạng thái</th>
+                                <th>Trạng thái Shopee</th>
                                 <th>SKU</th>
                                 <th>Tên sản phẩm</th>
-                                <th class="center">Số lượng</th>
+                                <th class="center">SL</th>
+                                <th>Tình trạng HĐ</th>
+                                <th>Số hóa đơn</th>
+                                <th>Ngày HĐ</th>
+                                <th>CQT</th>
+                                <th>Ghi chú</th>
                             </tr>
                         </thead>
                         <tbody id="orderTableBody">
-                            <tr><td colspan="5" class="empty-table">Hãy nhập file Shopee trước.</td></tr>
+                            <tr><td colspan="10" class="empty-table">Hãy nhập file Shopee trước.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -2853,8 +2878,8 @@
                 </div>
                 <div class="inventory-ledger-table-wrap compact">
                     <table class="inventory-ledger-orders-table">
-                        <thead><tr><th>STT</th><th>Mã đơn</th><th>Ngày đơn</th><th>SKU Shopee</th><th class="center">SL</th><th>Trạng thái</th><th>Nhóm hiện tại</th><th>Ý nghĩa với kho</th></tr></thead>
-                        <tbody id="inventoryLedgerOrdersBody"><tr><td colspan="8" class="empty-table">Chưa có snapshot luân chuyển.</td></tr></tbody>
+                        <thead><tr><th>STT</th><th>Mã đơn</th><th>Ngày đơn</th><th>SKU Shopee</th><th class="center">SL</th><th>Trạng thái</th><th>Nhóm hiện tại</th><th>Tình trạng HĐ</th><th>Số HĐ</th><th>CQT</th><th>Ý nghĩa với kho</th></tr></thead>
+                        <tbody id="inventoryLedgerOrdersBody"><tr><td colspan="11" class="empty-table">Chưa có snapshot luân chuyển.</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -2903,6 +2928,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=55"></script>
+    <script src="script.js?v=56"></script>
 </body>
 </html>

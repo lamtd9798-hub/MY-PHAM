@@ -6120,3 +6120,44 @@ body.return-v51-modal-open{overflow:hidden;}
 .v55-late-pill{background:#eef3f5;color:#607985}.v55-late-pill.late{background:#ffe9e5;color:#c94136}
 .v55-row-urgent td:first-child{box-shadow:inset 4px 0 0 #e35b50}.v55-row-warning td:first-child{box-shadow:inset 4px 0 0 #e6a326}.v55-row-cqt td:first-child{box-shadow:inset 4px 0 0 #5795d6}
 @media(max-width:1350px){.v55-queue-kpis{grid-template-columns:repeat(3,minmax(0,1fr));}.v55-queue-header{flex-direction:column;}.v55-queue-filters{width:100%;}.v55-queue-filters input{flex:1;}}
+
+
+/* =========================================================
+   V56 - ĐỒNG BỘ TRẠNG THÁI HÓA ĐƠN SANG ĐƠN HÀNG & TỒN KHO
+========================================================= */
+.order-v56-kpis{
+    display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-bottom:10px
+}
+.order-v56-kpi{
+    padding:12px 13px;border:1px solid #dfe7ea;border-radius:10px;background:#fff
+}
+.order-v56-kpi span{display:block;color:#71858e;font-size:10px;font-weight:900}
+.order-v56-kpi strong{display:block;margin-top:5px;color:#213d48;font-size:25px;line-height:1}
+.order-v56-kpi small{display:block;margin-top:5px;color:#84969d;font-size:10px;line-height:1.4}
+.order-v56-kpi.done{background:#f0faf7;border-color:#c5e4db}.order-v56-kpi.done strong{color:#087863}
+.order-v56-kpi.wait{background:#fff9ec;border-color:#ead9ae}.order-v56-kpi.wait strong{color:#9a6815}
+.order-v56-kpi.danger{background:#fff3f3;border-color:#efcaca}.order-v56-kpi.danger strong{color:#bf3e44}
+.order-v56-kpi.cqt{background:#f4f1fb;border-color:#d9cdec}.order-v56-kpi.cqt strong{color:#7454a4}
+.order-v56-toolbar{align-items:flex-start}
+.order-v56-filter{min-width:170px}
+.order-v56-source-note{margin:0 12px 10px;padding:8px 10px;border-radius:8px;background:#f5f9fa;color:#607680;font-size:11px;line-height:1.5}
+.order-v56-table{min-width:1480px}
+.order-v56-table th{font-size:11px;white-space:nowrap}
+.order-v56-table td{font-size:12px;vertical-align:middle}
+.order-v56-row.published{background:#fbfefc}.order-v56-row.unpublished{background:#fffdf8}.order-v56-row.missing{background:#fffafa}.order-v56-row.cqt{background:#fdfbff}
+.order-v56-invoice-no{color:#27658a}
+.order-v56-note{display:block;max-width:260px;color:#72858d;font-size:10.5px;line-height:1.45}
+.invoice-v56-status{display:inline-flex;align-items:center;justify-content:center;min-height:27px;padding:0 9px;border-radius:999px;font-size:10px;font-weight:900;white-space:nowrap}
+.invoice-v56-status.published{background:#e7f7f2;color:#087863}.invoice-v56-status.unpublished{background:#fff3d9;color:#956313}.invoice-v56-status.missing{background:#ffeded;color:#bf3e44}.invoice-v56-status.cqt{background:#eee8fa;color:#7251a1}.invoice-v56-status.tracking{background:#edf3f5;color:#617984}
+.invoice-v56-mini-group{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px}
+.invoice-v56-mini{display:inline-flex;align-items:center;justify-content:center;min-height:22px;padding:0 6px;border-radius:999px;font-size:9px;font-weight:900;white-space:nowrap}
+.invoice-v56-mini.published{background:#e7f7f2;color:#087863}.invoice-v56-mini.unpublished{background:#fff3d9;color:#956313}.invoice-v56-mini.missing{background:#ffeded;color:#bf3e44}.invoice-v56-mini.cqt{background:#eee8fa;color:#7251a1}.invoice-v56-mini.tracking{background:#edf3f5;color:#617984}
+.invoice-v56-order-count{display:block;margin-top:4px;color:#87979d;font-size:9px;white-space:nowrap}
+.inventory-v56-order-status-cell{min-width:145px;background:#fcfdfd}
+.inventory-v56-invoice-no-cell{min-width:115px;background:#f7fbfd}
+.inventory-v56-invoice-no-cell strong{display:block;color:#2f6687;font-size:11px}
+.inventory-v56-invoice-no-cell small{display:block;margin-top:3px;color:#84969d;font-size:9px}
+.inventory-ledger-v56-note{display:block;margin-top:4px;color:#819198;font-size:9px;line-height:1.4}
+.inventory-ledger-orders-table{min-width:1460px}
+@media(max-width:1200px){.order-v56-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.order-v56-kpis{grid-template-columns:1fr 1fr}.order-v56-toolbar{flex-direction:column}.order-v56-toolbar .toolbar{width:100%}.order-v56-filter,.order-v56-toolbar .search-input{width:100%}}

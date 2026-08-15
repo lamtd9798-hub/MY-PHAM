@@ -1,0 +1,54 @@
+RUCOS V56 - ĐỒNG BỘ TRẠNG THÁI HÓA ĐƠN SANG ĐƠN HÀNG & TỒN KHO
+
+KHÔNG CẦN CHẠY SQL MỚI.
+V56 dùng trực tiếp dữ liệu MISA 3 nguồn của V54/V55 đang lưu trên Supabase.
+
+NÂNG CẤP 1 - TAB ĐƠN HÀNG
+Mỗi dòng sản phẩm giờ có thêm:
+- Tình trạng HĐ
+- Số hóa đơn
+- Ngày HĐ
+- Trạng thái CQT
+- Ghi chú/lý do chưa phát hành
+
+Trên đầu có KPI:
+- Tổng đơn
+- Đã phát hành
+- Chưa phát hành
+- Đã giao chưa thấy MISA
+- CQT cần theo dõi
+
+Có bộ lọc trạng thái HĐ.
+
+NÂNG CẤP 2 - BẢNG TỒN KHO
+Nhóm ĐỐI CHIẾU HÓA ĐƠN thêm:
+- Tình trạng HĐ theo đơn
+- Số HĐ gần nhất
+- Đã xuất HĐ (SL)
+- Chờ HĐ (SL)
+
+Ví dụ với REWD có thể thấy ngay:
+HĐ 20 | Chờ 5 | Thiếu 2 | CQT 1
+mà không cần mở tab Thống kê hóa đơn.
+
+NÂNG CẤP 3 - NHẬT KÝ SKU V48
+Bảng đơn Shopee liên quan tới SKU thêm:
+- Tình trạng HĐ
+- Số HĐ
+- CQT
+
+DỮ LIỆU GHÉP
+Shopee: Mã đơn hàng
+=
+MISA: Mã ĐH của sàn
+
+CẬP NHẬT
+1. Thay 3 file GitHub:
+   index.html
+   style.css
+   script.js
+2. Commit.
+3. Mở web -> Ctrl + F5.
+4. Góc trái phải hiện V56.0.
+
+KHÔNG chạy SQL mới.
