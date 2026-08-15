@@ -1,0 +1,3970 @@
+/* =========================================================
+   RUCOS - FULL STYLE V4
+========================================================= */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+    --sidebar-width:238px;
+    --primary:#0f9b81;
+    --primary-dark:#087863;
+    --primary-light:#e9f8f4;
+    --danger:#e5484d;
+    --warning:#e99b2d;
+    --blue:#3b82f6;
+    --purple:#8b5cf6;
+    --text:#16202a;
+    --muted:#64748b;
+    --muted-2:#94a3b8;
+    --border:#e2e8f0;
+    --bg:#f4f7fa;
+    --card:#fff;
+}
+html,body{min-height:100%}
+body{font-family:"Inter",Arial,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+button,input,select{font:inherit}
+button{cursor:pointer}
+
+/* SIDEBAR */
+.sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidebar-width);background:#102f3b;color:white;display:flex;flex-direction:column;z-index:100;border-right:1px solid rgba(255,255,255,.05)}
+.sidebar-logo{height:78px;display:flex;align-items:center;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logo-icon{width:38px;height:38px;border-radius:10px;background:#16a58b;display:grid;place-items:center;font-size:20px;font-weight:800;margin-right:11px}
+.logo-title{font-size:18px;font-weight:800;letter-spacing:.7px}.logo-subtitle{font-size:8px;color:#91a9b3;letter-spacing:1.5px;margin-top:2px}
+.sidebar-section-title{color:#6f909d;font-size:9px;font-weight:800;letter-spacing:1.45px;padding:22px 18px 8px}.second-section{margin-top:8px}
+.sidebar-menu{display:flex;flex-direction:column;gap:4px;padding:0 9px}.nav-item{min-height:41px;width:100%;border:0;background:transparent;color:#b7ccd4;border-radius:8px;padding:0 11px;display:flex;align-items:center;text-align:left;font-size:12px;font-weight:550;transition:.15s}.nav-item:hover{background:rgba(255,255,255,.07);color:white}.nav-item.active{background:#12a58a;color:white;font-weight:700}.nav-icon{width:27px;font-size:15px}.nav-badge{margin-left:auto;min-width:20px;padding:2px 6px;border-radius:999px;background:rgba(255,255,255,.15);text-align:center;font-size:9px}.nav-item.disabled{opacity:.48;cursor:default}.nav-item.disabled:hover{background:transparent;color:#b7ccd4}
+.sidebar-footer{margin-top:auto;padding:13px;border-top:1px solid rgba(255,255,255,.08)}.shop-info{display:flex;align-items:center;padding:9px;background:rgba(255,255,255,.055);border-radius:9px}.shop-avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#f46155;font-size:10px;font-weight:800;margin-right:9px}.shop-name{font-size:11px;font-weight:700}.shop-platform{color:#8ca6b1;font-size:9px;margin-top:2px}
+
+/* MAIN + TOPBAR */
+.main-content{margin-left:var(--sidebar-width);min-height:100vh;padding:0 24px 36px}.topbar{min-height:78px;display:flex;align-items:center;justify-content:space-between;gap:16px}.topbar h1{font-size:21px;font-weight:800}.topbar p{color:var(--muted);font-size:11px;margin-top:4px}.topbar-actions{display:flex;align-items:center;gap:8px}.file-pill{height:35px;display:flex;align-items:center;gap:7px;padding:0 11px;background:#fff;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:10px;max-width:260px}.file-pill.loaded{border-color:#a8decf;background:#f5fcfa;color:#137561}.file-dot{width:7px;height:7px;border-radius:50%;background:#cbd5e1;flex:0 0 auto}.file-pill.loaded .file-dot{background:#11a784}.file-pill span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{height:35px;border:0;border-radius:7px;padding:0 13px;font-size:11px;font-weight:650;transition:.15s}.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}.btn-light{background:#fff;border:1px solid var(--border);color:#334155}.btn-light:hover{background:#f8fafc}.btn-danger-outline{background:#fff;border:1px solid #ffc8cb;color:#cc4147}.btn-danger-outline:hover{background:#fff4f4}.btn-large{height:43px;padding:0 22px;font-size:12px}.text-button{border:0;background:transparent;color:var(--primary);font-size:10px;font-weight:650}
+.view{display:none}.view.active{display:block}
+
+/* CARDS */
+.kpi-grid{display:grid;gap:12px;margin-bottom:15px}.kpi-grid.four{grid-template-columns:repeat(4,minmax(170px,1fr))}.kpi-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px;min-height:120px}.accent-card{border-color:#b7e3d8;background:linear-gradient(180deg,#fff 0%,#f5fcfa 100%)}.kpi-top{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:9px;font-weight:800}.kpi-icon{width:29px;height:29px;border-radius:7px;display:grid;place-items:center;font-size:13px}.kpi-icon.blue{background:#edf5ff}.kpi-icon.purple{background:#f3efff}.kpi-icon.green{background:#eaf9f3}.kpi-icon.cyan{background:#eaf9fb}.kpi-value{font-size:24px;font-weight:800;margin-top:12px}.kpi-footer{color:var(--muted-2);font-size:9px;margin-top:6px}
+.dashboard-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:15px}.panel{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:15px;overflow:hidden}.panel-header{min-height:58px;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #edf1f4}.panel-header h2{font-size:13px;font-weight:750}.panel-header p{font-size:9px;color:var(--muted-2);margin-top:3px}
+.flow-row{display:flex;align-items:center;padding:18px 15px;overflow:auto}.flow-step{min-width:145px;display:flex;align-items:center;gap:9px}.flow-number{width:31px;height:31px;flex:0 0 31px;border-radius:50%;display:grid;place-items:center;background:var(--primary-light);color:var(--primary);font-weight:800}.flow-step strong{display:block;font-size:10px}.flow-step span{display:block;color:var(--muted-2);font-size:8px;margin-top:3px;white-space:nowrap}.flow-arrow{color:#cbd5e1;font-size:16px;padding:0 8px}
+.file-summary{padding:9px 15px 14px}.summary-row{min-height:37px;display:flex;align-items:center;border-bottom:1px solid #f1f4f6}.summary-row:last-child{border-bottom:0}.summary-row span{font-size:10px;color:var(--muted)}.summary-row strong{margin-left:auto;font-size:11px}.empty-box{padding:25px;text-align:center;color:var(--muted-2);font-size:10px}
+
+/* TABLES */
+.table-scroll{width:100%;overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap}thead{background:#fafbfc}th{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:9px;font-weight:800;text-align:left}td{padding:10px 12px;border-bottom:1px solid #edf1f4;color:#334155;font-size:10px}tbody tr:hover{background:#fafcfd}.empty-table{text-align:center;color:var(--muted-2);padding:31px}.center{text-align:center!important}.status-pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 7px;font-size:8px;font-weight:700}.status-pill.ok{background:#eaf8f4;color:#087863}.status-pill.warn{background:#fff5df;color:#9a650f}
+
+/* IMPORT */
+.import-intro{margin-bottom:16px}.import-intro h2{font-size:17px}.import-intro p{font-size:10px;color:var(--muted);margin-top:5px}.single-upload-layout{display:grid;grid-template-columns:1.1fr .9fr;gap:15px;margin-bottom:15px}.upload-card{position:relative;background:#fff;border:1px solid var(--border);border-radius:11px;padding:24px;text-align:center}.upload-card.important{border-color:#83cfbe;box-shadow:0 4px 15px rgba(15,155,129,.07)}.large-upload-card{min-height:290px}.upload-step{position:absolute;top:13px;left:14px;color:var(--muted-2);font-size:8px;font-weight:800;letter-spacing:.4px}.upload-large-icon{width:54px;height:54px;margin:22px auto 13px;border-radius:50%;background:#f1f8f6;display:grid;place-items:center;font-size:23px}.upload-card h3{font-size:15px}.upload-card p{max-width:520px;margin:8px auto 16px;color:var(--muted);font-size:10px;line-height:1.6}.upload-button{min-height:38px;display:inline-flex;align-items:center;justify-content:center;padding:0 16px;border:1px solid var(--border);border-radius:7px;font-size:10px;font-weight:700;cursor:pointer}.upload-button.primary{background:var(--primary);border-color:var(--primary);color:#fff}.upload-button input{display:none}.upload-file-status{margin-top:12px;color:var(--muted-2);font-size:9px;word-break:break-all}.upload-file-status.success{color:#0b8069;font-weight:650}.upload-file-status.error{color:#d13c43;font-weight:650}
+.import-help-panel{margin-bottom:0}.check-list{padding:7px 15px 13px}.check-item{display:flex;align-items:flex-start;gap:9px;padding:11px 0;border-bottom:1px solid #f0f3f5}.check-item:last-child{border-bottom:0}.check-item>span{width:20px;height:20px;border-radius:50%;background:#e9f8f4;color:#0f9b81;display:grid;place-items:center;font-size:10px;font-weight:800}.check-item strong{display:block;font-size:10px}.check-item small{display:block;font-size:9px;color:var(--muted-2);margin-top:3px}.import-status-grid{display:grid;gap:10px;padding:15px}.import-status-grid.three{grid-template-columns:repeat(3,1fr)}.import-status-box{padding:14px;border:1px solid var(--border);border-radius:8px;background:#fafcfd}.import-status-box span{color:var(--muted);font-size:9px}.import-status-box strong{display:block;font-size:20px;margin-top:6px}.reconcile-actions{display:flex;justify-content:center;padding:2px 15px 17px}
+
+/* SKU KPI + FILTER */
+.sku-top-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:15px}.mini-kpi{background:#fff;border:1px solid var(--border);border-radius:9px;padding:14px}.mini-kpi span{color:var(--muted);font-size:8px;font-weight:700}.mini-kpi strong{display:block;font-size:18px;margin-top:7px}.mini-kpi.accent{border-color:#9fdccb;background:#f6fffc}.mini-kpi.total{border-color:#b8e2d9;background:#eef9f6}.table-toolbar{gap:14px}.toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.select-control{height:34px;border:1px solid var(--border);border-radius:7px;background:#fff;color:#334155;outline:0;padding:0 9px;font-size:10px}.select-control:focus{border-color:#78c8b7}.status-filter-wrap{display:flex;flex-wrap:wrap;gap:8px;padding:14px}.status-check{display:flex;align-items:flex-start;gap:7px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;max-width:430px}.status-check.checked{border-color:#9bd8cc;background:#f3fbf9}.status-check input{margin-top:2px;accent-color:var(--primary)}.status-check-text{display:flex;flex-direction:column;gap:2px}.status-check-text strong{font-size:9px;color:#334155}.status-check-text small{font-size:8px;color:var(--muted-2)}
+.conversion-warning{margin:11px 14px 0;padding:9px 11px;border:1px solid #ffd49e;background:#fff8eb;color:#8a5a13;border-radius:8px;font-size:9px;line-height:1.5}.hidden{display:none!important}
+
+/* CONVERSION TABLE - COMPACT */
+.conversion-scroll{max-height:560px}.conversion-table{border-collapse:separate;border-spacing:0;width:100%}.conversion-table th,.conversion-table td{vertical-align:middle!important}.conversion-table th{position:sticky;top:0;z-index:3;background:#fafbfc;text-align:center!important;padding:9px 3px!important}.conversion-table td{text-align:center!important;padding:6px 3px!important;height:42px}.conversion-table th:nth-child(1),.conversion-table td:nth-child(1),.conversion-table th:nth-child(2),.conversion-table td:nth-child(2){text-align:left!important}.conversion-table th:first-child,.conversion-table td:first-child{position:sticky;left:0;z-index:4;background:#fff;min-width:108px;width:108px;max-width:108px}.conversion-table th:nth-child(2),.conversion-table td:nth-child(2){position:sticky;left:108px;z-index:4;background:#fff;min-width:390px;width:390px;max-width:390px;white-space:normal!important;line-height:1.35}.conversion-table thead th:first-child,.conversion-table thead th:nth-child(2){z-index:6;background:#fafbfc}.conversion-table th:nth-child(3),.conversion-table td:nth-child(3){min-width:82px;width:82px;text-align:center!important}.conversion-table .base-sku-header{min-width:68px!important;width:68px!important;max-width:68px!important;font-size:8.5px!important;font-weight:800!important;white-space:normal!important;line-height:1.15}.conversion-table .remove-base-sku{width:14px;height:14px;margin-left:2px;padding:0;border:0;border-radius:4px;background:transparent;color:#d6454b;font-size:9px;vertical-align:middle}.conversion-table .remove-base-sku:hover{background:#ffe7e8}.conversion-input{width:38px!important;min-width:38px!important;max-width:38px!important;height:26px!important;padding:0!important;margin:0 auto!important;border:1px solid #cfd8e3!important;border-radius:6px!important;background:#fff!important;color:#0f172a!important;font-family:"Inter",Arial,sans-serif!important;font-size:11px!important;font-weight:650!important;line-height:26px!important;text-align:center!important;outline:0!important;box-shadow:0 1px 2px rgba(15,23,42,.03)!important;transition:.15s}.conversion-input:hover{border-color:#9eb2c7!important;background:#fbfcfd!important}.conversion-input:focus{border-color:#0f9b81!important;box-shadow:0 0 0 3px rgba(15,155,129,.12)!important}.conversion-input::-webkit-inner-spin-button,.conversion-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}.conversion-input[type=number]{-moz-appearance:textfield}.sku-qty{font-size:12px!important;font-weight:800!important;color:#111827!important}.product-name-cell{white-space:normal!important;line-height:1.35}.sku-mapped{color:#078267;font-size:8px;font-weight:750}.sku-unmapped{color:#b66c00;font-size:8px;font-weight:750}.conversion-table tfoot td{font-weight:800!important;background:#eef9f6!important;border-top:2px solid #9bd8cc!important;padding:9px 4px!important}.conversion-table tfoot td:first-child,.conversion-table tfoot td:nth-child(2){background:#eef9f6!important}.conversion-total-highlight{color:#087863!important;font-size:11px!important;font-weight:800!important}.total-converted-table td:last-child{font-size:12px;font-weight:800;color:#087863}
+
+/* TOAST */
+.toast{position:fixed;right:20px;bottom:20px;transform:translateY(90px);opacity:0;z-index:999;background:#17313a;color:#fff;border-radius:8px;padding:11px 15px;font-size:10px;box-shadow:0 8px 26px rgba(0,0,0,.18);transition:.22s}.toast.show{transform:translateY(0);opacity:1}
+
+/* RESPONSIVE */
+@media(max-width:1250px){.kpi-grid.four,.sku-top-grid{grid-template-columns:repeat(2,1fr)}.dashboard-grid{grid-template-columns:1fr}.single-upload-layout{grid-template-columns:1fr}.conversion-table th:nth-child(2),.conversion-table td:nth-child(2){min-width:320px;width:320px;max-width:320px}}
+@media(max-width:850px){:root{--sidebar-width:64px}.sidebar-logo{padding:0 13px}.logo-copy,.sidebar-section-title,.nav-item span:not(.nav-icon),.shop-text,.nav-badge{display:none}.nav-item{justify-content:center;padding:0}.nav-icon{width:auto}.main-content{margin-left:64px;padding:0 14px 25px}.topbar{align-items:flex-start;flex-direction:column;padding:13px 0}.topbar-actions{width:100%;flex-wrap:wrap}.file-pill{max-width:100%;flex:1}.conversion-table th:nth-child(2),.conversion-table td:nth-child(2){min-width:250px;width:250px;max-width:250px}}
+@media(max-width:560px){.kpi-grid.four,.sku-top-grid,.import-status-grid.three{grid-template-columns:1fr}.toolbar{width:100%}.select-control{width:100%}.flow-row{align-items:flex-start}.conversion-table th:nth-child(2),.conversion-table td:nth-child(2){min-width:210px;width:210px;max-width:210px}}
+
+
+/* =========================================================
+   V6 - TABS ĐỐI SOÁT + DANH SÁCH ĐƠN
+========================================================= */
+.nav-badge.warning{background:#f59e0b;color:#fff}
+.table-toolbar{gap:14px}
+.toolbar{display:flex;align-items:center;gap:8px}
+.search-input{height:35px;width:260px;padding:0 11px;border:1px solid var(--border);border-radius:7px;background:#fff;color:#334155;outline:none;font-family:inherit;font-size:10px}
+.search-input:focus{border-color:#7fcdbd;box-shadow:0 0 0 3px rgba(15,155,129,.08)}
+.large-table{max-height:calc(100vh - 170px)}
+.placeholder-panel{min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:35px}
+.placeholder-panel .placeholder-icon{font-size:44px;margin-bottom:12px}
+.placeholder-panel h2{font-size:18px;margin-bottom:7px}
+.placeholder-panel p{max-width:620px;color:var(--muted);font-size:11px;line-height:1.7}
+.placeholder-note{margin-top:14px;padding:10px 13px;border:1px solid #dce9e5;background:#f5fbf9;border-radius:8px;color:#52706a;font-size:10px}
+@media(max-width:820px){.search-input{width:100%}}
+
+
+/* =========================================================
+   V7 - CÂN LẠI BẢNG QUY ĐỔI
+========================================================= */
+.conversion-table th:first-child,
+.conversion-table td:first-child{
+    min-width:95px!important;
+    width:95px!important;
+    max-width:95px!important;
+}
+.conversion-table th:nth-child(2),
+.conversion-table td:nth-child(2){
+    left:95px!important;
+    min-width:500px!important;
+    width:500px!important;
+    max-width:500px!important;
+    white-space:normal!important;
+    line-height:1.45!important;
+}
+.conversion-table td:nth-child(2){
+    font-size:10.5px!important;
+    padding-left:10px!important;
+    padding-right:10px!important;
+}
+.conversion-table th:nth-child(3),
+.conversion-table td:nth-child(3){
+    min-width:72px!important;
+    width:72px!important;
+    max-width:72px!important;
+    padding-left:3px!important;
+    padding-right:3px!important;
+}
+.conversion-table .base-sku-header{
+    min-width:60px!important;
+    width:60px!important;
+    max-width:60px!important;
+    padding-left:2px!important;
+    padding-right:2px!important;
+}
+.conversion-table td:has(.conversion-input){
+    min-width:60px!important;
+    width:60px!important;
+    max-width:60px!important;
+    padding-left:2px!important;
+    padding-right:2px!important;
+    text-align:center!important;
+}
+.conversion-input{
+    width:36px!important;
+    min-width:36px!important;
+    max-width:36px!important;
+    height:26px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    text-align:center!important;
+}
+.conversion-table th:last-child,
+.conversion-table td:last-child{
+    min-width:105px!important;
+    width:105px!important;
+    max-width:105px!important;
+    text-align:center!important;
+    padding-left:4px!important;
+    padding-right:4px!important;
+}
+.conversion-table .sku-mapped,
+.conversion-table .sku-unmapped{
+    font-size:8.5px!important;
+    white-space:nowrap!important;
+}
+.conversion-table td{height:43px!important}
+.runtime-error{
+    position:fixed;
+    left:calc(var(--sidebar-width) + 16px);
+    right:16px;
+    bottom:16px;
+    z-index:2000;
+    padding:12px 14px;
+    border:1px solid #fecaca;
+    border-radius:9px;
+    background:#fff1f2;
+    color:#b91c1c;
+    font-size:11px;
+    box-shadow:0 8px 25px rgba(0,0,0,.12);
+}
+@media(max-width:850px){
+    .runtime-error{left:80px}
+}
+
+
+/* =========================================================
+   V9 - BỘ LỌC NGÀY ĐẶT HÀNG
+========================================================= */
+.filter-section{
+    padding:14px 16px 12px;
+}
+.filter-section + .filter-section{
+    padding-top:12px;
+}
+.filter-section-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+}
+.filter-section-title strong{
+    display:block;
+    color:#243746;
+    font-size:11px;
+    font-weight:750;
+}
+.filter-section-title span{
+    display:block;
+    margin-top:3px;
+    color:#8a9aa7;
+    font-size:9px;
+}
+.filter-divider{
+    height:1px;
+    margin:0 16px;
+    background:#edf1f4;
+}
+.date-filter-wrap{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:7px;
+}
+.date-check{
+    display:flex;
+    align-items:center;
+    min-width:126px;
+    min-height:43px;
+    padding:7px 10px;
+    border:1px solid #dfe6eb;
+    border-radius:8px;
+    background:#fff;
+    cursor:pointer;
+    user-select:none;
+    transition:.15s;
+}
+.date-check:hover{
+    border-color:#a7d8ce;
+    background:#f8fcfb;
+}
+.date-check.checked{
+    border-color:#65c5b2;
+    background:#edf9f6;
+    box-shadow:0 0 0 2px rgba(15,155,129,.05);
+}
+.date-check input{
+    margin-right:7px;
+    accent-color:var(--primary);
+}
+.date-check-main strong{
+    display:block;
+    color:#243746;
+    font-size:10px;
+    font-weight:750;
+}
+.date-check-main small{
+    display:block;
+    margin-top:2px;
+    color:#8fa0ac;
+    font-size:8px;
+}
+.date-action-btn{
+    height:31px;
+    padding:0 10px;
+    border:1px solid #b9ddd5;
+    border-radius:7px;
+    background:#f1faf8;
+    color:#087863;
+    font-family:inherit;
+    font-size:9px;
+    font-weight:650;
+    cursor:pointer;
+}
+.date-action-btn:hover{
+    background:#e7f7f3;
+}
+.date-action-btn.secondary{
+    border-color:#dde4e9;
+    background:#fff;
+    color:#64748b;
+}
+.compact-empty{
+    width:100%;
+    padding:12px!important;
+}
+
+
+/* =========================================================
+   V10 - LƯU NHIỀU FILE / DỮ LIỆU THEO NGÀY
+========================================================= */
+.saved-data-panel{margin-top:16px}
+.saved-db-badge{
+    display:inline-flex;align-items:center;height:28px;padding:0 9px;
+    border:1px solid #bfe0d9;border-radius:999px;background:#f0faf7;
+    color:#087863;font-size:9px;font-weight:700;white-space:nowrap
+}
+.saved-summary-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px
+}
+.saved-summary-card{
+    padding:12px 14px;border:1px solid var(--border);border-radius:9px;background:#fafcfd
+}
+.saved-summary-card span{
+    display:block;color:#7b8c99;font-size:8px;font-weight:700;letter-spacing:.35px
+}
+.saved-summary-card strong{
+    display:block;margin-top:6px;color:#172b34;font-size:19px;font-weight:800
+}
+.saved-summary-card strong.small-value{
+    font-size:10px;line-height:1.4;min-height:25px;display:flex;align-items:center
+}
+.btn-delete-day{
+    height:26px;padding:0 8px;border:1px solid #fecaca;border-radius:6px;
+    background:#fff6f6;color:#c83f46;font-family:inherit;font-size:8px;font-weight:650;cursor:pointer
+}
+.btn-delete-day:hover{background:#ffecec}
+.import-note{
+    margin-top:9px;padding:8px 10px;border:1px solid #d5e9e4;border-radius:7px;
+    background:#f5fbf9;color:#52706a;font-size:9px;line-height:1.5
+}
+.saved-day-date{font-weight:750;color:#233746}
+.saved-day-sub{display:block;margin-top:2px;color:#94a3b8;font-size:8px}
+@media(max-width:900px){
+    .saved-summary-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){
+    .saved-summary-grid{grid-template-columns:1fr}
+}
+
+
+/* =========================================================
+   V11 - SUPABASE CLOUD + LOGIN
+========================================================= */
+.auth-gate{
+    position:fixed;inset:0;z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+    padding:22px;background:rgba(10,31,40,.72);
+    backdrop-filter:blur(5px)
+}
+.auth-gate.hidden{display:none}
+.auth-card{
+    width:min(420px,100%);background:#fff;border:1px solid #dce5e9;
+    border-radius:16px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.26)
+}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.auth-logo-icon{
+    width:42px;height:42px;border-radius:11px;background:#12a58a;color:#fff;
+    display:grid;place-items:center;font-size:21px;font-weight:800
+}
+.auth-logo-title{font-size:19px;font-weight:800;color:#142a33}
+.auth-logo-sub{font-size:9px;color:#8da0aa;letter-spacing:1.3px;margin-top:2px}
+.auth-card h2{font-size:19px;margin-bottom:5px}
+.auth-card>p{color:#71828e;font-size:10px;line-height:1.6;margin-bottom:18px}
+.auth-field{margin-bottom:12px}
+.auth-field label{display:block;font-size:9px;font-weight:700;color:#536672;margin-bottom:5px}
+.auth-field input{
+    width:100%;height:42px;border:1px solid #d7e0e5;border-radius:8px;
+    padding:0 11px;outline:none;font-family:inherit;font-size:11px
+}
+.auth-field input:focus{border-color:#55bea9;box-shadow:0 0 0 3px rgba(15,155,129,.1)}
+.auth-submit{
+    width:100%;height:43px;border:0;border-radius:8px;background:#0f9b81;
+    color:#fff;font-family:inherit;font-weight:750;font-size:11px;cursor:pointer
+}
+.auth-submit:hover{background:#087863}
+.auth-submit:disabled{opacity:.6;cursor:wait}
+.auth-error{
+    display:none;margin-top:10px;padding:9px 10px;border:1px solid #fecaca;
+    border-radius:7px;background:#fff1f2;color:#b91c1c;font-size:9px;line-height:1.5
+}
+.auth-error.show{display:block}
+.auth-help{
+    margin-top:14px;padding-top:12px;border-top:1px solid #edf1f3;
+    color:#8a9aa4;font-size:8.5px;line-height:1.55
+}
+.cloud-user{
+    height:35px;display:flex;align-items:center;gap:7px;padding:0 10px;
+    border:1px solid #cce4de;border-radius:8px;background:#f4fbf9;
+    color:#30665b;font-size:9px;max-width:210px
+}
+.cloud-user-dot{width:7px;height:7px;border-radius:50%;background:#17a987}
+.cloud-user-email{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-logout{
+    height:35px;padding:0 10px;border:1px solid #dce4e8;border-radius:7px;
+    background:#fff;color:#64748b;font-family:inherit;font-size:9px;font-weight:650
+}
+.cloud-sync-badge{
+    display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 9px;
+    border:1px solid #bfe0d9;border-radius:999px;background:#effaf7;
+    color:#087863;font-size:9px;font-weight:700
+}
+.cloud-sync-badge.syncing{color:#9a670f;border-color:#f4d49a;background:#fff8e8}
+.cloud-sync-badge.error{color:#b91c1c;border-color:#fecaca;background:#fff1f2}
+.cloud-note{
+    margin-top:8px;padding:8px 10px;border:1px solid #cfe6e0;border-radius:7px;
+    background:#f4fbf9;color:#52706a;font-size:9px;line-height:1.5
+}
+@media(max-width:1000px){
+    .cloud-user{display:none}
+}
+
+
+/* =========================================================
+   V12 - CHỌN NGÀY + 2 CA UPLOAD
+========================================================= */
+.report-date-panel{margin-bottom:16px;overflow:visible}
+.report-date-content{
+    display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:16px 18px
+}
+.report-date-left h3{font-size:14px;margin-bottom:4px}
+.report-date-left p{font-size:9px;color:#81929e;line-height:1.5}
+.report-date-control{
+    display:flex;align-items:center;gap:9px;padding:8px 10px;
+    border:1px solid #b8ded6;border-radius:9px;background:#f3fbf9
+}
+.report-date-control label{
+    color:#457267;font-size:9px;font-weight:750;white-space:nowrap
+}
+.report-date-control input{
+    height:35px;padding:0 10px;border:1px solid #cddbd7;border-radius:7px;
+    background:#fff;color:#20343d;font-family:inherit;font-size:11px;font-weight:650;outline:none
+}
+.report-date-control input:focus{
+    border-color:#0f9b81;box-shadow:0 0 0 3px rgba(15,155,129,.09)
+}
+.report-date-selected{
+    min-width:105px;color:#087863;font-size:10px;font-weight:750;text-align:center
+}
+.upload-shift-grid{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-bottom:16px
+}
+.shift-upload-card{
+    position:relative;background:#fff;border:1px solid var(--border);
+    border-radius:11px;padding:22px;text-align:center;min-height:265px
+}
+.shift-upload-card.morning{border-top:3px solid #f4b544}
+.shift-upload-card.afternoon{border-top:3px solid #5ca7e8}
+.shift-tag{
+    position:absolute;top:12px;left:13px;padding:4px 7px;border-radius:999px;
+    font-size:8px;font-weight:800;letter-spacing:.3px
+}
+.shift-upload-card.morning .shift-tag{background:#fff6df;color:#9a670f}
+.shift-upload-card.afternoon .shift-tag{background:#edf6ff;color:#24699f}
+.shift-upload-icon{font-size:31px;margin:14px 0 8px}
+.shift-upload-card h3{font-size:14px;margin-bottom:5px}
+.shift-upload-card p{
+    max-width:480px;margin:0 auto 14px;color:#83949f;font-size:9px;line-height:1.55
+}
+.shift-status{
+    margin-top:12px;min-height:36px;padding:8px 9px;border:1px dashed #dbe4e8;
+    border-radius:7px;background:#fafcfd;color:#80919c;font-size:8.5px;line-height:1.45
+}
+.shift-status.loaded{
+    border-style:solid;border-color:#b9e0d7;background:#f1faf8;color:#307064
+}
+.shift-status strong{display:block;color:#20343d;font-size:9px;margin-bottom:2px}
+.saved-slot{
+    display:inline-flex;align-items:center;justify-content:center;min-width:82px;
+    min-height:25px;padding:4px 7px;border-radius:6px;font-size:8px;line-height:1.35
+}
+.saved-slot.yes{background:#edf9f6;color:#087863;border:1px solid #c4e7df}
+.saved-slot.no{background:#f7f9fa;color:#9aa8b1;border:1px solid #e5eaed}
+.saved-slot.old{background:#fff8e8;color:#95630d;border:1px solid #f4dba8}
+.saved-slot strong{display:block;font-size:8px}
+.saved-actions{display:flex;justify-content:center;gap:5px;flex-wrap:wrap}
+.btn-select-day{
+    height:26px;padding:0 8px;border:1px solid #b9ddd5;border-radius:6px;
+    background:#f1faf8;color:#087863;font-family:inherit;font-size:8px;font-weight:700;cursor:pointer
+}
+.btn-select-day:hover{background:#e6f7f3}
+.manual-date-note{
+    margin:0 18px 14px;padding:9px 11px;border-left:3px solid #0f9b81;
+    border-radius:6px;background:#f5fbf9;color:#54736b;font-size:9px;line-height:1.55
+}
+@media(max-width:900px){
+    .report-date-content{align-items:flex-start;flex-direction:column}
+    .upload-shift-grid{grid-template-columns:1fr}
+}
+
+
+/* =========================================================
+   V13 - NHẬP SÁNG/CHIỀU RIÊNG + LỊCH SỬ
+========================================================= */
+.shift-tabs{
+    display:flex;gap:7px;padding:0 18px 14px
+}
+.shift-tab-btn{
+    flex:1;min-height:42px;border:1px solid #dce5e9;border-radius:9px;
+    background:#fff;color:#637683;font-family:inherit;font-size:10px;font-weight:750;
+    cursor:pointer;transition:.15s
+}
+.shift-tab-btn.active{
+    border-color:#72caba;background:#ecf9f6;color:#087863;
+    box-shadow:0 0 0 2px rgba(15,155,129,.05)
+}
+.shift-pane{display:none;padding:0 18px 18px}
+.shift-pane.active{display:block}
+.shift-config-grid{
+    display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px;margin-bottom:14px
+}
+.shift-config-box{
+    border:1px solid #e1e8ec;border-radius:9px;background:#fafcfd;padding:13px
+}
+.shift-config-box label{
+    display:block;margin-bottom:6px;color:#536875;font-size:9px;font-weight:750
+}
+.shift-config-box input[type="date"]{
+    width:100%;height:38px;padding:0 10px;border:1px solid #ced9df;border-radius:7px;
+    background:#fff;font-family:inherit;font-size:10px;font-weight:650;outline:none
+}
+.shift-config-box input[type="date"]:focus{
+    border-color:#0f9b81;box-shadow:0 0 0 3px rgba(15,155,129,.08)
+}
+.shift-status-title{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px
+}
+.shift-status-title strong{font-size:9px;color:#536875}
+.shift-status-actions{display:flex;gap:5px}
+.shift-status-action{
+    height:24px;padding:0 7px;border:1px solid #dce5e9;border-radius:6px;
+    background:#fff;color:#6f818c;font-family:inherit;font-size:8px;cursor:pointer
+}
+.shift-status-grid{display:flex;flex-wrap:wrap;gap:6px}
+.shift-status-check{
+    display:flex;align-items:flex-start;gap:6px;max-width:360px;
+    padding:7px 8px;border:1px solid #e0e7eb;border-radius:7px;background:#fff;
+    cursor:pointer;user-select:none
+}
+.shift-status-check.checked{
+    border-color:#75cdbd;background:#effaf7
+}
+.shift-status-check input{
+    margin-top:1px;accent-color:#0f9b81
+}
+.shift-status-check span{
+    color:#536875;font-size:8.5px;line-height:1.35
+}
+.shift-upload-zone{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:13px;border:1px dashed #cbd9df;border-radius:9px;background:#fbfdfd
+}
+.shift-upload-zone-left strong{
+    display:block;color:#233a44;font-size:10px;margin-bottom:3px
+}
+.shift-upload-zone-left small{
+    display:block;color:#8a9aa5;font-size:8.5px;line-height:1.4
+}
+.shift-import-result{
+    margin-top:10px;padding:9px 11px;border:1px solid #dce6e9;border-radius:7px;
+    background:#fff;color:#73848f;font-size:8.5px;line-height:1.45
+}
+.shift-import-result.loaded{
+    border-color:#b8e0d7;background:#f2faf8;color:#356f63
+}
+.stats-report-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 16px
+}
+.stats-report-left{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.stats-report-left label{font-size:9px;font-weight:750;color:#536875}
+.stats-report-select{
+    height:35px;min-width:150px;padding:0 9px;border:1px solid #d5dfe4;border-radius:7px;
+    background:#fff;font-family:inherit;font-size:10px;font-weight:650;color:#253943
+}
+.shift-summary-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 14px
+}
+.shift-summary-card{
+    border:1px solid #e0e7eb;border-radius:9px;background:#fafcfd;padding:11px
+}
+.shift-summary-card.morning{border-left:3px solid #f1b543}
+.shift-summary-card.afternoon{border-left:3px solid #5ea7e7}
+.shift-summary-card strong{display:block;font-size:10px;color:#273c46;margin-bottom:4px}
+.shift-summary-card span{display:block;color:#7e909b;font-size:8.5px;line-height:1.45}
+.stat-shift-col{
+    min-width:72px!important;width:72px!important;max-width:72px!important;
+    text-align:center!important
+}
+.stat-total-col{
+    min-width:78px!important;width:78px!important;max-width:78px!important;
+    text-align:center!important;background:#f1faf7!important
+}
+.stat-total-value{font-weight:850;color:#087863;font-size:12px}
+.history-kpis{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px
+}
+.history-kpi{
+    padding:14px;border:1px solid #e1e7eb;border-radius:9px;background:#fff
+}
+.history-kpi span{display:block;color:#7a8b97;font-size:8px;font-weight:700}
+.history-kpi strong{display:block;margin-top:6px;color:#172b34;font-size:19px}
+.history-filter-bar{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:12px 16px;border-bottom:1px solid #edf1f3
+}
+.history-date-title strong{display:block;font-size:10px}
+.history-date-title span{display:block;margin-top:3px;color:#8b9ba5;font-size:8px}
+.history-config{
+    max-width:330px;white-space:normal!important;line-height:1.45
+}
+.history-config strong{display:block;font-size:8.5px;color:#344b56;margin-bottom:2px}
+.history-config span{color:#82939e;font-size:8px}
+.btn-view-history{
+    height:28px;padding:0 9px;border:1px solid #b6ddd5;border-radius:6px;
+    background:#effaf7;color:#087863;font-family:inherit;font-size:8px;font-weight:750;cursor:pointer
+}
+.btn-view-history:hover{background:#e4f6f2}
+.history-empty{
+    padding:44px;text-align:center;color:#93a2ac;font-size:10px
+}
+@media(max-width:900px){
+    .shift-config-grid{grid-template-columns:1fr}
+    .shift-summary-grid{grid-template-columns:1fr}
+    .history-kpis{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){
+    .history-kpis{grid-template-columns:1fr}
+}
+
+
+/* =========================================================
+   V14 - ĐỌC HẾT FILE + LỌC ĐỘNG
+========================================================= */
+.available-date-list{
+    display:flex;flex-wrap:wrap;gap:5px;margin-top:8px
+}
+.available-date-btn{
+    min-height:25px;padding:4px 7px;border:1px solid #dce5e9;border-radius:6px;
+    background:#fff;color:#647681;font-family:inherit;font-size:8px;cursor:pointer
+}
+.available-date-btn:hover{border-color:#94d4c7;background:#f5fbf9}
+.available-date-btn.active{
+    border-color:#69c8b6;background:#eaf8f5;color:#087863;font-weight:750
+}
+.available-date-btn small{
+    display:block;margin-top:1px;color:#98a5ad;font-size:7px
+}
+.shift-filter-preview{
+    display:inline-flex;align-items:center;margin-left:5px;padding:2px 5px;
+    border-radius:999px;background:#edf9f6;color:#087863;font-size:7px;font-weight:700
+}
+.full-import-badge{
+    display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;
+    background:#eaf8f5;color:#087863;font-size:7.5px;font-weight:750
+}
+.legacy-import-badge{
+    display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;
+    background:#fff5df;color:#95630d;font-size:7.5px;font-weight:750
+}
+.converted-shift-value{font-weight:750;color:#334b55}
+.converted-total-value{font-weight:850;color:#087863;font-size:11px}
+
+
+/* =========================================================
+   V15 - BỘ LỌC SÁNG/CHIỀU ĐƯA SANG THỐNG KÊ
+========================================================= */
+
+/* Trang nhập dữ liệu gọn hơn */
+.compact-upload-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-bottom:14px;
+}
+.compact-upload-card{
+    border:1px solid #dce5e9;
+    border-radius:10px;
+    background:#fff;
+    padding:15px;
+    min-height:145px;
+}
+.compact-upload-card.morning{
+    border-top:3px solid #f2b43d;
+}
+.compact-upload-card.afternoon{
+    border-top:3px solid #5aa6e6;
+}
+.compact-upload-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+}
+.compact-upload-head strong{
+    font-size:11px;
+    color:#253a44;
+}
+.compact-upload-card p{
+    color:#80919c;
+    font-size:8.5px;
+    line-height:1.45;
+    margin-bottom:10px;
+}
+.compact-upload-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+.compact-upload-status{
+    flex:1;
+    min-height:34px;
+    padding:7px 9px;
+    border:1px solid #e0e7eb;
+    border-radius:7px;
+    background:#fafcfd;
+    color:#7b8d98;
+    font-size:8px;
+    line-height:1.35;
+}
+.compact-upload-status.loaded{
+    border-color:#b9e0d7;
+    background:#f1faf8;
+    color:#356f63;
+}
+
+/* Khu vực bộ lọc trên Thống kê */
+.stats-shift-filter-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    padding:0 16px 14px;
+}
+.stats-shift-filter-card{
+    border:1px solid #dfe7eb;
+    border-radius:10px;
+    background:#fff;
+    overflow:hidden;
+}
+.stats-shift-filter-card.morning{
+    border-top:3px solid #f2b43d;
+}
+.stats-shift-filter-card.afternoon{
+    border-top:3px solid #5aa6e6;
+}
+.stats-shift-filter-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:10px 11px;
+    border-bottom:1px solid #edf1f3;
+    background:#fafcfd;
+}
+.stats-shift-filter-header strong{
+    font-size:10px;
+    color:#263c46;
+}
+.stats-shift-filter-header span{
+    font-size:8px;
+    color:#8a9ba5;
+}
+.stats-shift-filter-body{
+    padding:10px 11px;
+}
+.stats-filter-date-row{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    margin-bottom:9px;
+}
+.stats-filter-date-label{
+    min-width:78px;
+    padding-top:7px;
+    font-size:8px;
+    font-weight:750;
+    color:#607580;
+}
+.stats-filter-date-control{
+    flex:1;
+}
+.stats-filter-date-control input[type="date"]{
+    width:100%;
+    height:32px;
+    padding:0 8px;
+    border:1px solid #d3dde2;
+    border-radius:6px;
+    background:#fff;
+    font-family:inherit;
+    font-size:9px;
+    font-weight:650;
+    outline:none;
+}
+.stats-filter-date-control input[type="date"]:focus{
+    border-color:#66c7b5;
+    box-shadow:0 0 0 2px rgba(15,155,129,.07);
+}
+.stats-filter-date-buttons{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    margin-top:5px;
+}
+.stats-filter-date-buttons .available-date-btn{
+    min-height:22px;
+    padding:3px 6px;
+    font-size:7.5px;
+}
+.stats-filter-status-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+    margin-bottom:6px;
+}
+.stats-filter-status-title strong{
+    font-size:8px;
+    color:#607580;
+}
+.stats-filter-status-actions{
+    display:flex;
+    gap:4px;
+}
+.stats-filter-status-actions .shift-status-action{
+    height:22px;
+    font-size:7.5px;
+    padding:0 6px;
+}
+.stats-filter-status-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+}
+.stats-filter-status-grid .shift-status-check{
+    padding:5px 6px;
+    max-width:260px;
+}
+.stats-filter-status-grid .shift-status-check span{
+    font-size:7.5px;
+}
+.stats-shift-filter-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px dashed #e5eaed;
+}
+.stats-shift-filter-footer span{
+    color:#768893;
+    font-size:8px;
+}
+.stats-shift-filter-footer strong{
+    color:#087863;
+    font-size:10px;
+}
+
+@media(max-width:1000px){
+    .stats-shift-filter-grid,
+    .compact-upload-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+
+/* =========================================================
+   V16 - LỊCH 12 THÁNG -> CHỌN NGÀY -> UPLOAD / THỐNG KÊ
+========================================================= */
+.stats-screen.hidden{display:none!important}
+
+.calendar-shell{margin-bottom:14px}
+.calendar-toolbar-v16{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:15px 17px
+}
+.calendar-toolbar-v16 h2{font-size:15px;margin-bottom:4px}
+.calendar-toolbar-v16 p{font-size:9px;color:#82939e;line-height:1.5}
+.calendar-year-control{
+    display:flex;align-items:center;gap:8px;padding:7px 9px;
+    border:1px solid #c5e2dc;border-radius:8px;background:#f2faf8
+}
+.calendar-year-control label{
+    color:#55746c;font-size:8.5px;font-weight:750
+}
+.calendar-year-select{
+    height:34px;min-width:100px;padding:0 9px;border:1px solid #cfdadf;
+    border-radius:6px;background:#fff;color:#213741;font-family:inherit;
+    font-size:10px;font-weight:750;outline:none
+}
+.calendar-legend{
+    display:flex;align-items:center;gap:13px;flex-wrap:wrap;
+    padding:0 17px 12px;color:#758791;font-size:8px
+}
+.calendar-legend-item{display:inline-flex;align-items:center;gap:5px}
+.legend-dot{
+    width:8px;height:8px;border-radius:50%;display:inline-block
+}
+.legend-dot.morning{background:#f2b33e}
+.legend-dot.afternoon{background:#559fdf}
+.legend-dot.saved{background:#12a58a}
+
+.year-calendar-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(275px,1fr));
+    gap:11px;
+    padding:0 16px 16px
+}
+.month-calendar-card{
+    border:1px solid #dfe6ea;border-radius:10px;background:#fff;
+    padding:10px;min-width:0
+}
+.month-calendar-header{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:2px 2px 9px
+}
+.month-calendar-header strong{
+    color:#243a44;font-size:11px
+}
+.month-calendar-header span{
+    color:#8b9ba5;font-size:7.5px
+}
+.month-weekdays,.month-days{
+    display:grid;grid-template-columns:repeat(7,1fr);gap:4px
+}
+.month-weekdays span{
+    text-align:center;color:#9aa7af;font-size:7px;font-weight:700;padding:2px 0
+}
+.calendar-day-empty{aspect-ratio:1}
+.calendar-day{
+    position:relative;aspect-ratio:1;border:1px solid #e4e9ec;border-radius:6px;
+    background:#fafcfd;color:#556a75;font-family:inherit;cursor:pointer;
+    min-width:0;padding:2px;transition:.13s;overflow:hidden
+}
+.calendar-day:hover{
+    border-color:#73cbbb;background:#effaf7;transform:translateY(-1px)
+}
+.calendar-day.saved{
+    border-color:#acdcd2;background:#f2faf8;color:#1f6658
+}
+.calendar-day.today{
+    box-shadow:inset 0 0 0 1.5px #0f9b81
+}
+.calendar-day-number{
+    display:block;font-size:8.5px;font-weight:750;line-height:1
+}
+.calendar-day-total{
+    display:block;margin-top:2px;color:#8a9ba5;font-size:6.5px;line-height:1
+}
+.calendar-day.saved .calendar-day-total{color:#488073}
+.day-slot-dots{
+    position:absolute;left:3px;right:3px;bottom:3px;
+    display:flex;justify-content:center;gap:3px
+}
+.day-slot-dot{
+    width:5px;height:5px;border-radius:50%;opacity:.2
+}
+.day-slot-dot.on{opacity:1}
+.day-slot-dot.morning{background:#f2b33e}
+.day-slot-dot.afternoon{background:#559fdf}
+
+.calendar-empty-note{
+    padding:35px;text-align:center;color:#91a0a9;font-size:9px
+}
+
+/* Chi tiết ngày */
+.day-detail-header{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 15px
+}
+.day-detail-left{
+    display:flex;align-items:center;gap:10px
+}
+.btn-back-calendar{
+    height:33px;padding:0 10px;border:1px solid #dbe3e7;border-radius:7px;
+    background:#fff;color:#5e707b;font-family:inherit;font-size:8.5px;
+    font-weight:700;cursor:pointer
+}
+.btn-back-calendar:hover{background:#f7f9fa}
+.day-detail-date span{
+    display:block;color:#84959f;font-size:7.5px;font-weight:700
+}
+.day-detail-date strong{
+    display:block;margin-top:2px;color:#17343d;font-size:17px
+}
+.day-detail-actions{
+    display:flex;align-items:center;gap:7px
+}
+.day-detail-actions .btn{white-space:nowrap}
+
+/* Upload nằm ngay trong Thống kê */
+.stats-upload-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px
+}
+.stats-upload-card{
+    display:flex;align-items:center;gap:10px;min-height:76px;
+    padding:10px 11px;border:1px solid #dfe6ea;border-radius:9px;background:#fff
+}
+.stats-upload-card.morning{border-left:3px solid #f2b33e}
+.stats-upload-card.afternoon{border-left:3px solid #559fdf}
+.stats-upload-icon{font-size:23px;flex:0 0 auto}
+.stats-upload-info{min-width:0;flex:1}
+.stats-upload-info strong{
+    display:block;color:#263c46;font-size:9.5px;margin-bottom:3px
+}
+.stats-upload-info span{
+    display:block;color:#84959f;font-size:7.5px;line-height:1.4;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.stats-upload-card .upload-button{
+    flex:0 0 auto;white-space:nowrap
+}
+
+.calendar-month-click-hint{
+    color:#9aa8b0!important;font-size:7px!important
+}
+
+@media(max-width:1050px){
+    .stats-upload-grid{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+    .calendar-toolbar-v16,.day-detail-header{
+        align-items:flex-start;flex-direction:column
+    }
+    .year-calendar-grid{grid-template-columns:1fr}
+}
+
+
+.stats-upload-file-status{
+    display:block!important;
+    border:0!important;
+    background:transparent!important;
+    padding:0!important;
+    min-height:0!important;
+    color:#84959f!important;
+    font-size:7.5px!important;
+    line-height:1.4!important;
+    white-space:normal!important;
+}
+.stats-upload-file-status strong{
+    display:inline!important;
+    color:#356f63!important;
+    font-size:7.5px!important;
+}
+
+
+/* =========================================================
+   V17 - CĂN LẠI GIAO DIỆN / CHỮ / BẢNG
+========================================================= */
+
+/* Hình 1: chữ trong bộ lọc dễ đọc hơn */
+.stats-shift-filter-header{
+    padding:12px 13px;
+}
+.stats-shift-filter-header strong{
+    font-size:11px!important;
+}
+.stats-shift-filter-header span{
+    font-size:8.5px!important;
+}
+.stats-filter-date-label{
+    min-width:82px!important;
+    padding-top:8px!important;
+    font-size:9px!important;
+}
+.stats-filter-date-control input[type="date"]{
+    height:36px!important;
+    font-size:10px!important;
+    font-weight:750!important;
+}
+.stats-filter-date-buttons .available-date-btn{
+    min-height:25px!important;
+    padding:4px 7px!important;
+    font-size:8px!important;
+}
+.stats-filter-status-title strong{
+    font-size:9px!important;
+}
+.stats-filter-status-grid{
+    gap:6px!important;
+}
+.stats-filter-status-grid .shift-status-check{
+    padding:7px 8px!important;
+    min-height:33px;
+    align-items:center;
+}
+.stats-filter-status-grid .shift-status-check span{
+    font-size:8.3px!important;
+    line-height:1.35!important;
+}
+.shift-filter-preview{
+    font-size:7.5px!important;
+}
+.stats-shift-filter-footer span{
+    font-size:8.5px!important;
+}
+.stats-shift-filter-footer strong{
+    font-size:10.5px!important;
+}
+
+/* Ngày báo cáo phía trên lớn hơn */
+.day-detail-date span{
+    font-size:8px!important;
+}
+.day-detail-date strong{
+    font-size:20px!important;
+    letter-spacing:.15px;
+}
+.btn-back-calendar{
+    min-width:66px;
+}
+
+/* Hình 2: thêm STT và cho mã SKU thụt vào */
+.stt-col{
+    width:46px!important;
+    min-width:46px!important;
+    max-width:46px!important;
+    text-align:center!important;
+}
+.sku-code-cell{
+    padding-left:18px!important;
+    white-space:nowrap;
+}
+.sku-code-cell strong{
+    display:inline-block;
+}
+
+/* Hình 3: cột OBM đủ rộng để nằm một hàng */
+.base-sku-header{
+    white-space:nowrap!important;
+    min-width:64px;
+}
+.base-sku-header.wide-base-sku{
+    min-width:108px!important;
+    width:108px!important;
+    max-width:108px!important;
+}
+.wide-base-sku-cell{
+    min-width:108px!important;
+    width:108px!important;
+    max-width:108px!important;
+}
+.wide-base-sku-cell .conversion-input{
+    margin-left:auto;
+    margin-right:auto;
+}
+
+/* Bảng trên cân lại một chút */
+.conversion-table th,
+.conversion-table td{
+    vertical-align:middle;
+}
+.conversion-table .product-name-cell{
+    line-height:1.35;
+}
+
+/* Hình 4: bảng sau quy đổi gọn, các cột số sát mã hơn */
+.converted-summary-wrap{
+    overflow-x:auto;
+    padding-bottom:2px;
+}
+.converted-summary-table{
+    width:760px!important;
+    max-width:100%!important;
+    min-width:650px!important;
+    table-layout:fixed;
+    margin:0!important;
+}
+.converted-summary-table col.col-stt{width:52px}
+.converted-summary-table col.col-sku{width:230px}
+.converted-summary-table col.col-shift{width:145px}
+.converted-summary-table col.col-total{width:155px}
+
+.converted-summary-table th,
+.converted-summary-table td{
+    padding-top:10px!important;
+    padding-bottom:10px!important;
+}
+.converted-summary-table th:first-child,
+.converted-summary-table td:first-child{
+    text-align:center!important;
+}
+.converted-summary-table .converted-sku-cell{
+    padding-left:16px!important;
+}
+.converted-summary-table .converted-shift-value,
+.converted-summary-table .converted-total-value{
+    text-align:center!important;
+}
+
+/* Cho bảng dưới có cảm giác thành một khối riêng đẹp hơn */
+.converted-summary-table thead th{
+    background:#fafcfd;
+}
+.converted-summary-table tbody tr:hover td{
+    background:#f8fbfa;
+}
+
+
+/* =========================================================
+   V18 - SỬA ĐỘ RỘNG CỘT BẢNG SKU
+========================================================= */
+
+/* Bảng chính: giữ tổng chiều ngang hợp lý và cho Tên sản phẩm rộng nhất */
+.conversion-scroll{
+    overflow-x:auto!important;
+}
+.conversion-table{
+    width:100%!important;
+    min-width:1320px!important;
+    table-layout:fixed!important;
+}
+
+/* STT nhỏ */
+.conversion-table .stt-col{
+    width:42px!important;
+    min-width:42px!important;
+    max-width:42px!important;
+    text-align:center!important;
+    padding-left:4px!important;
+    padding-right:4px!important;
+}
+
+/* SKU nhỏ, không chiếm chỗ */
+.conversion-table .sku-code-cell{
+    padding-left:10px!important;
+    padding-right:8px!important;
+    white-space:nowrap!important;
+}
+.conversion-table .sku-code-cell strong{
+    white-space:nowrap!important;
+}
+
+/* Tên sản phẩm là cột rộng nhất */
+.conversion-table .product-name-cell{
+    white-space:normal!important;
+    overflow-wrap:break-word!important;
+    word-break:normal!important;
+    line-height:1.4!important;
+    padding-left:12px!important;
+    padding-right:12px!important;
+}
+
+/* Sáng / Chiều / Tổng vừa phải */
+.conversion-table .stat-shift-col{
+    width:74px!important;
+    min-width:74px!important;
+    max-width:74px!important;
+    text-align:center!important;
+}
+.conversion-table .stat-total-col{
+    width:78px!important;
+    min-width:78px!important;
+    max-width:78px!important;
+    text-align:center!important;
+}
+
+/* Cột quy đổi nhỏ gọn */
+.conversion-table .base-sku-header{
+    width:62px!important;
+    min-width:62px!important;
+    max-width:62px!important;
+    white-space:nowrap!important;
+    text-align:center!important;
+    padding-left:3px!important;
+    padding-right:3px!important;
+}
+.conversion-table .base-sku-header.wide-base-sku{
+    width:102px!important;
+    min-width:102px!important;
+    max-width:102px!important;
+}
+.conversion-table .wide-base-sku-cell{
+    width:102px!important;
+    min-width:102px!important;
+    max-width:102px!important;
+}
+.conversion-table .conversion-input{
+    width:36px!important;
+    height:28px!important;
+    padding:0!important;
+    margin:0 auto!important;
+    text-align:center!important;
+}
+.conversion-table th,
+.conversion-table td{
+    box-sizing:border-box!important;
+}
+
+/* Cột trạng thái Quy đổi gọn */
+.conversion-table th:last-child,
+.conversion-table td:last-child{
+    width:90px!important;
+    min-width:90px!important;
+    max-width:90px!important;
+    text-align:center!important;
+}
+
+/* Header không làm cột SKU / Tên sản phẩm bị bó */
+.conversion-table th:nth-child(2){
+    padding-left:10px!important;
+    text-align:left!important;
+}
+.conversion-table th:nth-child(3){
+    padding-left:12px!important;
+    text-align:left!important;
+}
+
+/* Bảng sau quy đổi vẫn giữ gọn */
+.converted-summary-table{
+    width:760px!important;
+    max-width:100%!important;
+    table-layout:fixed!important;
+}
+
+
+/* =========================================================
+   V19 - XÓA XUNG ĐỘT CSS CỘT CŨ SAU KHI THÊM STT
+========================================================= */
+
+/*
+   Các bản cũ từng có:
+   cột 1 = SKU (sticky 95/108px)
+   cột 2 = Tên sản phẩm (sticky 390/500px)
+   Sau khi thêm STT, các rule này làm lệch toàn bộ bảng.
+   V19 reset lại hoàn toàn.
+*/
+
+/* Không sticky các cột nội dung nữa; chỉ giữ header sticky theo chiều dọc */
+.conversion-table th:first-child,
+.conversion-table td:first-child,
+.conversion-table th:nth-child(2),
+.conversion-table td:nth-child(2){
+    position:static!important;
+    left:auto!important;
+    right:auto!important;
+    z-index:auto!important;
+}
+
+/* Hủy toàn bộ min/max-width cũ của 3 cột đầu.
+   Kích thước thực tế do COLGROUP V18/V19 điều khiển. */
+.conversion-table th:first-child,
+.conversion-table td:first-child,
+.conversion-table th:nth-child(2),
+.conversion-table td:nth-child(2),
+.conversion-table th:nth-child(3),
+.conversion-table td:nth-child(3){
+    min-width:0!important;
+    max-width:none!important;
+}
+
+/* ===== CỘT 1: STT ===== */
+.conversion-table th:nth-child(1),
+.conversion-table td:nth-child(1){
+    width:42px!important;
+    text-align:center!important;
+    padding-left:4px!important;
+    padding-right:4px!important;
+    white-space:nowrap!important;
+}
+
+/* ===== CỘT 2: SKU ===== */
+.conversion-table th:nth-child(2),
+.conversion-table td:nth-child(2){
+    width:88px!important;
+    text-align:left!important;
+    padding-left:10px!important;
+    padding-right:6px!important;
+    white-space:nowrap!important;
+}
+
+/* ===== CỘT 3: TÊN SẢN PHẨM - RỘNG NHẤT ===== */
+.conversion-table th:nth-child(3),
+.conversion-table td:nth-child(3){
+    width:410px!important;
+    text-align:left!important;
+    padding-left:12px!important;
+    padding-right:12px!important;
+    white-space:normal!important;
+}
+
+.conversion-table td:nth-child(3){
+    font-size:10px!important;
+    line-height:1.35!important;
+    overflow-wrap:normal!important;
+    word-break:normal!important;
+}
+
+/* Không để header/ô bị kéo lệch bởi các rule cũ */
+.conversion-table thead th:nth-child(1),
+.conversion-table thead th:nth-child(2),
+.conversion-table thead th:nth-child(3){
+    position:sticky!important;
+    top:0!important;
+    left:auto!important;
+    z-index:5!important;
+    background:#fafbfc!important;
+}
+
+/* Hàng tổng: chữ SKU + mô tả canh trái */
+.conversion-table tfoot td:nth-child(1){
+    text-align:center!important;
+}
+.conversion-table tfoot td:nth-child(2),
+.conversion-table tfoot td:nth-child(3){
+    text-align:left!important;
+    padding-left:10px!important;
+}
+
+/* STT số nằm chính giữa ô */
+.conversion-table .stt-col{
+    text-align:center!important;
+    padding-left:4px!important;
+    padding-right:4px!important;
+}
+
+/* SKU không còn khoảng trống giả phía trước */
+.conversion-table .sku-code-cell{
+    text-align:left!important;
+    padding-left:10px!important;
+    padding-right:6px!important;
+    margin:0!important;
+}
+.conversion-table .sku-code-cell strong{
+    display:inline!important;
+    margin:0!important;
+    padding:0!important;
+}
+
+/* Tên sản phẩm luôn bắt đầu sát bên phải cột SKU */
+.conversion-table .product-name-cell{
+    text-align:left!important;
+    padding-left:12px!important;
+    margin:0!important;
+}
+
+/* Bảng dưới: STT giữa, mã trái; không canh giữa phần chữ */
+.converted-summary-table th:nth-child(1),
+.converted-summary-table td:nth-child(1){
+    text-align:center!important;
+}
+.converted-summary-table th:nth-child(2),
+.converted-summary-table td:nth-child(2){
+    text-align:left!important;
+}
+.converted-summary-table .converted-sku-cell{
+    text-align:left!important;
+    padding-left:12px!important;
+}
+
+/* Các số ở bảng dưới vẫn giữa */
+.converted-summary-table th:nth-child(n+3),
+.converted-summary-table td:nth-child(n+3){
+    text-align:center!important;
+}
+
+
+.conversion-table .sku-header-cell{
+    text-align:left!important;
+    padding-left:10px!important;
+}
+.conversion-table .product-header-cell{
+    text-align:left!important;
+    padding-left:12px!important;
+}
+
+/* =========================================================
+   V20 - MODAL XÓA DỮ LIỆU ADMIN
+========================================================= */
+.admin-delete-overlay{
+    position:fixed;inset:0;z-index:12000;
+    display:flex;align-items:center;justify-content:center;
+    padding:18px;background:rgba(10,29,37,.62);
+    backdrop-filter:blur(4px)
+}
+.admin-delete-overlay.hidden{display:none!important}
+.admin-delete-modal{
+    width:min(520px,100%);max-height:calc(100vh - 34px);overflow:auto;
+    background:#fff;border:1px solid #dce5e9;border-radius:14px;
+    box-shadow:0 28px 90px rgba(0,0,0,.28)
+}
+.admin-delete-header{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+    padding:18px 19px 14px;border-bottom:1px solid #edf1f3
+}
+.admin-delete-header h2{font-size:16px;margin-bottom:4px;color:#172d37}
+.admin-delete-header p{font-size:9px;color:#81929d;line-height:1.45}
+.admin-delete-close{
+    width:30px;height:30px;border:1px solid #e0e6e9;border-radius:7px;
+    background:#fff;color:#72838d;font-size:19px;line-height:1;cursor:pointer
+}
+.admin-delete-body{padding:16px 19px}
+.admin-delete-warning{
+    margin-bottom:14px;padding:10px 11px;border:1px solid #fecaca;
+    border-radius:8px;background:#fff5f5;color:#a93636;
+    font-size:9px;font-weight:650;line-height:1.5
+}
+.admin-delete-field{margin-bottom:13px}
+.admin-delete-field>label{
+    display:block;margin-bottom:6px;color:#526671;
+    font-size:8.5px;font-weight:800
+}
+.admin-delete-field>small{
+    display:block;margin-top:5px;color:#96a3ab;font-size:7.8px;line-height:1.4
+}
+.admin-delete-scope{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px
+}
+.admin-scope-option{
+    display:flex;align-items:flex-start;gap:8px;padding:10px;
+    border:1px solid #dce5e9;border-radius:8px;background:#fafcfd;
+    cursor:pointer;transition:.14s
+}
+.admin-scope-option.active{
+    border-color:#e57c7c;background:#fff6f6;
+    box-shadow:0 0 0 2px rgba(220,38,38,.04)
+}
+.admin-scope-option input{margin-top:2px;accent-color:#dc4747}
+.admin-scope-option strong{
+    display:block;color:#344b55;font-size:9px;margin-bottom:2px
+}
+.admin-scope-option small{
+    display:block;color:#8d9ca5;font-size:7.7px;line-height:1.35
+}
+.admin-delete-select,
+.admin-delete-password{
+    width:100%;height:40px;padding:0 10px;border:1px solid #d4dfe4;
+    border-radius:7px;background:#fff;color:#253a43;font-family:inherit;
+    font-size:10px;outline:none
+}
+.admin-delete-select:focus,
+.admin-delete-password:focus{
+    border-color:#dd7777;box-shadow:0 0 0 3px rgba(220,71,71,.08)
+}
+.admin-email-box{
+    height:38px;display:flex;align-items:center;padding:0 10px;
+    border:1px solid #e0e6e9;border-radius:7px;background:#f8fafb;
+    color:#526671;font-size:10px;font-weight:700
+}
+.admin-delete-target-info{
+    min-height:20px;margin-top:6px;padding:6px 8px;border-radius:6px;
+    background:#f7f9fa;color:#7c8e98;font-size:8px;line-height:1.4
+}
+.admin-delete-error{
+    display:none;padding:9px 10px;border:1px solid #fecaca;border-radius:7px;
+    background:#fff1f2;color:#b91c1c;font-size:8.5px;line-height:1.45
+}
+.admin-delete-error.show{display:block}
+.admin-delete-footer{
+    display:flex;justify-content:flex-end;gap:8px;
+    padding:13px 19px 17px;border-top:1px solid #edf1f3
+}
+.btn-danger-solid{
+    height:35px;padding:0 13px;border:1px solid #dc4747;border-radius:7px;
+    background:#dc4747;color:#fff;font-family:inherit;
+    font-size:9px;font-weight:800;cursor:pointer
+}
+.btn-danger-solid:hover{background:#c93e3e}
+.btn-danger-solid:disabled{opacity:.55;cursor:wait}
+@media(max-width:560px){
+    .admin-delete-scope{grid-template-columns:1fr}
+}
+
+
+/* =========================================================
+   V21 - DASHBOARD THỐNG KÊ SKU
+========================================================= */
+.stats-dashboard-shell{
+    margin-bottom:12px;
+    overflow:hidden
+}
+.stats-dashboard-toolbar{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:14px 16px 10px
+}
+.stats-dashboard-toolbar h2{
+    margin:0 0 4px;color:#18323c;font-size:15px
+}
+.stats-dashboard-toolbar p{
+    margin:0;color:#82939e;font-size:8.5px;line-height:1.45
+}
+.stats-period-controls{
+    display:flex;align-items:center;gap:8px
+}
+.stats-period-control{
+    display:flex;align-items:center;gap:7px;
+    padding:6px 8px;border:1px solid #cde3de;border-radius:8px;background:#f4faf8
+}
+.stats-period-control label{
+    color:#5d766f;font-size:7.5px;font-weight:800
+}
+.dashboard-legend{
+    padding:0 16px 11px!important;
+    border-top:0!important
+}
+
+/* TOP: lịch 1/3 + chart 2/3 */
+.dashboard-top-grid{
+    display:grid;
+    grid-template-columns:minmax(300px,1fr) minmax(0,2fr);
+    gap:12px;
+    margin-bottom:12px
+}
+.dashboard-calendar-panel,
+.dashboard-chart-panel{
+    min-width:0
+}
+.analytics-panel-header{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+    padding:13px 14px 9px;border-bottom:1px solid #edf1f3
+}
+.analytics-panel-header h3{
+    margin:0 0 3px;color:#233a44;font-size:11px
+}
+.analytics-panel-header p{
+    margin:0;color:#8798a2;font-size:7.8px;line-height:1.4
+}
+.analytics-badge{
+    display:inline-flex;align-items:center;height:24px;padding:0 8px;
+    border-radius:999px;background:#edf8f5;color:#167763;
+    font-size:7.5px;font-weight:750;white-space:nowrap
+}
+
+/* Lịch một tháng */
+.single-month-calendar{
+    padding:10px 12px 13px
+}
+.single-month-calendar .month-weekdays,
+.single-month-calendar .month-days{
+    display:grid;grid-template-columns:repeat(7,1fr);gap:5px
+}
+.single-month-calendar .month-weekdays{
+    margin-bottom:5px
+}
+.single-month-calendar .month-weekdays span{
+    text-align:center;color:#93a2aa;font-size:7px;font-weight:750
+}
+.single-month-calendar .calendar-day{
+    min-height:41px;
+    aspect-ratio:auto!important;
+    border-radius:7px
+}
+.single-month-calendar .calendar-day-number{
+    font-size:9px
+}
+.single-month-calendar .calendar-day-total{
+    font-size:6.5px
+}
+
+/* Mini KPI trong chart ngày */
+.dashboard-mini-kpis{
+    display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end
+}
+.dashboard-mini-kpis>div{
+    min-width:76px;padding:6px 8px;border:1px solid #e0e8eb;
+    border-radius:7px;background:#fafcfd;text-align:center
+}
+.dashboard-mini-kpis span{
+    display:block;color:#8a99a2;font-size:6.5px;font-weight:750
+}
+.dashboard-mini-kpis strong{
+    display:block;margin-top:3px;color:#183b34;font-size:12px
+}
+
+/* Daily vertical chart */
+.daily-chart{
+    display:flex;align-items:flex-end;gap:4px;
+    height:255px;padding:18px 14px 14px;overflow:hidden
+}
+.daily-bar-col{
+    flex:1;min-width:0;height:100%;
+    display:flex;flex-direction:column;justify-content:flex-end;align-items:center
+}
+.daily-bar-value{
+    min-height:14px;margin-bottom:3px;color:#526a75;
+    font-size:6.5px;font-weight:750;white-space:nowrap
+}
+.daily-bar-track{
+    width:72%;max-width:18px;height:190px;
+    display:flex;flex-direction:column;justify-content:flex-end;
+    border-radius:4px 4px 2px 2px;background:#f1f4f6;overflow:hidden
+}
+.daily-bar-segment{
+    width:100%;min-height:0
+}
+.daily-bar-segment.afternoon{background:#5aa6e6}
+.daily-bar-segment.morning{background:#f2b43d}
+.daily-bar-label{
+    margin-top:5px;color:#8e9ca5;font-size:6.5px
+}
+.daily-bar-col.has-data .daily-bar-label{
+    color:#4e6a72;font-weight:750
+}
+
+/* Analytics common */
+.analytics-section{
+    margin-bottom:12px;
+    overflow:hidden
+}
+.analytics-section-title{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 14px;border-bottom:1px solid #edf1f3
+}
+.analytics-section-title h3{
+    margin:0 0 3px;color:#233a44;font-size:11px
+}
+.analytics-section-title p{
+    margin:0;color:#8898a2;font-size:7.8px
+}
+.analytics-split{
+    display:grid;grid-template-columns:minmax(390px,.92fr) minmax(0,1.35fr);
+    gap:12px;padding:12px
+}
+.analytics-table-card,
+.analytics-chart-card,
+.converted-table-card,
+.converted-chart-card{
+    border:1px solid #e0e7ea;border-radius:10px;background:#fff;
+    overflow:hidden
+}
+.analytics-table-scroll{
+    max-height:370px;overflow:auto
+}
+.analytics-table{
+    width:100%;border-collapse:collapse;table-layout:auto
+}
+.analytics-table th{
+    padding:9px 10px;border-bottom:1px solid #e7edef;
+    background:#f9fbfc;color:#647984;font-size:7.5px;font-weight:800;
+    text-align:center;white-space:nowrap
+}
+.analytics-table th:nth-child(2),
+.analytics-table th:nth-child(3){
+    text-align:left
+}
+.analytics-table td{
+    padding:9px 10px;border-bottom:1px solid #edf1f3;
+    color:#445b66;font-size:8.2px;text-align:center
+}
+.analytics-table td:nth-child(2),
+.analytics-table td:nth-child(3){
+    text-align:left
+}
+.analytics-table tbody tr:last-child td{
+    border-bottom:0
+}
+.analytics-table tbody tr:hover td{
+    background:#f7fbfa
+}
+.analytics-table td.analytics-total{
+    color:#087863;font-weight:850
+}
+.analytics-chart-title{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:11px 12px;border-bottom:1px solid #edf1f3
+}
+.analytics-chart-title strong{
+    color:#334b55;font-size:9px
+}
+.analytics-chart-title span{
+    color:#8a9aa4;font-size:7px
+}
+
+/* Horizontal stacked charts */
+.horizontal-chart{
+    display:flex;flex-direction:column;gap:8px;
+    padding:12px 13px;min-height:190px
+}
+.hchart-empty{
+    display:flex;align-items:center;justify-content:center;
+    min-height:165px;color:#96a4ac;font-size:8.5px
+}
+.hchart-row{
+    display:grid;grid-template-columns:68px minmax(0,1fr) 46px;
+    gap:8px;align-items:center
+}
+.hchart-label{
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    color:#556c76;font-size:7.5px;font-weight:700
+}
+.hchart-track{
+    height:13px;display:flex;align-items:stretch;
+    border-radius:999px;background:#eef2f4;overflow:hidden
+}
+.hchart-seg.morning{background:#f2b43d}
+.hchart-seg.afternoon{background:#5aa6e6}
+.hchart-value{
+    text-align:right;color:#087863;font-size:8px;font-weight:850
+}
+.hchart-legend{
+    display:flex;justify-content:flex-end;gap:12px;
+    padding:0 13px 11px;color:#80919b;font-size:7px
+}
+.hchart-legend span{
+    display:inline-flex;align-items:center;gap:5px
+}
+.hchart-legend i{
+    width:7px;height:7px;border-radius:50%
+}
+.hchart-legend i.morning{background:#f2b43d}
+.hchart-legend i.afternoon{background:#5aa6e6}
+
+/* Converted summary: bỏ nét dài, đóng khung + chart bên phải */
+.converted-analytics-grid{
+    display:grid;grid-template-columns:minmax(600px,1.12fr) minmax(340px,.88fr);
+    gap:12px;padding:12px
+}
+.converted-table-card{
+    overflow-x:auto
+}
+.converted-summary-table{
+    width:100%!important;
+    max-width:none!important;
+    min-width:650px!important;
+    margin:0!important
+}
+.converted-summary-table thead th{
+    border-bottom:1px solid #e4ebee!important
+}
+.converted-summary-table tbody td{
+    border-bottom:1px solid #edf1f3!important
+}
+.converted-summary-table tbody tr:last-child td{
+    border-bottom:0!important
+}
+.converted-chart{
+    min-height:260px
+}
+
+/* Bỏ các nét kéo dài không cần thiết của khối cũ */
+.converted-summary-wrap{
+    border:0!important;
+    padding:0!important
+}
+
+@media(max-width:1150px){
+    .dashboard-top-grid,
+    .analytics-split,
+    .converted-analytics-grid{
+        grid-template-columns:1fr
+    }
+    .dashboard-calendar-panel{
+        max-width:none
+    }
+}
+@media(max-width:720px){
+    .stats-dashboard-toolbar{
+        flex-direction:column;align-items:flex-start
+    }
+    .stats-period-controls{
+        width:100%
+    }
+    .stats-period-control{
+        flex:1
+    }
+    .daily-chart{
+        overflow-x:auto
+    }
+    .daily-bar-col{
+        min-width:20px
+    }
+}
+
+
+/* =========================================================
+   V22 - BIỂU ĐỒ CỘT ĐÔI SÁNG / CHIỀU
+========================================================= */
+
+/* Bảng sau quy đổi: bảng ~2/3, biểu đồ ~1/3 */
+.converted-analytics-grid{
+    grid-template-columns:minmax(640px,2fr) minmax(330px,1fr)!important;
+}
+
+/* Các khối tuần/tháng/năm: bảng và biểu đồ cân hơn */
+.analytics-split{
+    grid-template-columns:minmax(430px,1fr) minmax(500px,1.35fr)!important;
+}
+
+/* Vùng biểu đồ cột */
+.grouped-column-chart{
+    position:relative;
+    display:flex;
+    align-items:flex-end;
+    gap:10px;
+    min-height:265px;
+    padding:20px 14px 34px;
+    overflow-x:auto;
+    overflow-y:hidden;
+}
+
+.grouped-column-chart.compact{
+    min-height:260px;
+}
+
+.gchart-group{
+    flex:1 0 54px;
+    min-width:54px;
+    height:215px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    align-items:center;
+}
+
+.gchart-bars{
+    width:100%;
+    height:178px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    gap:5px;
+}
+
+.gchart-bar-wrap{
+    width:18px;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    align-items:center;
+}
+
+.gchart-value{
+    min-height:15px;
+    margin-bottom:3px;
+    color:#415963;
+    font-size:7px;
+    font-weight:850;
+    white-space:nowrap;
+}
+
+.gchart-bar{
+    width:100%;
+    min-height:0;
+    border-radius:5px 5px 2px 2px;
+    transition:height .18s ease, opacity .18s ease;
+}
+
+.gchart-bar.morning{
+    background:#f2b43d;
+}
+
+.gchart-bar.afternoon{
+    background:#5aa6e6;
+}
+
+.gchart-bar.zero{
+    height:2px!important;
+    opacity:.18;
+}
+
+.gchart-label{
+    width:100%;
+    margin-top:7px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    text-align:center;
+    color:#60737d;
+    font-size:7px;
+    font-weight:750;
+}
+
+.gchart-group:hover .gchart-bar{
+    filter:brightness(.96);
+}
+
+.gchart-legend{
+    display:flex;
+    justify-content:flex-end;
+    gap:14px;
+    padding:0 14px 11px;
+    color:#80919b;
+    font-size:7px;
+}
+
+.gchart-legend span{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+}
+
+.gchart-legend i{
+    width:8px;
+    height:8px;
+    border-radius:2px;
+}
+
+.gchart-legend i.morning{background:#f2b43d}
+.gchart-legend i.afternoon{background:#5aa6e6}
+
+/* Biểu đồ SKU sau quy đổi */
+.converted-chart-card{
+    min-width:0;
+}
+.converted-chart{
+    min-height:275px!important;
+}
+.converted-chart .gchart-group{
+    flex-basis:58px;
+    min-width:58px;
+}
+
+/* Biểu đồ tuần/tháng/năm */
+.analytics-chart-card{
+    min-width:0;
+}
+.analytics-chart-card .grouped-column-chart{
+    min-height:285px;
+}
+.analytics-chart-card .gchart-group{
+    flex-basis:58px;
+    min-width:58px;
+}
+
+/* Với 12 tháng / 10 năm cho phép cuộn ngang đẹp */
+#monthlyStatsChart .gchart-group,
+#yearlyStatsChart .gchart-group{
+    flex-basis:62px;
+    min-width:62px;
+}
+
+/* Biểu đồ ngày: cũng chuyển thành 2 cột song song */
+.daily-chart{
+    display:flex!important;
+    align-items:flex-end!important;
+    gap:5px!important;
+    height:270px!important;
+    padding:18px 12px 32px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+}
+
+.daily-bar-col{
+    flex:1 0 34px!important;
+    min-width:34px!important;
+    height:220px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:flex-end!important;
+    align-items:center!important;
+}
+
+.daily-pair-bars{
+    width:100%;
+    height:185px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    gap:3px;
+}
+
+.daily-single-wrap{
+    width:11px;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    align-items:center;
+}
+
+.daily-single-value{
+    min-height:13px;
+    margin-bottom:2px;
+    color:#526a75;
+    font-size:6px;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.daily-single-bar{
+    width:100%;
+    border-radius:4px 4px 1px 1px;
+}
+
+.daily-single-bar.morning{background:#f2b43d}
+.daily-single-bar.afternoon{background:#5aa6e6}
+.daily-single-bar.zero{height:2px!important;opacity:.18}
+
+.daily-bar-label{
+    margin-top:5px!important;
+    color:#8798a2!important;
+    font-size:6.5px!important;
+    font-weight:700!important;
+}
+
+@media(max-width:1150px){
+    .converted-analytics-grid,
+    .analytics-split{
+        grid-template-columns:1fr!important;
+    }
+}
+
+
+/* =========================================================
+   V23 - THỐNG KÊ HÓA ĐƠN
+========================================================= */
+.invoice-upload-panel{
+    margin-bottom:12px;
+    overflow:hidden
+}
+.invoice-upload-layout{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:16px
+}
+.invoice-upload-copy{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    min-width:0
+}
+.invoice-upload-icon{
+    width:44px;height:44px;flex:0 0 44px;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:11px;background:#edf8f5;font-size:22px
+}
+.invoice-upload-copy h2{
+    margin:0 0 5px;color:#18323c;font-size:15px
+}
+.invoice-upload-copy p{
+    max-width:770px;margin:0;color:#7e909a;
+    font-size:8.7px;line-height:1.55
+}
+.invoice-upload-actions{
+    display:flex;align-items:center;gap:8px;flex:0 0 auto
+}
+.invoice-upload-button{
+    height:36px;display:inline-flex;align-items:center;justify-content:center;
+    padding:0 13px;border:1px solid #0d9c82;border-radius:7px;
+    background:#0d9c82;color:#fff;font-size:9px;font-weight:800;
+    cursor:pointer;white-space:nowrap
+}
+.invoice-upload-button:hover{background:#0a8d75}
+.invoice-upload-button input{display:none}
+.invoice-file-info{
+    margin:0 16px 15px;padding:9px 11px;
+    border:1px dashed #d5e1e5;border-radius:8px;
+    background:#fafcfd;color:#7d8f99;font-size:8.5px;line-height:1.45
+}
+.invoice-file-info.loaded{
+    border-style:solid;border-color:#bae0d8;
+    background:#f2faf8;color:#44766b
+}
+.invoice-file-info strong{color:#176b5b}
+
+/* KPI */
+.invoice-kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:10px;
+    margin-bottom:12px
+}
+.invoice-kpi{
+    min-height:86px;padding:13px 14px;
+    border:1px solid #dfe7eb;border-radius:10px;background:#fff
+}
+.invoice-kpi.accent{
+    border-color:#b7e0d7;background:#f1faf7
+}
+.invoice-kpi span{
+    display:block;color:#667b86;font-size:7.5px;font-weight:800
+}
+.invoice-kpi strong{
+    display:block;margin-top:7px;color:#142e38;font-size:17px
+}
+.invoice-kpi.accent strong{color:#087863}
+.invoice-kpi small{
+    display:block;margin-top:5px;color:#98a5ad;font-size:7px
+}
+
+/* Table toolbar */
+.invoice-summary-panel{
+    overflow:hidden
+}
+.invoice-table-toolbar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px
+}
+.invoice-toolbar-actions{
+    display:flex;align-items:center;gap:8px
+}
+.invoice-search-box{
+    width:230px;height:34px;
+    display:flex;align-items:center;gap:7px;
+    padding:0 9px;border:1px solid #d8e2e6;border-radius:7px;background:#fff
+}
+.invoice-search-box input{
+    width:100%;border:0;outline:0;background:transparent;
+    color:#304851;font-family:inherit;font-size:8.5px
+}
+
+/* Main invoice table */
+.invoice-table-wrap{
+    overflow:auto;
+    max-height:590px
+}
+.invoice-summary-table{
+    width:100%;
+    min-width:1000px;
+    border-collapse:collapse;
+    table-layout:fixed
+}
+.invoice-summary-table .invoice-col-stt{width:55px}
+.invoice-summary-table .invoice-col-name{width:auto}
+.invoice-summary-table .invoice-col-qty{width:125px}
+.invoice-summary-table .invoice-col-money{width:180px}
+
+.invoice-summary-table thead th{
+    position:sticky;top:0;z-index:3;
+    padding:10px 11px;border-bottom:1px solid #dfe7ea;
+    background:#f8fafb;color:#536b76;font-size:7.8px;font-weight:850;
+    text-align:right;white-space:nowrap
+}
+.invoice-summary-table thead th:first-child{
+    text-align:center
+}
+.invoice-summary-table thead th:nth-child(2){
+    text-align:left
+}
+
+.invoice-summary-table tbody td{
+    padding:10px 11px;border-bottom:1px solid #edf1f3;
+    color:#354e59;font-size:9px;text-align:right;vertical-align:middle
+}
+.invoice-summary-table tbody td:first-child{
+    text-align:center;color:#72858f
+}
+.invoice-summary-table tbody td:nth-child(2){
+    text-align:left
+}
+.invoice-summary-table tbody tr:hover td{
+    background:#f8fbfa
+}
+.invoice-summary-table tbody tr.invoice-promo-row td{
+    background:#fffaf0
+}
+.invoice-summary-table tbody tr.invoice-promo-row:hover td{
+    background:#fff6e3
+}
+.invoice-product-name{
+    display:flex;align-items:center;gap:7px;line-height:1.4
+}
+.invoice-promo-badge{
+    display:inline-flex;align-items:center;height:18px;padding:0 6px;
+    border-radius:999px;background:#fff0c9;color:#95650a;
+    font-size:6.8px;font-weight:800;white-space:nowrap
+}
+.invoice-qty-value{
+    color:#102e38;font-weight:850
+}
+.invoice-money-value{
+    font-variant-numeric:tabular-nums
+}
+.invoice-zero-money{
+    color:#b0bbc1
+}
+
+.invoice-summary-table tfoot td{
+    position:sticky;bottom:0;z-index:2;
+    padding:11px;border-top:2px solid #8ed2c4;
+    background:#eaf8f5;color:#075f50;
+    font-size:9px;font-weight:900;text-align:right
+}
+.invoice-summary-table tfoot td:first-child{
+    text-align:center
+}
+.invoice-summary-table tfoot td:nth-child(2){
+    text-align:left
+}
+
+.invoice-note{
+    padding:10px 14px;border-top:1px solid #edf1f3;
+    background:#fbfcfd;color:#84949d;font-size:7.8px;line-height:1.45
+}
+
+/* Loading state */
+.invoice-loading{
+    display:inline-flex;align-items:center;gap:6px;color:#0a856f;font-weight:750
+}
+.invoice-loading-dot{
+    width:7px;height:7px;border-radius:50%;background:#0d9c82;
+    animation:invoicePulse .8s infinite alternate
+}
+@keyframes invoicePulse{
+    from{opacity:.35;transform:scale(.8)}
+    to{opacity:1;transform:scale(1.1)}
+}
+
+@media(max-width:1200px){
+    .invoice-kpi-grid{
+        grid-template-columns:repeat(3,minmax(0,1fr))
+    }
+}
+@media(max-width:850px){
+    .invoice-upload-layout,
+    .invoice-table-toolbar{
+        flex-direction:column;align-items:flex-start
+    }
+    .invoice-upload-actions,
+    .invoice-toolbar-actions{
+        width:100%
+    }
+    .invoice-search-box{flex:1;width:auto}
+    .invoice-kpi-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr))
+    }
+}
+
+
+/* =========================================================
+   V24 - TĂNG CỠ CHỮ BẢNG THỐNG KÊ HÓA ĐƠN
+========================================================= */
+
+/* Tiêu đề bảng */
+.invoice-table-toolbar h2{
+    font-size:14px!important;
+}
+.invoice-table-toolbar p{
+    font-size:8.5px!important;
+}
+
+/* Header cột */
+.invoice-summary-table thead th{
+    padding:12px 12px!important;
+    font-size:9px!important;
+    line-height:1.3!important;
+}
+
+/* Dữ liệu trong bảng */
+.invoice-summary-table tbody td{
+    padding:12px 12px!important;
+    font-size:10.5px!important;
+    line-height:1.45!important;
+}
+
+/* Tên sản phẩm rõ hơn */
+.invoice-summary-table tbody td:nth-child(2){
+    font-size:10.5px!important;
+    font-weight:500!important;
+}
+
+/* Số lượng nổi bật hơn */
+.invoice-qty-value{
+    font-size:11px!important;
+    font-weight:850!important;
+}
+
+/* Các cột tiền */
+.invoice-money-value{
+    font-size:10.5px!important;
+    font-weight:600!important;
+}
+
+/* STT dễ nhìn hơn */
+.invoice-summary-table tbody td:first-child{
+    font-size:9.5px!important;
+}
+
+/* Badge khuyến mại lớn hơn chút */
+.invoice-promo-badge{
+    height:20px!important;
+    padding:0 7px!important;
+    font-size:7.2px!important;
+}
+
+/* Dòng tổng cộng */
+.invoice-summary-table tfoot td{
+    padding:13px 12px!important;
+    font-size:10.8px!important;
+    line-height:1.35!important;
+}
+
+/* Ghi chú dưới bảng */
+.invoice-note{
+    font-size:8.2px!important;
+    padding:11px 14px!important;
+}
+
+
+/* =========================================================
+   V25 - TINH CHỈNH GIAO DIỆN THEO YÊU CẦU
+========================================================= */
+
+/* ---------------------------------------------------------
+   A. THỐNG KÊ HÓA ĐƠN - CHỮ LỚN HƠN THÊM MỘT CHÚT
+--------------------------------------------------------- */
+.invoice-summary-table thead th{
+    font-size:9.6px!important;
+    padding:12px 13px!important;
+}
+
+.invoice-summary-table tbody td{
+    font-size:11.2px!important;
+    padding:12px 13px!important;
+    line-height:1.45!important;
+}
+
+.invoice-summary-table tbody td:nth-child(2){
+    font-size:11.2px!important;
+}
+
+.invoice-summary-table tbody td:first-child{
+    font-size:10px!important;
+}
+
+.invoice-qty-value{
+    font-size:11.6px!important;
+}
+
+.invoice-money-value{
+    font-size:11px!important;
+}
+
+.invoice-summary-table tfoot td{
+    font-size:11.4px!important;
+    padding:13px!important;
+}
+
+/* ---------------------------------------------------------
+   B. PHẦN LỊCH NGÀY / BIỂU ĐỒ NGÀY
+   Lịch rộng hơn, chart hẹp lại
+--------------------------------------------------------- */
+.dashboard-top-grid{
+    grid-template-columns:minmax(410px,1.15fr) minmax(0,1.85fr)!important;
+}
+
+/* Lịch ngày rộng, ô ngày dễ bấm hơn */
+.dashboard-calendar-panel .analytics-panel-header{
+    padding:14px 15px 10px!important;
+}
+
+.single-month-calendar{
+    padding:12px 14px 15px!important;
+}
+
+.single-month-calendar .month-weekdays,
+.single-month-calendar .month-days{
+    gap:7px!important;
+}
+
+.single-month-calendar .month-weekdays span{
+    font-size:8px!important;
+}
+
+.single-month-calendar .calendar-day{
+    min-height:48px!important;
+    border-radius:8px!important;
+}
+
+.single-month-calendar .calendar-day-number{
+    font-size:10.5px!important;
+    font-weight:800!important;
+}
+
+.single-month-calendar .calendar-day-total{
+    font-size:7px!important;
+}
+
+/* Chart ngày thấp/gọn hơn một chút */
+.dashboard-chart-panel{
+    min-width:0;
+}
+
+.daily-chart{
+    height:245px!important;
+    padding:16px 10px 26px!important;
+}
+
+.daily-bar-col{
+    height:198px!important;
+    flex-basis:31px!important;
+    min-width:31px!important;
+}
+
+.daily-pair-bars{
+    height:164px!important;
+}
+
+.daily-single-wrap{
+    width:10px!important;
+}
+
+.daily-single-value{
+    font-size:6.4px!important;
+}
+
+.daily-bar-label{
+    font-size:6.8px!important;
+}
+
+/* ---------------------------------------------------------
+   C. BẢNG TUẦN / THÁNG / NĂM - CHỮ VÀ SỐ TO HƠN
+--------------------------------------------------------- */
+.analytics-section-title h3{
+    font-size:12.5px!important;
+}
+
+.analytics-section-title p{
+    font-size:8.5px!important;
+}
+
+.analytics-table th{
+    font-size:9px!important;
+    padding:10px 11px!important;
+    line-height:1.3!important;
+}
+
+.analytics-table td{
+    font-size:10.5px!important;
+    padding:10px 11px!important;
+    line-height:1.35!important;
+}
+
+.analytics-table td strong{
+    font-size:10.6px!important;
+}
+
+.analytics-table td.analytics-total{
+    font-size:11px!important;
+    font-weight:900!important;
+}
+
+/* STT và số trong các bảng dễ đọc */
+.analytics-table td:first-child{
+    font-size:9.8px!important;
+}
+
+.analytics-table th:first-child{
+    font-size:8.7px!important;
+}
+
+/* Header biểu đồ đi kèm cũng lớn hơn nhẹ */
+.analytics-chart-title strong{
+    font-size:10px!important;
+}
+
+.analytics-chart-title span{
+    font-size:7.8px!important;
+}
+
+/* Hàng/nhãn trên biểu đồ tuần-tháng-năm dễ đọc hơn */
+.gchart-value{
+    font-size:7.5px!important;
+}
+
+.gchart-label{
+    font-size:7.5px!important;
+}
+
+.gchart-legend{
+    font-size:7.5px!important;
+}
+
+/* Bảng tuần/tháng/năm chiếm rộng hơn một chút so với V24 */
+.analytics-split{
+    grid-template-columns:minmax(500px,1.12fr) minmax(480px,1.18fr)!important;
+}
+
+/* ---------------------------------------------------------
+   D. RESPONSIVE
+--------------------------------------------------------- */
+@media(max-width:1250px){
+    .dashboard-top-grid{
+        grid-template-columns:minmax(360px,1fr) minmax(0,1.45fr)!important;
+    }
+
+    .analytics-split{
+        grid-template-columns:1fr!important;
+    }
+}
+
+@media(max-width:900px){
+    .dashboard-top-grid{
+        grid-template-columns:1fr!important;
+    }
+}
+
+
+/* =========================================================
+   V26 - TĂNG CỠ CHỮ BẢNG THỐNG KÊ & QUY ĐỔI SKU
+========================================================= */
+
+/* Tiêu đề các cột */
+.conversion-table thead th{
+    font-size:9px!important;
+    line-height:1.25!important;
+    padding-top:10px!important;
+    padding-bottom:10px!important;
+}
+
+/* STT */
+.conversion-table tbody td:nth-child(1){
+    font-size:9.5px!important;
+}
+
+/* Mã SKU */
+.conversion-table tbody td:nth-child(2),
+.conversion-table .sku-code-cell{
+    font-size:10.5px!important;
+    font-weight:800!important;
+}
+
+/* TÊN SẢN PHẨM - phần user khoanh */
+.conversion-table tbody td:nth-child(3),
+.conversion-table .product-name-cell{
+    font-size:11.2px!important;
+    line-height:1.42!important;
+    font-weight:500!important;
+}
+
+/* Tăng chiều cao dòng để chữ thoáng */
+.conversion-table tbody td{
+    padding-top:11px!important;
+    padding-bottom:11px!important;
+}
+
+/* Sáng / Chiều */
+.conversion-table .stat-shift-col{
+    font-size:10.3px!important;
+}
+
+/* Tổng */
+.conversion-table .stat-total-col,
+.conversion-table .stat-total-value{
+    font-size:11.5px!important;
+    font-weight:900!important;
+}
+
+/* Các hệ số quy đổi trong ô */
+.conversion-table .conversion-input{
+    font-size:10.5px!important;
+    font-weight:750!important;
+}
+
+/* Trạng thái Đã cấu hình */
+.conversion-table .sku-mapped,
+.conversion-table .sku-unmapped{
+    font-size:8.3px!important;
+}
+
+/* Hàng tổng cuối bảng */
+.conversion-table tfoot td{
+    font-size:10.5px!important;
+    padding-top:11px!important;
+    padding-bottom:11px!important;
+}
+.conversion-table tfoot td:nth-child(2),
+.conversion-table tfoot td:nth-child(3){
+    font-weight:850!important;
+}
+
+/* Giữ tên sản phẩm rộng, tránh bị bó lại */
+.conversion-table col:nth-child(3){
+    width:430px!important;
+}
+
+
+/* =========================================================
+   V27 - LỊCH SỬ THỐNG KÊ HÓA ĐƠN
+========================================================= */
+
+.invoice-history-button{
+    height:36px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:0 12px;
+    border:1px solid #b9d8d2;
+    border-radius:7px;
+    background:#f3faf8;
+    color:#176d5e;
+    font-family:inherit;
+    font-size:9px;
+    font-weight:800;
+    cursor:pointer;
+    white-space:nowrap
+}
+.invoice-history-button:hover{
+    background:#e9f7f3;
+    border-color:#91c9be
+}
+.invoice-history-count{
+    min-width:20px;
+    height:20px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 5px;
+    border-radius:999px;
+    background:#0d9c82;
+    color:#fff;
+    font-size:7.5px;
+    font-weight:900
+}
+
+/* Overlay */
+.invoice-history-overlay{
+    position:fixed;
+    inset:0;
+    z-index:12500;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(10,29,37,.62);
+    backdrop-filter:blur(4px)
+}
+.invoice-history-overlay.hidden{
+    display:none!important
+}
+.invoice-history-modal{
+    width:min(1450px,96vw);
+    max-height:88vh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    border:1px solid #dce6e9;
+    border-radius:14px;
+    background:#fff;
+    box-shadow:0 30px 100px rgba(0,0,0,.3)
+}
+.invoice-history-modal-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    padding:16px 18px 13px;
+    border-bottom:1px solid #e9eef0
+}
+.invoice-history-modal-header h2{
+    margin:0 0 4px;
+    color:#18323c;
+    font-size:16px
+}
+.invoice-history-modal-header p{
+    margin:0;
+    color:#8797a0;
+    font-size:8.5px
+}
+.invoice-history-close{
+    width:31px;
+    height:31px;
+    border:1px solid #dde5e8;
+    border-radius:7px;
+    background:#fff;
+    color:#6f818a;
+    font-size:20px;
+    cursor:pointer
+}
+.invoice-history-close:hover{
+    background:#f4f7f8
+}
+
+/* Toolbar */
+.invoice-history-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:11px 18px;
+    border-bottom:1px solid #edf1f3;
+    background:#fbfcfd
+}
+.invoice-history-search{
+    width:min(430px,100%);
+    height:36px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:0 10px;
+    border:1px solid #d8e2e6;
+    border-radius:7px;
+    background:#fff
+}
+.invoice-history-search input{
+    width:100%;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#314952;
+    font-family:inherit;
+    font-size:9px
+}
+.invoice-history-summary{
+    color:#687d87;
+    font-size:8.5px;
+    font-weight:750
+}
+
+/* Table */
+.invoice-history-table-wrap{
+    flex:1;
+    overflow:auto
+}
+.invoice-history-table{
+    width:100%;
+    min-width:1200px;
+    border-collapse:collapse;
+    table-layout:fixed
+}
+.invoice-history-table thead th{
+    position:sticky;
+    top:0;
+    z-index:3;
+    padding:11px 10px;
+    border-bottom:1px solid #dfe7ea;
+    background:#f7fafb;
+    color:#546b75;
+    font-size:8.3px;
+    font-weight:850;
+    text-align:center;
+    white-space:nowrap
+}
+.invoice-history-table thead th:nth-child(5){
+    text-align:left
+}
+.invoice-history-table tbody td{
+    padding:11px 10px;
+    border-bottom:1px solid #edf1f3;
+    color:#405862;
+    font-size:9.5px;
+    text-align:center;
+    vertical-align:middle
+}
+.invoice-history-table tbody td:nth-child(5){
+    text-align:left;
+    font-weight:650;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap
+}
+.invoice-history-table tbody tr:hover td{
+    background:#f7fbfa
+}
+.invoice-history-current td{
+    background:#f1faf7!important
+}
+.invoice-history-current-badge{
+    display:inline-flex;
+    align-items:center;
+    height:18px;
+    margin-left:6px;
+    padding:0 6px;
+    border-radius:999px;
+    background:#dff5ee;
+    color:#087863;
+    font-size:6.8px;
+    font-weight:850;
+    vertical-align:middle
+}
+.invoice-history-money{
+    color:#087863!important;
+    font-weight:850
+}
+.invoice-history-actions{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px
+}
+.invoice-history-view-btn,
+.invoice-history-delete-btn{
+    height:30px;
+    padding:0 9px;
+    border-radius:6px;
+    font-family:inherit;
+    font-size:8px;
+    font-weight:800;
+    cursor:pointer;
+    white-space:nowrap
+}
+.invoice-history-view-btn{
+    border:1px solid #a9d6cd;
+    background:#edf9f6;
+    color:#087863
+}
+.invoice-history-view-btn:hover{
+    background:#def3ee
+}
+.invoice-history-delete-btn{
+    border:1px solid #f1b9b9;
+    background:#fff6f6;
+    color:#c63f3f
+}
+.invoice-history-delete-btn:hover{
+    background:#ffeded
+}
+
+/* Footer */
+.invoice-history-modal-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:11px 18px;
+    border-top:1px solid #e9eef0;
+    background:#fbfcfd
+}
+.invoice-history-note{
+    color:#8797a0;
+    font-size:7.8px
+}
+
+/* File info when viewing a historical snapshot */
+.invoice-file-info.history-viewing{
+    border-style:solid;
+    border-color:#c9dfee;
+    background:#f3f8fc;
+    color:#4b7188
+}
+
+@media(max-width:900px){
+    .invoice-history-toolbar{
+        align-items:flex-start;
+        flex-direction:column
+    }
+    .invoice-history-search{
+        width:100%
+    }
+}
+
+
+/* =========================================================
+   V28 - TỒN KHO & LUÂN CHUYỂN
+========================================================= */
+.inventory-hero-panel{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 16px;margin-bottom:11px}
+.inventory-hero-copy{display:flex;align-items:flex-start;gap:11px;min-width:0}.inventory-hero-icon{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:11px;background:#eef8f5;font-size:22px}.inventory-hero-copy h2{font-size:15px;margin:0 0 5px;color:#19343e}.inventory-hero-copy p{max-width:760px;margin:0;color:#7d8f99;font-size:8.6px;line-height:1.5}.inventory-hero-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}.inventory-cloud-badge{display:inline-flex;align-items:center;height:34px;padding:0 9px;border:1px solid #cfe1dd;border-radius:7px;background:#f5faf9;color:#5f7771;font-size:8px;font-weight:750}.inventory-cloud-badge.cloud{border-color:#b9ddd5;background:#eff9f6;color:#087863}.inventory-cloud-badge.local{border-color:#efd9a5;background:#fff9eb;color:#976812}.inventory-file-button{height:34px;display:inline-flex;align-items:center;justify-content:center;padding:0 10px;border:1px solid #cfdce1;border-radius:7px;background:#fff;color:#3d5964;font-size:8.5px;font-weight:800;cursor:pointer}.inventory-file-button input{display:none}
+.inventory-warning-box{margin:0 0 11px;padding:10px 12px;border:1px solid #f0d79f;border-radius:8px;background:#fff9ed;color:#895f12;font-size:8.5px;line-height:1.5}.inventory-warning-box.hidden{display:none}
+.inventory-kpi-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin-bottom:11px}.inventory-kpi-card{min-height:87px;padding:12px 13px;border:1px solid #dfe7ea;border-radius:9px;background:#fff}.inventory-kpi-card span{display:block;color:#6e818a;font-size:7.2px;font-weight:850}.inventory-kpi-card strong{display:block;margin-top:7px;color:#18323c;font-size:18px}.inventory-kpi-card small{display:block;margin-top:5px;color:#96a3ab;font-size:6.8px;line-height:1.35}.inventory-kpi-card.primary{border-color:#a6dacf;background:#f2fbf8}.inventory-kpi-card.primary strong,.inventory-kpi-card.green strong,.inventory-kpi-card.value strong{color:#087863}.inventory-kpi-card.blue{border-color:#c8ddf2;background:#f6faff}.inventory-kpi-card.blue strong{color:#327fc2}.inventory-kpi-card.purple{border-color:#ddd1ef;background:#faf7ff}.inventory-kpi-card.purple strong{color:#7351a6}.inventory-kpi-card.green{border-color:#bee0d8;background:#f5fbf9}.inventory-kpi-card.value{border-color:#b9ddd5;background:#eef9f6}
+.inventory-summary-panel{margin-bottom:11px;overflow:hidden}.inventory-summary-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px}.inventory-summary-toolbar h2{font-size:12px}.inventory-summary-toolbar p{font-size:8px}.inventory-search-box{width:235px;height:34px;display:flex;align-items:center;gap:6px;padding:0 9px;border:1px solid #d7e1e5;border-radius:7px;background:#fff}.inventory-search-box input{width:100%;border:0;outline:0;background:transparent;font:inherit;color:#334b55;font-size:8.5px}.inventory-table-wrap{overflow:auto;max-height:600px}.inventory-summary-table{width:100%;min-width:1600px;border-collapse:collapse;table-layout:auto}.inventory-summary-table th{position:sticky;top:0;z-index:3;padding:9px 8px;background:#f8fafb;border-bottom:1px solid #dfe7ea;color:#5d727c;font-size:7.5px;text-align:left;white-space:nowrap}.inventory-summary-table td{padding:10px 8px;border-bottom:1px solid #edf1f3;color:#405761;font-size:9px;vertical-align:middle}.inventory-summary-table th.center,.inventory-summary-table td.center{text-align:center}.inventory-summary-table th.right,.inventory-summary-table td.right{text-align:right}.inventory-summary-table td:nth-child(1){text-align:center;color:#71838c}.inventory-summary-table td:nth-child(2){font-weight:850;white-space:nowrap}.inventory-summary-table td:nth-child(3){min-width:190px}.inventory-summary-table .inventory-num{text-align:center;font-weight:750;font-variant-numeric:tabular-nums}.inventory-summary-table .inventory-col-physical,.inventory-summary-table td.inventory-col-physical{background:#f0faf7;color:#087863;font-weight:900}.inventory-summary-table .inventory-col-transit,.inventory-summary-table td.inventory-col-transit{background:#f5f9fd;color:#327fc2;font-weight:900}.inventory-summary-table .inventory-col-available,.inventory-summary-table td.inventory-col-available{background:#f2fbf8;color:#087863;font-weight:900}.inventory-summary-table tfoot td{position:sticky;bottom:0;z-index:2;padding:10px 8px;border-top:2px solid #83cfbe;background:#eaf8f5;color:#075f50;font-size:9px;font-weight:900}.inventory-table-note{padding:9px 13px;border-top:1px solid #edf1f3;background:#fbfcfd;color:#84949d;font-size:7.6px;line-height:1.45}.inventory-alert-pill{display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 7px;border-radius:999px;font-size:7px;font-weight:850;white-space:nowrap}.inventory-alert-pill.ok{background:#eaf8f4;color:#087863}.inventory-alert-pill.low{background:#fff3d6;color:#9a660e}.inventory-alert-pill.out{background:#ffeded;color:#c43c42}.inventory-unmapped{color:#b27613;font-size:7px;font-weight:800}
+.inventory-two-column-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:11px;margin-bottom:11px}.inventory-flow-panel,.inventory-misa-panel{overflow:hidden}.inventory-flow-bars{padding:13px}.inventory-flow-row{display:grid;grid-template-columns:125px minmax(0,1fr) 70px;gap:9px;align-items:center;margin-bottom:10px}.inventory-flow-row:last-child{margin-bottom:0}.inventory-flow-label{color:#546a74;font-size:8px;font-weight:800}.inventory-flow-track{height:15px;border-radius:999px;background:#edf1f3;overflow:hidden}.inventory-flow-fill{height:100%;border-radius:999px;min-width:0}.inventory-flow-fill.reserved{background:#efb348}.inventory-flow-fill.in_transit{background:#58a4e2}.inventory-flow-fill.delivered{background:#8d72c7}.inventory-flow-fill.invoiced{background:#1fa989}.inventory-flow-fill.returning{background:#ed8f51}.inventory-flow-value{text-align:right;color:#203d47;font-size:9px;font-weight:900}.inventory-misa-info{padding:14px;color:#6f828c;font-size:8.5px;line-height:1.55}.inventory-misa-info strong{color:#203d47}.inventory-misa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}.inventory-misa-stat{padding:9px;border:1px solid #e0e7ea;border-radius:7px;background:#fafcfd}.inventory-misa-stat span{display:block;color:#8b99a1;font-size:6.5px}.inventory-misa-stat strong{display:block;margin-top:4px;color:#087863;font-size:11px}
+.inventory-movement-panel{overflow:hidden}.inventory-movement-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px}.inventory-movement-scroll{max-height:520px}.inventory-movement-table{min-width:1280px}.inventory-movement-table th{font-size:7.5px}.inventory-movement-table td{font-size:8.5px}.inventory-movement-table td:nth-child(1){text-align:center}.inventory-movement-table td:nth-child(8){text-align:center;font-weight:850}.inventory-bucket-pill{display:inline-flex;align-items:center;height:21px;padding:0 7px;border-radius:999px;font-size:6.9px;font-weight:850;white-space:nowrap}.inventory-bucket-pill.reserved{background:#fff3d6;color:#95620c}.inventory-bucket-pill.in_transit{background:#eaf4fd;color:#337fbf}.inventory-bucket-pill.delivered{background:#f0ebfb;color:#7452a7}.inventory-bucket-pill.returning{background:#fff0e5;color:#aa5c24}.inventory-bucket-pill.cancelled{background:#ffeded;color:#c33d43}.inventory-bucket-pill.other{background:#edf1f3;color:#6c7c84}
+.inventory-editor-overlay{position:fixed;inset:0;z-index:12600;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(10,29,37,.64);backdrop-filter:blur(4px)}.inventory-editor-overlay.hidden{display:none!important}.inventory-editor-modal{width:min(1500px,97vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;border:1px solid #dae4e7;border-radius:14px;background:#fff;box-shadow:0 30px 100px rgba(0,0,0,.3)}.inventory-editor-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px 13px;border-bottom:1px solid #e9eef0}.inventory-editor-header h2{font-size:15px;margin:0 0 4px;color:#18323c}.inventory-editor-header p{margin:0;color:#8797a0;font-size:8px}.inventory-editor-close{width:31px;height:31px;border:1px solid #dbe4e7;border-radius:7px;background:#fff;color:#6f818a;font-size:20px;cursor:pointer}.inventory-editor-topbar{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:11px 18px;border-bottom:1px solid #edf1f3;background:#fbfcfd}.inventory-editor-topbar label{display:flex;flex-direction:column;gap:5px;color:#637984;font-size:7.5px;font-weight:850}.inventory-editor-topbar input[type=date]{height:34px;border:1px solid #d6e1e5;border-radius:7px;padding:0 9px;font-family:inherit;font-size:9px}.inventory-editor-table-wrap{flex:1;overflow:auto}.inventory-editor-table{width:100%;min-width:1280px;border-collapse:collapse}.inventory-editor-table th{position:sticky;top:0;z-index:2;padding:9px;background:#f8fafb;border-bottom:1px solid #dfe7ea;color:#5d727c;font-size:7.5px;white-space:nowrap}.inventory-editor-table td{padding:7px;border-bottom:1px solid #edf1f3}.inventory-editor-table td:first-child{text-align:center;color:#71838c;font-size:8px}.inventory-editor-input{width:100%;height:32px;border:1px solid #d8e2e6;border-radius:6px;padding:0 8px;font-family:inherit;font-size:8.5px;color:#314952;outline:0}.inventory-editor-input:focus{border-color:#75c5b4;box-shadow:0 0 0 2px rgba(13,156,130,.07)}.inventory-editor-input.number{text-align:right}.inventory-editor-help{padding:9px 18px;border-top:1px solid #edf1f3;background:#fbfcfd;color:#82939c;font-size:7.5px;line-height:1.45}.inventory-editor-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid #e9eef0}
+@media(max-width:1350px){.inventory-kpi-grid{grid-template-columns:repeat(3,1fr)}.inventory-two-column-grid{grid-template-columns:1fr}.inventory-hero-panel{align-items:flex-start;flex-direction:column}.inventory-hero-actions{justify-content:flex-start}}
+@media(max-width:800px){.inventory-kpi-grid{grid-template-columns:repeat(2,1fr)}.inventory-summary-toolbar,.inventory-movement-toolbar{align-items:flex-start;flex-direction:column}.inventory-search-box{width:100%}}
+
+
+/* =========================================================
+   V29 - TĂNG CỠ CHỮ MODULE TỒN KHO & LUÂN CHUYỂN
+========================================================= */
+
+/* Tiêu đề bảng và mô tả */
+.inventory-summary-toolbar h2{
+    font-size:14px!important;
+    line-height:1.3!important;
+}
+.inventory-summary-toolbar p{
+    font-size:9px!important;
+    line-height:1.45!important;
+}
+
+/* Ô tìm kiếm */
+.inventory-search-box{
+    height:36px!important;
+}
+.inventory-search-box input{
+    font-size:9.5px!important;
+}
+
+/* Header cột của bảng tồn kho */
+.inventory-summary-table th{
+    padding:11px 9px!important;
+    font-size:8.8px!important;
+    line-height:1.25!important;
+    font-weight:850!important;
+}
+
+/* Toàn bộ dữ liệu */
+.inventory-summary-table td{
+    padding:12px 9px!important;
+    font-size:10.5px!important;
+    line-height:1.4!important;
+}
+
+/* STT */
+.inventory-summary-table td:nth-child(1){
+    font-size:9.8px!important;
+}
+
+/* SKU kho */
+.inventory-summary-table td:nth-child(2){
+    font-size:10.8px!important;
+    font-weight:900!important;
+}
+
+/* Tên sản phẩm */
+.inventory-summary-table td:nth-child(3){
+    min-width:220px!important;
+    font-size:10.8px!important;
+    line-height:1.35!important;
+}
+
+/* Dòng Shopee: XXX dưới tên sản phẩm */
+.inventory-summary-table td:nth-child(3) small,
+.inventory-summary-table td:nth-child(3) .muted,
+.inventory-summary-table .inventory-unmapped{
+    font-size:8px!important;
+}
+
+/* Các số tồn / luân chuyển / hóa đơn */
+.inventory-summary-table .inventory-num{
+    font-size:10.7px!important;
+    font-weight:850!important;
+}
+
+/* Ba cột quan trọng */
+.inventory-summary-table .inventory-col-physical,
+.inventory-summary-table td.inventory-col-physical,
+.inventory-summary-table .inventory-col-transit,
+.inventory-summary-table td.inventory-col-transit,
+.inventory-summary-table .inventory-col-available,
+.inventory-summary-table td.inventory-col-available{
+    font-size:11.2px!important;
+    font-weight:950!important;
+}
+
+/* Đơn giá và giá trị tồn */
+.inventory-summary-table td.right{
+    font-size:10.3px!important;
+}
+.inventory-summary-table td:nth-last-child(2){
+    font-weight:850!important;
+}
+
+/* Badge cảnh báo */
+.inventory-alert-pill{
+    height:25px!important;
+    padding:0 9px!important;
+    font-size:8px!important;
+}
+
+/* Hàng tổng */
+.inventory-summary-table tfoot td{
+    padding:12px 9px!important;
+    font-size:10.8px!important;
+    line-height:1.3!important;
+    font-weight:950!important;
+}
+
+/* Ghi chú dưới bảng */
+.inventory-table-note{
+    padding:10px 13px!important;
+    font-size:8.3px!important;
+    line-height:1.5!important;
+}
+
+/* KPI phía trên: tăng nhẹ nhãn/mô tả */
+.inventory-kpi-card span{
+    font-size:8px!important;
+}
+.inventory-kpi-card strong{
+    font-size:19px!important;
+}
+.inventory-kpi-card small{
+    font-size:7.4px!important;
+}
+
+/* Phần luân chuyển chi tiết bên dưới */
+.inventory-movement-toolbar h2{
+    font-size:13px!important;
+}
+.inventory-movement-toolbar p{
+    font-size:8.5px!important;
+}
+.inventory-movement-table th{
+    font-size:8.5px!important;
+    padding-top:10px!important;
+    padding-bottom:10px!important;
+}
+.inventory-movement-table td{
+    font-size:9.6px!important;
+    padding-top:10px!important;
+    padding-bottom:10px!important;
+}
+.inventory-bucket-pill{
+    height:23px!important;
+    padding:0 8px!important;
+    font-size:7.6px!important;
+}
+
+/* Thanh trạng thái luân chuyển */
+.inventory-flow-label{
+    font-size:9px!important;
+}
+.inventory-flow-value{
+    font-size:10px!important;
+}
+
+
+/* =========================================================
+   V30 - ĐỐI CHIẾU MISA THEO SỐ HÓA ĐƠN
+========================================================= */
+.inventory-misa-rule{
+    margin-top:9px;
+    padding:9px 10px;
+    border:1px solid #cfe4df;
+    border-radius:7px;
+    background:#f3faf8;
+    color:#4f6d66;
+    font-size:8.2px;
+    line-height:1.5
+}
+.inventory-misa-rule strong{color:#087863}
+
+.inventory-misa-warning{
+    margin-top:9px;
+    padding:9px 10px;
+    border:1px solid #efd4a4;
+    border-radius:7px;
+    background:#fff9ed;
+    color:#8c651a;
+    font-size:8.2px;
+    line-height:1.5
+}
+
+.inventory-misa-unmapped{
+    margin-top:9px;
+    padding-top:8px;
+    border-top:1px dashed #dfe7ea;
+    color:#7d8e97;
+    font-size:8px;
+    line-height:1.55
+}
+.inventory-misa-unmapped strong{color:#a35f16}
+
+.inventory-misa-code-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:20px;
+    margin:3px 4px 0 0;
+    padding:2px 6px;
+    border:1px solid #e0e7ea;
+    border-radius:999px;
+    background:#fff;
+    color:#526a74;
+    font-size:7.2px;
+    font-weight:750
+}
+
+.inventory-scope-mismatch{
+    display:inline-flex;
+    align-items:center;
+    margin-left:5px;
+    padding:2px 5px;
+    border-radius:999px;
+    background:#fff3d6;
+    color:#9b680d;
+    font-size:6.8px;
+    font-weight:850;
+    vertical-align:middle
+}
+
+.invoice-file-info .invoice-issued-note{
+    color:#087863;
+    font-weight:800
+}
+
+
+/* =========================================================
+   V31 - KIỂM KÊ & ĐỐI CHIẾU KHO
+========================================================= */
+.inventory-module-tabs{
+    display:flex;
+    gap:6px;
+    padding:7px;
+    margin-bottom:11px;
+    overflow-x:auto
+}
+.inventory-tab-btn{
+    min-height:36px;
+    flex:0 0 auto;
+    padding:0 13px;
+    border:1px solid #dbe5e8;
+    border-radius:7px;
+    background:#fff;
+    color:#5c717b;
+    font-size:9px;
+    font-weight:800
+}
+.inventory-tab-btn:hover{background:#f6faf9}
+.inventory-tab-btn.active{
+    border-color:#84cfbe;
+    background:#eaf8f4;
+    color:#087863
+}
+.inventory-tab-pane{display:none}
+.inventory-tab-pane.active{display:block}
+
+.inventory-v31-panel{margin-bottom:11px;overflow:hidden}
+.inventory-v31-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px
+}
+.inventory-v31-header h2{font-size:13px!important}
+.inventory-v31-header p{
+    max-width:880px;
+    font-size:8.5px!important;
+    line-height:1.5
+}
+.inventory-v31-date{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    color:#667b85;
+    font-size:7.3px;
+    font-weight:850;
+    white-space:nowrap
+}
+.inventory-v31-date input{
+    height:34px;
+    min-width:142px;
+    border:1px solid #d6e1e5;
+    border-radius:7px;
+    padding:0 8px;
+    background:#fff;
+    color:#304953;
+    font-family:inherit;
+    font-size:9px;
+    font-weight:700
+}
+
+/* KPI */
+.inventory-v31-kpis{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:9px;
+    padding:12px
+}
+.inventory-v31-kpi{
+    min-height:78px;
+    padding:11px 12px;
+    border:1px solid #dfe7ea;
+    border-radius:9px;
+    background:#fff
+}
+.inventory-v31-kpi span{
+    display:block;
+    color:#74858e;
+    font-size:7.5px;
+    font-weight:850
+}
+.inventory-v31-kpi strong{
+    display:block;
+    margin-top:7px;
+    color:#1f3c47;
+    font-size:17px
+}
+.inventory-v31-kpi.positive{background:#f4fbf8;border-color:#cce5df}
+.inventory-v31-kpi.positive strong{color:#087863}
+.inventory-v31-kpi.negative{background:#fff8f3;border-color:#f0d6c2}
+.inventory-v31-kpi.negative strong{color:#b65b2d}
+.inventory-v31-kpi.accent{background:#eaf8f5;border-color:#a9dacd}
+.inventory-v31-kpi.accent strong{color:#087863}
+
+/* Current stock / reconcile tables */
+.inventory-v31-table-wrap{
+    overflow:auto;
+    border-top:1px solid #edf1f3
+}
+.inventory-v31-table,
+.inventory-reconcile-table,
+.inventory-tx-table,
+.inventory-misa-detail-table{
+    width:100%;
+    min-width:1300px;
+    border-collapse:collapse
+}
+.inventory-v31-table th,
+.inventory-reconcile-table th,
+.inventory-tx-table th,
+.inventory-misa-detail-table th{
+    position:sticky;
+    top:0;
+    z-index:2;
+    padding:10px 9px;
+    border-bottom:1px solid #dfe7ea;
+    background:#f8fafb;
+    color:#5a707a;
+    font-size:8.5px;
+    font-weight:850;
+    text-align:center;
+    white-space:nowrap
+}
+.inventory-v31-table th:nth-child(3),
+.inventory-reconcile-table th:nth-child(3),
+.inventory-tx-table th:nth-child(4),
+.inventory-misa-detail-table th:nth-child(3){
+    text-align:left
+}
+.inventory-v31-table td,
+.inventory-reconcile-table td,
+.inventory-tx-table td,
+.inventory-misa-detail-table td{
+    padding:10px 9px;
+    border-bottom:1px solid #edf1f3;
+    color:#3f5862;
+    font-size:9.7px;
+    text-align:center;
+    vertical-align:middle;
+    font-variant-numeric:tabular-nums
+}
+.inventory-v31-table td:nth-child(3),
+.inventory-reconcile-table td:nth-child(3),
+.inventory-tx-table td:nth-child(4),
+.inventory-misa-detail-table td:nth-child(3){
+    text-align:left
+}
+.inventory-v31-table td:nth-child(2),
+.inventory-reconcile-table td:nth-child(2),
+.inventory-tx-table td:nth-child(3),
+.inventory-misa-detail-table td:nth-child(2){
+    font-weight:850
+}
+.inventory-v31-table .positive-col{color:#087863}
+.inventory-v31-table .negative-col{color:#b15c32}
+.inventory-v31-table .theory-col,
+.inventory-reconcile-table .theory-col{
+    background:#edf9f6;
+    color:#087863;
+    font-weight:950
+}
+.inventory-reconcile-table .actual-col{
+    background:#f3f8fc
+}
+.inventory-v31-table tfoot td,
+.inventory-reconcile-table tfoot td{
+    padding:11px 9px;
+    border-top:2px solid #83cfbe;
+    background:#eaf8f5;
+    color:#075f50;
+    font-size:9.8px;
+    font-weight:900
+}
+.inventory-v31-note{
+    padding:10px 13px;
+    border-top:1px solid #edf1f3;
+    background:#fbfcfd;
+    color:#7f919a;
+    font-size:8.2px;
+    line-height:1.55
+}
+.inventory-v31-note.warning{
+    border-top-color:#eedaa9;
+    background:#fffaf0;
+    color:#8d681b
+}
+
+/* Transaction tab */
+.inventory-v31-two-col{
+    display:grid;
+    grid-template-columns:1.45fr .55fr;
+    gap:11px;
+    margin-bottom:11px
+}
+.inventory-tx-form{
+    display:grid;
+    grid-template-columns:145px minmax(220px,1.25fr) 170px 130px minmax(180px,1fr);
+    gap:9px;
+    padding:13px
+}
+.inventory-tx-form label{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    color:#657a84;
+    font-size:7.3px;
+    font-weight:850
+}
+.inventory-tx-form label.wide{
+    grid-column:1 / -2
+}
+.inventory-tx-form input,
+.inventory-tx-form select{
+    width:100%;
+    height:35px;
+    border:1px solid #d7e2e6;
+    border-radius:7px;
+    padding:0 9px;
+    background:#fff;
+    color:#304953;
+    font-family:inherit;
+    font-size:9px;
+    outline:0
+}
+.inventory-tx-form input:focus,
+.inventory-tx-form select:focus{
+    border-color:#76c6b5;
+    box-shadow:0 0 0 2px rgba(13,156,130,.07)
+}
+.inventory-tx-submit{
+    display:flex;
+    align-items:end;
+    justify-content:flex-end
+}
+.inventory-tx-summary{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+    padding:13px
+}
+.inventory-tx-mini{
+    padding:10px;
+    border:1px solid #e0e7ea;
+    border-radius:8px;
+    background:#fafcfd
+}
+.inventory-tx-mini span{
+    display:block;
+    color:#87969e;
+    font-size:6.8px;
+    font-weight:800
+}
+.inventory-tx-mini strong{
+    display:block;
+    margin-top:5px;
+    font-size:13px
+}
+.inventory-tx-mini.in strong,
+.inventory-tx-mini.return strong{color:#087863}
+.inventory-tx-mini.out strong{color:#bd5a2b}
+.inventory-tx-mini.adjust strong{color:#5f54a4}
+.inventory-tx-type{
+    display:inline-flex;
+    align-items:center;
+    min-height:22px;
+    padding:0 7px;
+    border-radius:999px;
+    font-size:7.2px;
+    font-weight:850;
+    white-space:nowrap
+}
+.inventory-tx-type.INBOUND{background:#e8f8f3;color:#087863}
+.inventory-tx-type.RETURN_IN{background:#edf8ef;color:#357a45}
+.inventory-tx-type.OUT_OTHER{background:#fff0e6;color:#a95225}
+.inventory-tx-type.ADJUSTMENT{background:#f0edfb;color:#6b50a2}
+.inventory-tx-delete{
+    height:27px;
+    padding:0 8px;
+    border:1px solid #f0bcbc;
+    border-radius:6px;
+    background:#fff7f7;
+    color:#c54242;
+    font-size:7.5px;
+    font-weight:800
+}
+
+/* Reconcile */
+.inventory-reconcile-actions{
+    display:flex;
+    align-items:end;
+    gap:7px;
+    flex-wrap:wrap;
+    justify-content:flex-end
+}
+.inventory-reconcile-kpis{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:8px;
+    padding:12px
+}
+.inventory-reconcile-kpi{
+    min-height:76px;
+    padding:10px 11px;
+    border:1px solid #dfe7ea;
+    border-radius:8px;
+    background:#fff
+}
+.inventory-reconcile-kpi span{
+    display:block;
+    color:#7d8c94;
+    font-size:7px;
+    font-weight:850
+}
+.inventory-reconcile-kpi strong{
+    display:block;
+    margin-top:6px;
+    color:#213d47;
+    font-size:16px
+}
+.inventory-reconcile-kpi.ok{background:#eff9f6;border-color:#c2e2da}
+.inventory-reconcile-kpi.ok strong{color:#087863}
+.inventory-reconcile-kpi.shortage{background:#fff3f3;border-color:#f0c9c9}
+.inventory-reconcile-kpi.shortage strong{color:#c83e43}
+.inventory-reconcile-kpi.surplus{background:#fff8eb;border-color:#efd9aa}
+.inventory-reconcile-kpi.surplus strong{color:#a76b0e}
+.inventory-reconcile-kpi.value{background:#f3f7fb}
+.inventory-reconcile-input{
+    width:86px;
+    height:32px;
+    border:1px solid #bcd3df;
+    border-radius:6px;
+    padding:0 7px;
+    background:#fff;
+    text-align:center;
+    font-family:inherit;
+    font-size:10px;
+    font-weight:850;
+    outline:0
+}
+.inventory-reconcile-input:focus{
+    border-color:#4ca2d1;
+    box-shadow:0 0 0 2px rgba(76,162,209,.1)
+}
+.inventory-variance.negative{color:#c63d42;font-weight:950}
+.inventory-variance.positive{color:#ad6c0c;font-weight:950}
+.inventory-variance.zero{color:#087863;font-weight:950}
+.inventory-reconcile-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:23px;
+    padding:0 8px;
+    border-radius:999px;
+    font-size:7.2px;
+    font-weight:850;
+    white-space:nowrap
+}
+.inventory-reconcile-status.pending{background:#edf1f3;color:#73838b}
+.inventory-reconcile-status.match{background:#e7f7f2;color:#087863}
+.inventory-reconcile-status.shortage{background:#ffeded;color:#c43d42}
+.inventory-reconcile-status.surplus{background:#fff2d5;color:#9a650c}
+
+/* MISA detail */
+.inventory-misa-detail-table{min-width:900px}
+
+/* Small screens */
+@media(max-width:1200px){
+    .inventory-v31-two-col{grid-template-columns:1fr}
+    .inventory-tx-form{
+        grid-template-columns:repeat(2,minmax(0,1fr))
+    }
+    .inventory-tx-form label.wide{grid-column:1 / -1}
+    .inventory-tx-submit{grid-column:1 / -1}
+}
+@media(max-width:900px){
+    .inventory-v31-kpis,
+    .inventory-reconcile-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .inventory-v31-header{align-items:flex-start;flex-direction:column}
+}
+
+
+/* =========================================================
+   V32 - UPLOAD MISA TRỰC TIẾP TRONG MODULE TỒN KHO
+========================================================= */
+.inventory-misa-upload-button{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-height:35px;padding:0 11px;border:1px solid #a9d8cd;border-radius:7px;
+    background:#edf9f6;color:#087863;font-size:8.5px;font-weight:850;
+    cursor:pointer;white-space:nowrap
+}
+.inventory-misa-upload-button:hover{background:#e0f5ef;border-color:#7bc8b7}
+.inventory-misa-upload-button input{display:none}
+.inventory-misa-tab-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+.inventory-misa-upload-card{
+    display:grid;grid-template-columns:42px minmax(0,1fr) 145px;align-items:center;
+    gap:11px;margin:12px;padding:11px 12px;border:1px solid #cfe4df;border-radius:9px;
+    background:#f4fbf9
+}
+.inventory-misa-upload-card.loaded{border-color:#81cdbb;background:#edf9f6}
+.inventory-misa-upload-icon{
+    width:38px;height:38px;display:grid;place-items:center;border-radius:9px;
+    background:#e1f4ef;font-size:18px
+}
+.inventory-misa-upload-copy{min-width:0}
+.inventory-misa-upload-copy strong{
+    display:block;color:#26444f;font-size:9.8px;line-height:1.35;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.inventory-misa-upload-copy span{
+    display:block;margin-top:4px;color:#758992;font-size:7.8px;line-height:1.5
+}
+.inventory-misa-upload-effect{
+    padding-left:12px;border-left:1px solid #d6e8e3;text-align:center
+}
+.inventory-misa-upload-effect span{display:block;color:#7a8d95;font-size:6.7px;font-weight:850}
+.inventory-misa-upload-effect strong{display:block;margin-top:3px;color:#087863;font-size:17px}
+.inventory-misa-upload-effect small{display:block;margin-top:2px;color:#86979e;font-size:6.7px}
+.inventory-misa-upload-progress{display:inline-flex;align-items:center;gap:5px;color:#087863!important;font-weight:800}
+.inventory-misa-upload-progress:before{
+    content:"";width:7px;height:7px;border:2px solid #b6dfd6;border-top-color:#0f9b81;
+    border-radius:50%;animation:inventoryMisaSpin .75s linear infinite
+}
+@keyframes inventoryMisaSpin{to{transform:rotate(360deg)}}
+.inventory-misa-logic-banner{
+    margin:0 12px 12px;padding:9px 11px;border:1px solid #eed9a6;border-radius:8px;
+    background:#fffaf0;color:#866518;font-size:8px;line-height:1.55
+}
+.inventory-misa-logic-banner strong{color:#6c4d09}
+@media(max-width:900px){
+    .inventory-misa-upload-card{grid-template-columns:38px 1fr}
+    .inventory-misa-upload-effect{grid-column:1/-1;border-left:0;border-top:1px solid #d6e8e3;padding:8px 0 0}
+}
+
+
+/* =========================================================
+   V33 - SNAPSHOT ĐƠN LUÂN CHUYỂN SHOPEE
+========================================================= */
+.inventory-transit-upload-button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:35px;
+    padding:0 11px;
+    border:1px solid #a8cfee;
+    border-radius:7px;
+    background:#f0f7fd;
+    color:#2478b6;
+    font-size:8.5px;
+    font-weight:850;
+    cursor:pointer;
+    white-space:nowrap
+}
+.inventory-transit-upload-button:hover{
+    background:#e6f2fb;
+    border-color:#79b6e4
+}
+.inventory-transit-upload-button input{display:none}
+
+.inventory-transit-source-card{
+    display:grid;
+    grid-template-columns:42px minmax(0,1fr) auto;
+    gap:11px;
+    align-items:center;
+    margin-bottom:10px;
+    padding:11px 12px;
+    border:1px solid #cfdfe9;
+    border-radius:9px;
+    background:#f7fbfe
+}
+.inventory-transit-source-card.loaded{
+    border-color:#8dc4e8;
+    background:#f0f8fd
+}
+.inventory-transit-source-card.warning{
+    border-color:#efd6a5;
+    background:#fffaf0
+}
+.inventory-transit-source-icon{
+    width:38px;
+    height:38px;
+    display:grid;
+    place-items:center;
+    border-radius:9px;
+    background:#e8f3fb;
+    font-size:18px
+}
+.inventory-transit-source-copy{
+    min-width:0
+}
+.inventory-transit-source-copy strong{
+    display:block;
+    color:#294754;
+    font-size:9.8px;
+    line-height:1.35
+}
+.inventory-transit-source-copy span{
+    display:block;
+    margin-top:3px;
+    color:#768b95;
+    font-size:7.8px;
+    line-height:1.55
+}
+.inventory-transit-source-actions{
+    display:flex;
+    align-items:center;
+    gap:6px
+}
+.inventory-transit-statuses{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    margin-top:7px
+}
+.inventory-transit-status-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    min-height:22px;
+    padding:0 7px;
+    border:1px solid #d9e7ef;
+    border-radius:999px;
+    background:#fff;
+    color:#58707d;
+    font-size:7.1px;
+    font-weight:800
+}
+.inventory-transit-status-chip strong{
+    display:inline;
+    color:#2478b6;
+    font-size:7.4px
+}
+.inventory-transit-source-badge{
+    display:inline-flex;
+    align-items:center;
+    min-height:20px;
+    padding:0 6px;
+    border-radius:999px;
+    background:#e9f5fc;
+    color:#2478b6;
+    font-size:6.8px;
+    font-weight:850
+}
+.inventory-transit-no-delivered{
+    color:#9a650d!important;
+    font-weight:800
+}
+
+.inventory-transit-uploading{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color:#2478b6!important;
+    font-weight:800
+}
+.inventory-transit-uploading:before{
+    content:"";
+    width:8px;
+    height:8px;
+    border:2px solid #bfdbed;
+    border-top-color:#2478b6;
+    border-radius:50%;
+    animation:inventoryTransitSpin .75s linear infinite
+}
+@keyframes inventoryTransitSpin{
+    to{transform:rotate(360deg)}
+}
+
+@media(max-width:900px){
+    .inventory-transit-source-card{
+        grid-template-columns:38px 1fr
+    }
+    .inventory-transit-source-actions{
+        grid-column:1/-1;
+        justify-content:flex-end
+    }
+}
+
+
+/* =========================================================
+   V34 - TỰ MAP TỪ FILE LUÂN CHUYỂN
+========================================================= */
+.inventory-transit-item-source{
+    display:inline-flex;
+    align-items:center;
+    margin-top:3px;
+    padding:2px 6px;
+    border-radius:999px;
+    background:#eaf5fc;
+    color:#2778af;
+    font-size:7px;
+    font-weight:800
+}
+.inventory-transit-item-empty{
+    display:block;
+    margin-top:3px;
+    color:#95a3aa;
+    font-size:7px;
+    font-weight:650
+}
+.inventory-transit-map-method{
+    display:inline-flex;
+    align-items:center;
+    margin-left:4px;
+    color:#7c9099;
+    font-size:6.5px;
+    font-weight:650
+}
+.inventory-transit-unmatched-list{
+    margin-top:5px;
+    color:#8e681a;
+    font-size:7.5px;
+    line-height:1.5
+}
+
+
+/* =========================================================
+   V35 - BẢNG TỒN KHO TRỰC QUAN THEO NHÓM NGHIỆP VỤ
+========================================================= */
+
+/* 2 tầng header */
+.inventory-summary-table thead .inventory-group-header th{
+    top:0;
+    z-index:6;
+    height:31px;
+    padding:7px 8px;
+    border-bottom:1px solid #d7e2e6;
+    text-align:center;
+    font-size:7.1px;
+    font-weight:950;
+    letter-spacing:.04em;
+    white-space:nowrap
+}
+.inventory-summary-table thead .inventory-column-header th{
+    top:31px;
+    z-index:5;
+    height:35px;
+    padding:8px 8px;
+    font-size:7.6px;
+    font-weight:850
+}
+.inventory-summary-table thead .inventory-group-header th[rowspan="2"]{
+    vertical-align:middle;
+    background:#f8fafb
+}
+
+.inventory-group-stock{
+    background:#e9f8f4!important;
+    color:#087863!important;
+    border-left:2px solid #96d5c6!important
+}
+.inventory-group-transit{
+    background:#eef6fc!important;
+    color:#287ab7!important;
+    border-left:2px solid #9bc8e8!important
+}
+.inventory-group-invoice{
+    background:#f3f8f5!important;
+    color:#31765f!important;
+    border-left:2px solid #9bcfbf!important
+}
+.inventory-group-value{
+    background:#faf8f1!important;
+    color:#7b6b35!important;
+    border-left:2px solid #ddd1a6!important
+}
+
+/* Cột con theo nhóm */
+.inventory-summary-table .inventory-col-reserved,
+.inventory-summary-table td.inventory-col-reserved{
+    background:#fbfcfd;
+    color:#4d626c;
+    font-weight:850
+}
+.inventory-summary-table .inventory-col-delivered,
+.inventory-summary-table td.inventory-col-delivered{
+    background:#faf8fd;
+    color:#7056a0;
+    font-weight:850
+}
+.inventory-summary-table .inventory-col-returning,
+.inventory-summary-table td.inventory-col-returning{
+    background:#fff9f5;
+    color:#a96639;
+    font-weight:850
+}
+.inventory-summary-table .inventory-col-invoice,
+.inventory-summary-table td.inventory-col-invoice{
+    background:#f4faf7;
+    color:#24785f;
+    font-weight:900
+}
+.inventory-summary-table .inventory-col-waiting,
+.inventory-summary-table td.inventory-col-waiting{
+    background:#fbfcfc;
+    color:#536a73;
+    font-weight:850
+}
+
+/* Ranh giới nhóm rõ hơn */
+.inventory-summary-table th:nth-child(4),
+.inventory-summary-table td:nth-child(4){
+    border-left:2px solid #a8d8cd
+}
+.inventory-summary-table th:nth-child(8),
+.inventory-summary-table td:nth-child(8){
+    border-left:2px solid #afd0e8
+}
+.inventory-summary-table th:nth-child(11),
+.inventory-summary-table td:nth-child(11){
+    border-left:2px solid #b6d9cd
+}
+.inventory-summary-table th:nth-child(13),
+.inventory-summary-table td:nth-child(13){
+    border-left:2px solid #dfd6b7
+}
+
+/* Waiting invoice states */
+.inventory-waiting-dash{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:26px;
+    height:23px;
+    border-radius:6px;
+    background:#f1f3f4;
+    color:#87969d;
+    font-size:11px;
+    font-weight:900
+}
+.inventory-waiting-note{
+    display:block;
+    margin-top:3px;
+    color:#a97820;
+    font-size:6.3px;
+    font-weight:800;
+    white-space:nowrap
+}
+.inventory-invoice-ok{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:19px;
+    margin-left:4px;
+    padding:0 5px;
+    border-radius:999px;
+    background:#e8f7f2;
+    color:#087863;
+    font-size:6.1px;
+    font-weight:850
+}
+
+/* Legend */
+.inventory-v35-legend{
+    display:grid;
+    grid-template-columns:1.1fr 1fr 1.25fr;
+    gap:10px;
+    padding:10px 13px;
+    font-size:7.5px;
+    line-height:1.55
+}
+.inventory-v35-legend > div{
+    padding:8px 9px;
+    border:1px solid #e7edef;
+    border-radius:7px;
+    background:#fff
+}
+.inventory-v35-legend > div:nth-child(1){border-left:3px solid #82cdbb}
+.inventory-v35-legend > div:nth-child(2){border-left:3px solid #77b7e3}
+.inventory-v35-legend > div:nth-child(3){border-left:3px solid #73b89e}
+
+/* Header source hint badges */
+.inventory-summary-subsource{
+    display:inline-flex;
+    align-items:center;
+    margin-left:5px;
+    padding:2px 5px;
+    border-radius:999px;
+    background:#eef4f6;
+    color:#71848d;
+    font-size:6.1px;
+    font-weight:800
+}
+
+/* Slightly wider table for clearer groups */
+.inventory-summary-table{
+    min-width:1680px
+}
+
+@media(max-width:1100px){
+    .inventory-v35-legend{grid-template-columns:1fr}
+}
+
+
+/* =========================================================
+   V36 - ĐỐI CHIẾU KHO NGAY TRÊN TỔNG QUAN
+========================================================= */
+.inventory-reconcile-overview-v36{margin-bottom:10px;padding:11px 12px;border:1px solid #d7e4e8;border-radius:9px;background:#fff}
+.inventory-reconcile-overview-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.inventory-reconcile-overview-title strong{display:block;color:#243e49;font-size:10px}
+.inventory-reconcile-overview-title span{display:block;margin-top:3px;color:#7d9098;font-size:7.5px}
+.inventory-reconcile-overview-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.inventory-reconcile-overview-card{padding:9px 10px;border:1px solid #e0e8eb;border-radius:8px;background:#fafcfd}
+.inventory-reconcile-overview-card span{display:block;color:#7a8b93;font-size:6.5px;font-weight:850}
+.inventory-reconcile-overview-card strong{display:block;margin-top:4px;color:#243e49;font-size:14px}
+.inventory-reconcile-overview-card.match{background:#eff9f6;border-color:#c2e2da}.inventory-reconcile-overview-card.match strong{color:#087863}
+.inventory-reconcile-overview-card.shortage{background:#fff3f3;border-color:#f0c9c9}.inventory-reconcile-overview-card.shortage strong{color:#c83e43}
+.inventory-reconcile-overview-card.surplus{background:#fff8eb;border-color:#efd9aa}.inventory-reconcile-overview-card.surplus strong{color:#a76b0e}
+.inventory-reconcile-overview-card.value strong{font-size:11px}
+.inventory-reconcile-overview-hint{margin-top:8px;padding:7px 9px;border-radius:7px;background:#f7f9fa;color:#758891;font-size:7.4px;line-height:1.5}
+.inventory-reconcile-overview-hint.ok{background:#eff9f6;color:#087863}.inventory-reconcile-overview-hint.warning{background:#fff8eb;color:#966315}
+.inventory-group-reconcile-v36{background:#f7f1fd!important;color:#7551a4!important;border-left:2px solid #bea7db!important}
+.inventory-summary-table .inventory-col-theory-v36,.inventory-summary-table td.inventory-col-theory-v36{background:#f4faf8;color:#14745e;font-weight:900}
+.inventory-summary-table .inventory-col-variance-v36,.inventory-summary-table td.inventory-col-variance-v36{background:#fbf9fd;font-weight:900}
+.inventory-summary-table .inventory-col-result-v36,.inventory-summary-table td.inventory-col-result-v36{background:#fcfbfd}
+.inventory-stock-variance{display:inline-flex;align-items:center;justify-content:center;min-width:42px;min-height:25px;padding:0 6px;border-radius:6px;font-size:8px;font-weight:950}
+.inventory-stock-variance.zero{background:#e7f7f2;color:#087863}.inventory-stock-variance.shortage{background:#ffeded;color:#c43d42}
+.inventory-stock-variance.surplus{background:#fff2d5;color:#9a650c}.inventory-stock-variance.pending{background:#f0f3f4;color:#8a989e}
+.inventory-stock-result-v36{display:inline-flex;align-items:center;justify-content:center;min-width:70px;min-height:24px;padding:0 7px;border-radius:999px;font-size:7px;font-weight:900;white-space:nowrap}
+.inventory-stock-result-v36.match{background:#e7f7f2;color:#087863}.inventory-stock-result-v36.shortage{background:#ffeded;color:#c43d42}
+.inventory-stock-result-v36.surplus{background:#fff2d5;color:#9a650c}.inventory-stock-result-v36.pending{background:#edf1f3;color:#73838b}
+.inventory-stock-result-date-v36{display:block;margin-top:3px;color:#89979d;font-size:6.2px;white-space:nowrap}
+.inventory-theory-date-v36{display:block;margin-top:2px;color:#82949b;font-size:6px;font-weight:650}
+.inventory-summary-table{min-width:1980px}.inventory-v36-legend{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1150px){.inventory-reconcile-overview-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.inventory-v36-legend{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.inventory-reconcile-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.inventory-v36-legend{grid-template-columns:1fr}}
