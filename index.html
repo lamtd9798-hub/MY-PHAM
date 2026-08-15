@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style-v56-2.css?v=562">
+    <link rel="stylesheet" href="style-v56-3.css?v=563">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -269,7 +269,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V56.2</span>
+                <span class="v38-sidebar-version">V56.3</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -295,7 +295,7 @@
                     <span id="cloudUserRole" class="v40-role-badge role-loading">ĐANG TẢI QUYỀN</span>
                 </div>
                 <button class="btn btn-light v40-admin-only hidden" id="btnManageRoles">👥 Phân quyền</button>
-                <button class="btn btn-light" id="btnGoImport">Nhập file</button>
+                <button class="btn btn-light" id="btnGoImport">Nhập file Shopee</button>
                 <button class="btn btn-danger-outline" id="btnReset">Xóa dữ liệu cloud</button>
                 <button class="btn-logout" id="btnLogout">Đăng xuất</button>
             </div>
@@ -1883,11 +1883,17 @@
         <!-- ======================== THỐNG KÊ HÓA ĐƠN ======================== -->
         <section id="view-invoice-stats" class="view">
 
-            <!-- V56.2: Bảng thống kê hóa đơn đưa lên đầu tab theo yêu cầu -->
+            <!-- V56.3: Bảng hóa đơn có nút nhập file riêng ngay cạnh tiêu đề -->
             <div class="panel invoice-summary-panel">
                 <div class="panel-header invoice-table-toolbar">
-                    <div>
-                        <h2>Bảng thống kê hóa đơn theo tên hàng</h2>
+                    <div class="invoice-title-block">
+                        <div class="invoice-title-upload-row">
+                            <h2>Bảng thống kê hóa đơn theo tên hàng</h2>
+                            <label class="btn btn-primary invoice-summary-upload-btn" title="Nhập file Bảng kê chi tiết hóa đơn đã sử dụng để cập nhật riêng bảng thống kê này">
+                                📥 Nhập file thống kê
+                                <input id="invoiceFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv" hidden>
+                            </label>
+                        </div>
                         <p id="invoiceSummarySubtitle">
                             Chưa có dữ liệu.
                         </p>
@@ -1996,7 +2002,7 @@
                             <span>Dùng Mã hàng / Tên hàng / Số lượng để kiểm tra từng SKU đã xuất.</span>
                             <small id="invoiceFileInfo">Chưa có file chi tiết hóa đơn.</small>
                         </div>
-                        <label class="btn btn-light v54-upload-btn">📥 Upload chi tiết HĐ<input id="invoiceFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv" hidden></label>
+                        <span class="v54-detail-upload-hint">↑ Nhập file bằng nút <strong>“Nhập file thống kê”</strong> ở bảng phía trên</span>
                     </div>
                 </div>
 
@@ -2931,6 +2937,6 @@
         </div>
     </div>
 
-    <script src="script-v56-2.js?v=562"></script>
+    <script src="script-v56-3.js?v=563"></script>
 </body>
 </html>
