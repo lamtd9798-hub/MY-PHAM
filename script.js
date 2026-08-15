@@ -225,9 +225,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V55.0";
+const APP_VERSION = "V56.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "55";
+const APP_CACHE_VERSION = "56";
 
 const systemHealthStateV38 = {
     running: false,
@@ -4031,45 +4031,152 @@ function isReturnOrCancelStatus(status) {
     );
 }
 
+
+/* =========================================================
+   V56 - ĐỒNG BỘ TRẠNG THÁI HÓA ĐƠN SANG ĐƠN HÀNG & TỒN KHO
+========================================================= */
+function invoiceStatusMetaV56(row){
+    if(!row){return {key:"missing",label:"Chưa thấy MISA",note:"Chưa có dữ liệu MISA cho mã đơn này."};}
+    if(row.pub && row.cqtPending){
+        return {key:"cqt",label:"Đã phát hành · CQT",note:`CQT: ${row.pub.taxAuthorityStatus||"chưa hoàn tất"}`};
+    }
+    if(row.pub){return {key:"published",label:"Đã phát hành",note:"Đã ghép chính xác theo Mã ĐH của sàn."};}
+    if(row.unpub){return {key:"unpublished",label:"Chưa phát hành",note:row.unpub.unissuedReason||"Đang chờ phát hành."};}
+    if(row.delivered){return {key:"missing",label:"Đã giao · chưa MISA",note:"Đơn đã giao nhưng chưa thấy trong danh sách MISA."};}
+    return {key:"tracking",label:"Theo dõi",note:"Chưa đến bước kết luận hóa đơn."};
+}
+
+function buildOrderInvoiceMapV56(){
+    const map=new Map();
+    try{
+        buildMisaDirectRowsV54().forEach(row=>map.set(row.key,row));
+    }catch(error){
+        console.warn("V56 chưa tạo được map hóa đơn theo đơn:",error);
+    }
+    return map;
+}
+
+function invoiceStatusBadgeV56(orderRow){
+    const meta=invoiceStatusMetaV56(orderRow);
+    return `<span class="invoice-v56-status ${escapeHTML(meta.key)}">${escapeHTML(meta.label)}</span>`;
+}
+
+function buildInventoryInvoiceSummaryV56(){
+    const orderMap=buildOrderInvoiceMapV56();
+    const latestLines=typeof v41GetLatestShopeeLines==="function" ? v41GetLatestShopeeLines() : (state.skuRows||[]);
+    const byItem=new Map();
+
+    latestLines.forEach(row=>{
+        const orderId=String(row.orderId||"").trim();
+        if(!orderId)return;
+        const orderKey=normalizeOrderReferenceV41(orderId);
+        const invoiceRow=orderMap.get(orderKey)||null;
+        const parts=typeof expandShopeeRowToInventorySkus==="function" ? expandShopeeRowToInventorySkus(row) : [];
+
+        parts.forEach(part=>{
+            const resolved=typeof resolveInventoryItemFromTransit==="function"
+                ? resolveInventoryItemFromTransit(row,part.baseSku)
+                : {item:null};
+            const itemCode=String(resolved?.item?.itemCode||"").trim();
+            if(!itemCode)return;
+            if(!byItem.has(itemCode))byItem.set(itemCode,{orders:new Map()});
+            const bucket=byItem.get(itemCode);
+            if(!bucket.orders.has(orderKey)){
+                bucket.orders.set(orderKey,{orderId,invoiceRow,quantity:0});
+            }
+            bucket.orders.get(orderKey).quantity+=Number(part.quantity||0);
+        });
+    });
+
+    const result=new Map();
+    byItem.forEach((bucket,itemCode)=>{
+        const orders=[...bucket.orders.values()];
+        const published=orders.filter(x=>x.invoiceRow?.pub);
+        const unpublished=orders.filter(x=>x.invoiceRow?.unpub);
+        const missingDelivered=orders.filter(x=>x.invoiceRow?.delivered&&!x.invoiceRow?.pub&&!x.invoiceRow?.unpub);
+        const cqt=orders.filter(x=>x.invoiceRow?.cqtPending);
+        const invoiceNos=[...new Set(published.map(x=>String(x.invoiceRow?.pub?.invoiceNo||"").trim()).filter(Boolean))];
+        const latestPublished=published.slice().sort((a,b)=>String(b.invoiceRow?.pub?.invoiceDate||"").localeCompare(String(a.invoiceRow?.pub?.invoiceDate||"")))[0]||null;
+        result.set(itemCode,{totalOrders:orders.length,published:published.length,unpublished:unpublished.length,missingDelivered:missingDelivered.length,cqt:cqt.length,invoiceNos,latestInvoiceNo:latestPublished?.invoiceRow?.pub?.invoiceNo||"",latestInvoiceDate:latestPublished?.invoiceRow?.pub?.invoiceDate||""});
+    });
+    return result;
+}
+
+function inventoryInvoiceStatusHtmlV56(summary){
+    if(!summary||!summary.totalOrders)return '<span class="invoice-v56-status tracking">Chưa có đơn</span>';
+    const parts=[];
+    if(summary.published)parts.push(`<span class="invoice-v56-mini published">HĐ ${formatNumber(summary.published)}</span>`);
+    if(summary.unpublished)parts.push(`<span class="invoice-v56-mini unpublished">Chờ ${formatNumber(summary.unpublished)}</span>`);
+    if(summary.missingDelivered)parts.push(`<span class="invoice-v56-mini missing">Thiếu ${formatNumber(summary.missingDelivered)}</span>`);
+    if(summary.cqt)parts.push(`<span class="invoice-v56-mini cqt">CQT ${formatNumber(summary.cqt)}</span>`);
+    return `<div class="invoice-v56-mini-group">${parts.join("")||'<span class="invoice-v56-mini tracking">Theo dõi</span>'}</div><small class="invoice-v56-order-count">${formatNumber(summary.totalOrders)} đơn có SKU này</small>`;
+}
+
 function renderOrdersTab() {
     const body = $("orderTableBody");
     const summary = $("orderTableSummary");
     if (!body || !summary) return;
 
-    let data = [...state.skuRows];
-    const search = normalizeText($("orderSearch")?.value || "");
+    const invoiceMap=buildOrderInvoiceMapV56();
+    const directRows=[...invoiceMap.values()];
+    const uniqueOrders=new Set((state.skuRows||[]).map(r=>String(r.orderId||"").trim()).filter(Boolean));
 
-    if (search) {
-        data = data.filter(row =>
-            normalizeText(
-                `${row.orderId} ${row.status} ${row.sku} ${row.product}`
-            ).includes(search)
-        );
+    if($("orderV56Total")) $("orderV56Total").textContent=formatNumber(uniqueOrders.size);
+    if($("orderV56Published")) $("orderV56Published").textContent=formatNumber(directRows.filter(x=>x.pub).length);
+    if($("orderV56Unpublished")) $("orderV56Unpublished").textContent=formatNumber(directRows.filter(x=>x.unpub).length);
+    if($("orderV56Missing")) $("orderV56Missing").textContent=formatNumber(directRows.filter(x=>x.delivered&&!x.pub&&!x.unpub).length);
+    if($("orderV56Cqt")) $("orderV56Cqt").textContent=formatNumber(directRows.filter(x=>x.cqtPending).length);
+
+    if($("orderInvoiceSourceV56")){
+        const pub=latestMisaImportV54("published"),unpub=latestMisaImportV54("unpublished");
+        $("orderInvoiceSourceV56").innerHTML=`MISA đã phát hành: <strong>${pub?formatNumber(pub.rowCount):"0"}</strong> dòng · Chưa phát hành Shopee: <strong>${unpub?formatNumber(unpub.rowCount):"0"}</strong> dòng · Ghép bằng <strong>Mã đơn Shopee = Mã ĐH của sàn</strong>.`;
     }
 
-    summary.textContent =
-        `${formatNumber(data.length)} dòng sản phẩm · ${formatNumber(uniqueOrderCount(state.skuRows))} mã đơn`;
+    let data = [...state.skuRows];
+    const search = normalizeText($("orderSearch")?.value || "");
+    const invoiceFilter=$("orderInvoiceFilterV56")?.value||"all";
+
+    data=data.filter(row=>{
+        const orderKey=normalizeOrderReferenceV41(row.orderId||"");
+        const inv=invoiceMap.get(orderKey)||null;
+        const meta=invoiceStatusMetaV56(inv);
+        if(invoiceFilter!=="all"){
+            if(invoiceFilter==="published" && !inv?.pub)return false;
+            if(invoiceFilter==="unpublished" && !inv?.unpub)return false;
+            if(invoiceFilter==="missing" && !(inv?.delivered&&!inv?.pub&&!inv?.unpub))return false;
+            if(invoiceFilter==="cqt" && !inv?.cqtPending)return false;
+        }
+        if(!search)return true;
+        return normalizeText(`${row.orderId} ${row.status} ${row.sku} ${row.product} ${inv?.pub?.invoiceNo||""} ${inv?.unpub?.unissuedReason||""} ${meta.label}`).includes(search);
+    });
+
+    summary.textContent = `${formatNumber(data.length)} dòng sản phẩm · ${formatNumber(uniqueOrderCount(data))} mã đơn sau lọc`;
 
     if (!data.length) {
-        body.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-table">
-                    ${state.skuRows.length ? "Không tìm thấy dữ liệu phù hợp." : "Hãy nhập file Shopee trước."}
-                </td>
-            </tr>
-        `;
+        body.innerHTML = `<tr><td colspan="10" class="empty-table">${state.skuRows.length ? "Không tìm thấy dữ liệu phù hợp." : "Hãy nhập file Shopee trước."}</td></tr>`;
         return;
     }
 
-    body.innerHTML = data.map(row => `
-        <tr>
+    body.innerHTML = data.map(row => {
+        const inv=invoiceMap.get(normalizeOrderReferenceV41(row.orderId||""))||null;
+        const meta=invoiceStatusMetaV56(inv);
+        const invoiceNo=inv?.pub?.invoiceNo||"";
+        const invoiceDate=inv?.pub?.invoiceDate||"";
+        const cqt=inv?.pub?.taxAuthorityStatus||"";
+        const note=inv?.unpub?.unissuedReason || (inv?.cqtPending?`CQT: ${cqt||"chưa hoàn tất"}`:meta.note);
+        return `<tr class="order-v56-row ${escapeHTML(meta.key)}">
             <td><strong>${escapeHTML(row.orderId || "-")}</strong></td>
             <td>${escapeHTML(row.status || "-")}</td>
             <td><strong>${escapeHTML(row.sku || "-")}</strong></td>
             <td>${escapeHTML(row.product || "")}</td>
             <td class="center">${formatNumber(row.quantity || 0)}</td>
-        </tr>
-    `).join("");
+            <td>${invoiceStatusBadgeV56(inv)}</td>
+            <td><strong class="order-v56-invoice-no">${escapeHTML(invoiceNo||"—")}</strong></td>
+            <td>${invoiceDate?formatDateLabel(invoiceDate):"—"}</td>
+            <td>${escapeHTML(cqt||"—")}</td>
+            <td><span class="order-v56-note">${escapeHTML(note||"—")}</span></td>
+        </tr>`;
+    }).join("");
 }
 
 const returnStateV51 = {
@@ -4334,6 +4441,7 @@ function refreshNavCounts() {
 
 if ($("orderSearch")) {
     $("orderSearch").addEventListener("input", renderOrdersTab);
+    $("orderInvoiceFilterV56")?.addEventListener("change", renderOrdersTab);
 }
 
 
@@ -7146,10 +7254,13 @@ function renderInventoryLedgerV48() {
     }).join("") : '<tr><td colspan="9" class="empty-table">Không có dòng nhật ký phù hợp bộ lọc.</td></tr>';
 
     const orderBody = $("inventoryLedgerOrdersBody");
+    const orderInvoiceMapV56=buildOrderInvoiceMapV56();
     if (orderBody) orderBody.innerHTML = currentSnapshotRows.length ? currentSnapshotRows.map((row,index) => {
         const meaning=inventoryLedgerMeaningV48(row);
-        return `<tr><td>${index+1}</td><td><span class="inventory-ledger-ref">${escapeHTML(row.orderId || "-")}</span></td><td>${row.sourceOrderDate ? formatDateLabel(row.sourceOrderDate) : "-"}</td><td>${escapeHTML(row.rawSku || row.baseSku || "-")}</td><td class="center"><strong>${formatNumber(row.quantity || 0)}</strong></td><td>${escapeHTML(row.status || "-")}</td><td>${escapeHTML(inventoryBucketLabel(row.bucket))}</td><td><span class="inventory-ledger-order-meaning ${meaning.cls}">${escapeHTML(meaning.text)}</span></td></tr>`;
-    }).join("") : '<tr><td colspan="8" class="empty-table">SKU này không phát sinh trong snapshot luân chuyển hiện tại.</td></tr>';
+        const inv=orderInvoiceMapV56.get(normalizeOrderReferenceV41(row.orderId||""))||null;
+        const meta=invoiceStatusMetaV56(inv);
+        return `<tr><td>${index+1}</td><td><span class="inventory-ledger-ref">${escapeHTML(row.orderId || "-")}</span></td><td>${row.sourceOrderDate ? formatDateLabel(row.sourceOrderDate) : "-"}</td><td>${escapeHTML(row.rawSku || row.baseSku || "-")}</td><td class="center"><strong>${formatNumber(row.quantity || 0)}</strong></td><td>${escapeHTML(row.status || "-")}</td><td>${escapeHTML(inventoryBucketLabel(row.bucket))}</td><td>${invoiceStatusBadgeV56(inv)}</td><td><strong>${escapeHTML(inv?.pub?.invoiceNo||"—")}</strong></td><td>${escapeHTML(inv?.pub?.taxAuthorityStatus||"—")}</td><td><span class="inventory-ledger-order-meaning ${meaning.cls}">${escapeHTML(meaning.text)}</span><small class="inventory-ledger-v56-note">${escapeHTML(meta.note||"")}</small></td></tr>`;
+    }).join("") : '<tr><td colspan="11" class="empty-table">SKU này không phát sinh trong snapshot luân chuyển hiện tại.</td></tr>';
 
     if ($("inventoryLedgerOrderCount")) {
         const uniqueOrders=new Set(currentSnapshotRows.map(row=>row.orderId).filter(Boolean));
@@ -7327,9 +7438,10 @@ function renderInventoryModule() {
 
     const body = $("inventorySummaryBody");
     const foot = $("inventorySummaryFoot");
+    const inventoryInvoiceSummaryV56 = buildInventoryInvoiceSummaryV56();
     if (body && foot) {
         if (!filtered.length) {
-            body.innerHTML = '<tr><td colspan="24" class="empty-table">Không có mặt hàng phù hợp.</td></tr>';
+            body.innerHTML = '<tr><td colspan="26" class="empty-table">Không có mặt hàng phù hợp.</td></tr>';
             foot.innerHTML = "";
         } else {
             body.innerHTML = filtered.map((item, index) => {
@@ -7340,6 +7452,7 @@ function renderInventoryModule() {
                 const varianceValue = item.lastReconcile
                     ? Number(item.lastReconcile.varianceValue ?? (variance * Number(item.unitPrice || 0)))
                     : null;
+                const invoiceOrderSummaryV56 = inventoryInvoiceSummaryV56.get(item.itemCode) || null;
 
                 const signed = value => {
                     const n = Number(value || 0);
@@ -7425,6 +7538,16 @@ function renderInventoryModule() {
                         <td class="inventory-num inventory-col-delivered">${formatNumber(item.delivered || 0)}</td>
                         <td class="inventory-num inventory-col-returning">${formatNumber(item.returning || 0)}</td>
 
+                        <td class="center inventory-v56-order-status-cell">
+                            ${inventoryInvoiceStatusHtmlV56(invoiceOrderSummaryV56)}
+                        </td>
+
+                        <td class="center inventory-v56-invoice-no-cell">
+                            ${invoiceOrderSummaryV56?.latestInvoiceNo
+                                ? `<strong>${escapeHTML(invoiceOrderSummaryV56.latestInvoiceNo)}</strong>${invoiceOrderSummaryV56.latestInvoiceDate?`<small>${formatDateLabel(invoiceOrderSummaryV56.latestInvoiceDate)}</small>`:""}`
+                                : "—"}
+                        </td>
+
                         <td class="inventory-num inventory-col-invoice">
                             ${formatNumber(item.invoiceQty || 0)}
                             ${item.invoiceScopeMismatch
@@ -7474,6 +7597,8 @@ function renderInventoryModule() {
                     <td class="center">${formatNumber(totals.delivered)}</td>
                     <td class="center">${formatNumber(totals.returning)}</td>
 
+                    <td class="center">Theo đơn</td>
+                    <td class="center">—</td>
                     <td class="center">${formatNumber(totals.invoiced)}</td>
                     <td class="center">
                         ${totals.waitingInvoiceHasMismatch
@@ -8071,6 +8196,9 @@ function renderMisaInvoiceHubV54(){
     }
     renderMisaDirectTableV54();
     renderInvoiceWorkQueueV55();
+    // V56: trạng thái HĐ được dùng trực tiếp ở Đơn hàng và Tồn kho.
+    renderOrdersTab();
+    if (inventoryState.loaded) renderInventoryModule();
 }
 
 function renderMisaDirectTableV54(){
@@ -13474,7 +13602,7 @@ async function v39ProbeSystemHealthRpc(client) {
             "rpc",
             "RPC & SQL nền V54",
             "ok",
-            `Role ${roleLabelV40()} + kiểm kê + MISA 3 nguồn + ghép Mã ĐH của sàn + đối soát tài chính + hàng chờ hóa đơn V55 đã sẵn sàng.`
+            `Role ${roleLabelV40()} + kiểm kê + MISA 3 nguồn + ghép Mã ĐH của sàn + đối soát tài chính + hàng chờ hóa đơn V55 + đồng bộ trạng thái HĐ V56 đã sẵn sàng.`
         );
     } catch (error) {
         return v38HealthCheckItem(
