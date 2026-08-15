@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=48">
+    <link rel="stylesheet" href="style.css?v=49">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -266,7 +266,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V48.0</span>
+                <span class="v38-sidebar-version">V49.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -1129,6 +1129,115 @@
                     <div id="inventoryMisaInfo" class="inventory-misa-info">
                         Chưa có file hóa đơn MISA để đối chiếu.
                     </div>
+                </div>
+            </div>
+
+            <!-- ======================== V49 - TUỔI ĐƠN LUÂN CHUYỂN ======================== -->
+            <div id="inventoryOrderAgingPanel" class="panel inventory-aging-panel">
+                <div class="panel-header inventory-aging-header">
+                    <div>
+                        <h2>⏱ Tuổi đơn luân chuyển & cảnh báo giao chậm</h2>
+                        <p id="inventoryAgingSubtitle">
+                            Tính số ngày từ Ngày đơn đến ngày snapshot luân chuyển mới nhất. Không dùng ngày hiện tại nếu snapshot đã cũ.
+                        </p>
+                    </div>
+
+                    <div class="inventory-aging-toolbar">
+                        <select id="inventoryAgingStatusFilter" class="select-control">
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="open">Đang xử lý ngoài kho</option>
+                            <option value="reserved">Đã giữ cho đơn</option>
+                            <option value="in_transit">Đang giao</option>
+                            <option value="delivered">Đã giao / chờ HĐ</option>
+                            <option value="returning">Hoàn đang về</option>
+                        </select>
+
+                        <select id="inventoryAgingBucketFilter" class="select-control">
+                            <option value="all">Tất cả tuổi đơn</option>
+                            <option value="0_2">0–2 ngày</option>
+                            <option value="3_4">3–4 ngày</option>
+                            <option value="5_plus">≥ 5 ngày</option>
+                            <option value="unknown">Không rõ ngày</option>
+                        </select>
+
+                        <input id="inventoryAgingSearch"
+                               class="search-input"
+                               type="text"
+                               placeholder="Tìm mã đơn, SKU, sản phẩm...">
+                    </div>
+                </div>
+
+                <div class="inventory-aging-kpis">
+                    <div class="inventory-aging-kpi total">
+                        <span>ĐƠN ĐANG THEO DÕI</span>
+                        <strong id="inventoryAgingTotalOrders">0</strong>
+                        <small id="inventoryAgingTotalQty">0 SP trong snapshot</small>
+                    </div>
+                    <div class="inventory-aging-kpi fresh">
+                        <span>0–2 NGÀY</span>
+                        <strong id="inventoryAgingFreshOrders">0</strong>
+                        <small>Đang trong ngưỡng bình thường</small>
+                    </div>
+                    <div class="inventory-aging-kpi watch">
+                        <span>3–4 NGÀY</span>
+                        <strong id="inventoryAgingWatchOrders">0</strong>
+                        <small>Nên theo dõi sát</small>
+                    </div>
+                    <div class="inventory-aging-kpi late">
+                        <span>≥ 5 NGÀY</span>
+                        <strong id="inventoryAgingLateOrders">0</strong>
+                        <small>Đơn cũ cần kiểm tra</small>
+                    </div>
+                    <div class="inventory-aging-kpi critical">
+                        <span>ĐANG GIAO ≥ 5 NGÀY</span>
+                        <strong id="inventoryAgingLateTransit">0</strong>
+                        <small>Cảnh báo giao chậm</small>
+                    </div>
+                    <div class="inventory-aging-kpi oldest">
+                        <span>ĐƠN LÂU NHẤT</span>
+                        <strong id="inventoryAgingOldest">—</strong>
+                        <small id="inventoryAgingOldestOrder">Chưa có dữ liệu</small>
+                    </div>
+                </div>
+
+                <div class="inventory-aging-distribution">
+                    <div class="inventory-aging-distribution-copy">
+                        <strong>Phân bố tuổi đơn</strong>
+                        <span id="inventoryAgingReferenceDate">Ngày snapshot: —</span>
+                    </div>
+                    <div class="inventory-aging-track" aria-label="Phân bố tuổi đơn">
+                        <div id="inventoryAgingBarFresh" class="inventory-aging-segment fresh" style="width:0%"></div>
+                        <div id="inventoryAgingBarWatch" class="inventory-aging-segment watch" style="width:0%"></div>
+                        <div id="inventoryAgingBarLate" class="inventory-aging-segment late" style="width:0%"></div>
+                        <div id="inventoryAgingBarUnknown" class="inventory-aging-segment unknown" style="width:0%"></div>
+                    </div>
+                    <div class="inventory-aging-legend">
+                        <span><i class="fresh"></i>0–2 ngày</span>
+                        <span><i class="watch"></i>3–4 ngày</span>
+                        <span><i class="late"></i>≥5 ngày</span>
+                        <span><i class="unknown"></i>Không rõ ngày</span>
+                    </div>
+                </div>
+
+                <div class="table-scroll inventory-aging-scroll">
+                    <table class="inventory-aging-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã đơn</th>
+                                <th>Ngày đơn</th>
+                                <th class="center">Tuổi đơn</th>
+                                <th>Trạng thái hiện tại</th>
+                                <th>SKU / mặt hàng</th>
+                                <th class="center">SL</th>
+                                <th>Nhóm tuổi</th>
+                                <th>Cảnh báo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryAgingBody">
+                            <tr><td colspan="9" class="empty-table">Chưa có snapshot đơn luân chuyển.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -2144,6 +2253,6 @@
 </div>
 
 <div id="toast" class="toast"></div>
-    <script src="script.js?v=48"></script>
+    <script src="script.js?v=49"></script>
 </body>
 </html>

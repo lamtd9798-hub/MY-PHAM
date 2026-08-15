@@ -215,9 +215,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V48.0";
+const APP_VERSION = "V49.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "48";
+const APP_CACHE_VERSION = "49";
 
 const systemHealthStateV38 = {
     running: false,
@@ -7031,6 +7031,7 @@ function renderInventoryModule() {
 
     renderInventoryFlowBars(summary);
     renderInventoryMisaInfo(summary);
+    renderInventoryOrderAgingV49();
     renderInventoryMovementTable();
 
     if (!inventoryState.currentDate) {
@@ -7054,6 +7055,310 @@ function renderInventoryModule() {
     renderInventoryMisaUploadInfo();
     renderInventoryTransitSourceCard();
     setInventoryTab(inventoryState.activeTab || "overview");
+}
+
+
+/* =========================================================
+   V49 - TUỔI ĐƠN LUÂN CHUYỂN & CẢNH BÁO GIAO CHẬM
+========================================================= */
+const inventoryAgingStateV49 = {
+    statusFilter: "all",
+    bucketFilter: "all",
+    search: ""
+};
+
+function inventoryAgingReferenceDateV49() {
+    const snapshotDate = normalizeOrderDate(
+        inventoryState.transitSnapshot?.snapshotDate || ""
+    );
+
+    if (snapshotDate) return snapshotDate;
+
+    const movementDates = (inventoryState.movementRows || [])
+        .map(row => normalizeOrderDate(row.reportDate || ""))
+        .filter(Boolean)
+        .sort();
+
+    return movementDates.at(-1) || getLocalTodayKey();
+}
+
+function inventoryAgingBucketV49(ageDays) {
+    if (ageDays === null || ageDays === undefined || Number.isNaN(ageDays) || ageDays < 0) {
+        return "unknown";
+    }
+    if (ageDays <= 2) return "0_2";
+    if (ageDays <= 4) return "3_4";
+    return "5_plus";
+}
+
+function inventoryAgingBucketLabelV49(bucket) {
+    return {
+        "0_2": "0–2 ngày",
+        "3_4": "3–4 ngày",
+        "5_plus": "≥ 5 ngày",
+        unknown: "Không rõ ngày"
+    }[bucket] || "Không rõ ngày";
+}
+
+function inventoryAgingStatusPriorityV49(bucket) {
+    return {
+        returning: 5,
+        in_transit: 4,
+        reserved: 3,
+        delivered: 2,
+        other: 1,
+        cancelled: 0
+    }[bucket] ?? 0;
+}
+
+function buildInventoryOrderAgingRowsV49() {
+    const referenceDate = inventoryAgingReferenceDateV49();
+    const movementRows = inventoryState.movementRows?.length
+        ? [...inventoryState.movementRows]
+        : buildInventoryMovementRows();
+
+    const orderMap = new Map();
+
+    movementRows.forEach(row => {
+        if (["cancelled", "other"].includes(row.bucket)) return;
+
+        const orderId = String(row.orderId || "").trim();
+        if (!orderId || orderId === "-") return;
+
+        const orderDate = normalizeOrderDate(row.sourceOrderDate || row.reportDate || "");
+        const ageDays = orderDate && referenceDate
+            ? v38DateDiffDays(orderDate, referenceDate)
+            : null;
+        const ageBucket = inventoryAgingBucketV49(ageDays);
+
+        if (!orderMap.has(orderId)) {
+            orderMap.set(orderId, {
+                orderId,
+                orderDate,
+                ageDays,
+                ageBucket,
+                reportDate: normalizeOrderDate(row.reportDate || "") || referenceDate,
+                bucket: row.bucket,
+                rawStatuses: new Set(),
+                skuQty: new Map(),
+                itemNames: new Set(),
+                quantity: 0
+            });
+        }
+
+        const order = orderMap.get(orderId);
+
+        if (orderDate && (!order.orderDate || orderDate < order.orderDate)) {
+            order.orderDate = orderDate;
+            order.ageDays = referenceDate ? v38DateDiffDays(orderDate, referenceDate) : null;
+            order.ageBucket = inventoryAgingBucketV49(order.ageDays);
+        }
+
+        if (inventoryAgingStatusPriorityV49(row.bucket) > inventoryAgingStatusPriorityV49(order.bucket)) {
+            order.bucket = row.bucket;
+        }
+
+        if (row.status) order.rawStatuses.add(String(row.status).trim());
+        if (row.itemName) order.itemNames.add(String(row.itemName).trim());
+
+        const sku = String(row.baseSku || row.rawSku || "").trim() || "(không SKU)";
+        order.skuQty.set(
+            sku,
+            Number(order.skuQty.get(sku) || 0) + Number(row.quantity || 0)
+        );
+        order.quantity += Number(row.quantity || 0);
+    });
+
+    return [...orderMap.values()].map(order => {
+        const isLateTransit =
+            order.ageBucket === "5_plus" &&
+            ["reserved", "in_transit", "returning"].includes(order.bucket);
+
+        let warningKey = "ok";
+        let warningLabel = "Bình thường";
+        let warningDetail = "Trong ngưỡng theo dõi.";
+
+        if (order.ageBucket === "unknown") {
+            warningKey = "unknown";
+            warningLabel = "Thiếu ngày đơn";
+            warningDetail = "Không tính được tuổi đơn.";
+        } else if (isLateTransit) {
+            warningKey = "critical";
+            warningLabel = "Cần xử lý";
+            warningDetail = `${formatNumber(order.ageDays)} ngày nhưng hàng vẫn đang xử lý ngoài kho.`;
+        } else if (order.ageBucket === "5_plus") {
+            warningKey = "late";
+            warningLabel = order.bucket === "delivered" ? "Đã giao lâu" : "Đơn cũ";
+            warningDetail = order.bucket === "delivered"
+                ? "Đã giao; nên kiểm tra bước hóa đơn/đối soát."
+                : "Nên kiểm tra trạng thái thực tế.";
+        } else if (order.ageBucket === "3_4") {
+            warningKey = "watch";
+            warningLabel = "Theo dõi";
+            warningDetail = "Đơn đã 3–4 ngày.";
+        }
+
+        return {
+            ...order,
+            isLateTransit,
+            warningKey,
+            warningLabel,
+            warningDetail,
+            skus: [...order.skuQty.entries()].map(([sku, quantity]) => ({ sku, quantity })),
+            statuses: [...order.rawStatuses]
+        };
+    }).sort((a, b) => {
+        const ageA = a.ageDays === null ? -1 : a.ageDays;
+        const ageB = b.ageDays === null ? -1 : b.ageDays;
+        if (ageA !== ageB) return ageB - ageA;
+        return String(a.orderId).localeCompare(String(b.orderId));
+    });
+}
+
+function inventoryAgingSkuHtmlV49(order) {
+    if (!order.skus?.length) return "—";
+
+    const visible = order.skus.slice(0, 5);
+    const extra = order.skus.length - visible.length;
+
+    return `
+        <div class="inventory-aging-skus">
+            ${visible.map(item => `
+                <span class="inventory-aging-sku-chip">
+                    ${escapeHTML(item.sku)} × ${formatNumber(item.quantity)}
+                </span>
+            `).join("")}
+            ${extra > 0 ? `<span class="inventory-aging-sku-more">+${extra} SKU</span>` : ""}
+        </div>
+    `;
+}
+
+function renderInventoryOrderAgingV49() {
+    const body = $("inventoryAgingBody");
+    if (!body) return;
+
+    const allRows = buildInventoryOrderAgingRowsV49();
+    const referenceDate = inventoryAgingReferenceDateV49();
+
+    const counts = {
+        fresh: allRows.filter(row => row.ageBucket === "0_2").length,
+        watch: allRows.filter(row => row.ageBucket === "3_4").length,
+        late: allRows.filter(row => row.ageBucket === "5_plus").length,
+        unknown: allRows.filter(row => row.ageBucket === "unknown").length,
+        lateTransit: allRows.filter(row => row.isLateTransit).length,
+        totalQty: allRows.reduce((sum, row) => sum + Number(row.quantity || 0), 0)
+    };
+
+    const knownAges = allRows
+        .map(row => row.ageDays)
+        .filter(value => Number.isFinite(value) && value >= 0);
+    const oldestAge = knownAges.length ? Math.max(...knownAges) : null;
+    const oldestRow = oldestAge === null
+        ? null
+        : allRows.find(row => row.ageDays === oldestAge);
+
+    if ($("inventoryAgingTotalOrders")) $("inventoryAgingTotalOrders").textContent = formatNumber(allRows.length);
+    if ($("inventoryAgingTotalQty")) $("inventoryAgingTotalQty").textContent = `${formatNumber(counts.totalQty)} SP trong snapshot`;
+    if ($("inventoryAgingFreshOrders")) $("inventoryAgingFreshOrders").textContent = formatNumber(counts.fresh);
+    if ($("inventoryAgingWatchOrders")) $("inventoryAgingWatchOrders").textContent = formatNumber(counts.watch);
+    if ($("inventoryAgingLateOrders")) $("inventoryAgingLateOrders").textContent = formatNumber(counts.late);
+    if ($("inventoryAgingLateTransit")) $("inventoryAgingLateTransit").textContent = formatNumber(counts.lateTransit);
+    if ($("inventoryAgingOldest")) $("inventoryAgingOldest").textContent = oldestAge === null ? "—" : `${formatNumber(oldestAge)} ngày`;
+    if ($("inventoryAgingOldestOrder")) $("inventoryAgingOldestOrder").textContent = oldestRow ? `Mã đơn ${oldestRow.orderId}` : "Chưa có dữ liệu";
+    if ($("inventoryAgingReferenceDate")) $("inventoryAgingReferenceDate").textContent = `Ngày snapshot: ${referenceDate ? formatDateLabel(referenceDate) : "—"}`;
+    if ($("inventoryAgingSubtitle")) {
+        $("inventoryAgingSubtitle").textContent = referenceDate
+            ? `Tính tuổi đơn tới snapshot ${formatDateLabel(referenceDate)}. Đơn ≥5 ngày còn Giữ đơn / Đang giao / Hoàn về được cảnh báo đỏ.`
+            : "Chưa xác định được ngày snapshot để tính tuổi đơn.";
+    }
+
+    const total = Math.max(1, allRows.length);
+    const pct = value => `${Math.max(0, (Number(value || 0) / total) * 100)}%`;
+    if ($("inventoryAgingBarFresh")) $("inventoryAgingBarFresh").style.width = pct(counts.fresh);
+    if ($("inventoryAgingBarWatch")) $("inventoryAgingBarWatch").style.width = pct(counts.watch);
+    if ($("inventoryAgingBarLate")) $("inventoryAgingBarLate").style.width = pct(counts.late);
+    if ($("inventoryAgingBarUnknown")) $("inventoryAgingBarUnknown").style.width = pct(counts.unknown);
+
+    const statusFilter = $("inventoryAgingStatusFilter")?.value || inventoryAgingStateV49.statusFilter || "all";
+    const bucketFilter = $("inventoryAgingBucketFilter")?.value || inventoryAgingStateV49.bucketFilter || "all";
+    const rawSearch = $("inventoryAgingSearch")?.value || inventoryAgingStateV49.search || "";
+    const search = normalizeText(rawSearch);
+
+    inventoryAgingStateV49.statusFilter = statusFilter;
+    inventoryAgingStateV49.bucketFilter = bucketFilter;
+    inventoryAgingStateV49.search = rawSearch;
+
+    const rows = allRows.filter(row => {
+        const statusOk =
+            statusFilter === "all" ||
+            (statusFilter === "open"
+                ? ["reserved", "in_transit", "returning"].includes(row.bucket)
+                : row.bucket === statusFilter);
+
+        const bucketOk = bucketFilter === "all" || row.ageBucket === bucketFilter;
+
+        const searchOk = !search || normalizeText([
+            row.orderId,
+            row.orderDate,
+            row.statuses.join(" "),
+            row.skus.map(item => item.sku).join(" "),
+            [...row.itemNames].join(" ")
+        ].join(" ")).includes(search);
+
+        return statusOk && bucketOk && searchOk;
+    });
+
+    if (!allRows.length) {
+        body.innerHTML = '<tr><td colspan="9" class="empty-table">Chưa có đơn phù hợp trong snapshot luân chuyển.</td></tr>';
+        return;
+    }
+
+    if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="9" class="empty-table">Không có đơn phù hợp bộ lọc hiện tại.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = rows.slice(0, 800).map((row, index) => {
+        const rowClass = row.warningKey === "critical"
+            ? "critical"
+            : row.warningKey === "watch"
+                ? "watch"
+                : row.warningKey === "late"
+                    ? "late"
+                    : "";
+
+        return `
+            <tr class="inventory-aging-row ${rowClass}">
+                <td>${index + 1}</td>
+                <td><strong class="inventory-aging-order">${escapeHTML(row.orderId)}</strong></td>
+                <td>${row.orderDate ? formatDateLabel(row.orderDate) : "—"}</td>
+                <td class="center">
+                    <span class="inventory-aging-days ${escapeHTML(row.ageBucket)}">
+                        ${row.ageDays === null || row.ageDays < 0 ? "—" : `${formatNumber(row.ageDays)} ngày`}
+                    </span>
+                </td>
+                <td>
+                    <span class="inventory-bucket-pill ${escapeHTML(row.bucket)}">
+                        ${escapeHTML(inventoryBucketLabel(row.bucket))}
+                    </span>
+                    ${row.statuses.length ? `<small class="inventory-aging-raw-status" title="${escapeHTML(row.statuses.join(" | "))}">${escapeHTML(row.statuses[0])}</small>` : ""}
+                </td>
+                <td>${inventoryAgingSkuHtmlV49(row)}</td>
+                <td class="center"><strong>${formatNumber(row.quantity)}</strong></td>
+                <td>
+                    <span class="inventory-aging-bucket ${escapeHTML(row.ageBucket)}">
+                        ${escapeHTML(inventoryAgingBucketLabelV49(row.ageBucket))}
+                    </span>
+                </td>
+                <td>
+                    <span class="inventory-aging-warning ${escapeHTML(row.warningKey)}">
+                        ${escapeHTML(row.warningLabel)}
+                    </span>
+                    <small class="inventory-aging-warning-detail">${escapeHTML(row.warningDetail)}</small>
+                </td>
+            </tr>
+        `;
+    }).join("");
 }
 
 function renderInventoryMovementTable() {
@@ -7342,6 +7647,18 @@ $("btnInventoryAddItem")?.addEventListener("click", () => { if (requirePermissio
 $("btnInventoryEditorSave")?.addEventListener("click", saveInventoryEditor);
 $("inventoryEditorModal")?.addEventListener("click", e => { if (e.target === $("inventoryEditorModal")) closeInventoryEditor(); });
 $("inventorySearchInput")?.addEventListener("input", renderInventoryModule);
+$("inventoryAgingStatusFilter")?.addEventListener("change", event => {
+    inventoryAgingStateV49.statusFilter = event.target.value || "all";
+    renderInventoryOrderAgingV49();
+});
+$("inventoryAgingBucketFilter")?.addEventListener("change", event => {
+    inventoryAgingStateV49.bucketFilter = event.target.value || "all";
+    renderInventoryOrderAgingV49();
+});
+$("inventoryAgingSearch")?.addEventListener("input", event => {
+    inventoryAgingStateV49.search = event.target.value || "";
+    renderInventoryOrderAgingV49();
+});
 $("inventoryMovementFilter")?.addEventListener("change", renderInventoryMovementTable);
 $("inventoryMovementSearch")?.addEventListener("input", renderInventoryMovementTable);
 $("btnInventoryOpenInvoice")?.addEventListener("click", () => openView("invoice-stats"));
@@ -10476,11 +10793,13 @@ function buildOperationalAlertsV38() {
             }
         })();
 
-    const today = getLocalTodayKey();
+    const transitAgeReferenceDate =
+        normalizeOrderDate(inventoryState.transitSnapshot?.snapshotDate || "") ||
+        getLocalTodayKey();
 
     const agedTransit = transitRows.filter(row => {
         if (row.bucket !== "in_transit") return false;
-        const age = v38DateDiffDays(row.sourceOrderDate, today);
+        const age = v38DateDiffDays(row.sourceOrderDate, transitAgeReferenceDate);
         return age !== null && age >= 5;
     });
 
@@ -10508,8 +10827,8 @@ function buildOperationalAlertsV38() {
                 `${oldestDate ? ` · ngày đơn cũ nhất ${formatDateLabel(oldestDate)}` : ""}. ` +
                 `Nên kiểm tra các đơn giao lâu chưa hoàn tất.`,
             view: "inventory-flow",
-            tab: "current",
-            action: "Xem luân chuyển"
+            tab: "overview",
+            action: "Xem tuổi đơn"
         });
     }
 

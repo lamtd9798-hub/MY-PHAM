@@ -5563,3 +5563,302 @@ body.sidebar-collapsed .sidebar-collapse-handle{right:-15px!important;transform:
 .inventory-ledger-table-wrap{overflow:auto;max-height:360px}.inventory-ledger-table-wrap.compact{max-height:300px}.inventory-ledger-table,.inventory-ledger-orders-table{width:100%;border-collapse:collapse;min-width:1180px}.inventory-ledger-orders-table{min-width:980px}.inventory-ledger-table th,.inventory-ledger-orders-table th{position:sticky;top:0;z-index:2;padding:9px 10px;border-bottom:1px solid #dfe7e9;background:#f6f9fa;color:#637a83;font-size:10px;font-weight:850;text-align:left;white-space:nowrap}.inventory-ledger-table td,.inventory-ledger-orders-table td{padding:9px 10px;border-bottom:1px solid #edf1f2;color:#2d4a55;font-size:11px;line-height:1.45;vertical-align:middle}
 .inventory-ledger-source{display:inline-flex;align-items:center;min-height:24px;padding:0 7px;border-radius:999px;font-size:9px;font-weight:850;white-space:nowrap}.inventory-ledger-source.stocktake{background:#edf4f7;color:#476b7b}.inventory-ledger-source.manual{background:#ecf8f4;color:#087b65}.inventory-ledger-source.shopee{background:#eef5ff;color:#2b6faa}.inventory-ledger-source.misa{background:#f4effb;color:#7452a0}.inventory-ledger-impact{display:inline-flex;align-items:center;justify-content:center;min-width:56px;min-height:26px;padding:0 8px;border-radius:7px;font-size:11px;font-weight:900}.inventory-ledger-impact.plus{background:#eaf8f3;color:#087a64}.inventory-ledger-impact.minus{background:#fff0f0;color:#c23d43}.inventory-ledger-impact.zero{background:#f1f4f5;color:#6c7d84}.inventory-ledger-operation{font-weight:850;color:#284c59}.inventory-ledger-ref{font-weight:750;color:#2f6e93}.inventory-ledger-order-meaning{display:inline-flex;min-height:24px;align-items:center;padding:0 7px;border-radius:7px;font-size:9px;font-weight:800}.inventory-ledger-order-meaning.reserved{background:#fff5df;color:#946115}.inventory-ledger-order-meaning.outside{background:#edf5ff;color:#2f6fa7}.inventory-ledger-order-meaning.returning{background:#fff0e8;color:#9a5d2e}.inventory-ledger-order-meaning.other{background:#f1f4f5;color:#687b83}body.inventory-ledger-open{overflow:hidden}
 @media(max-width:1300px){.inventory-ledger-kpis{grid-template-columns:repeat(4,minmax(120px,1fr))}}@media(max-width:760px){.inventory-ledger-dialog{width:100vw;height:100vh;border-radius:0}.inventory-ledger-header{align-items:flex-start}.inventory-ledger-header-actions label{display:none}.inventory-ledger-kpis{grid-template-columns:1fr 1fr}.inventory-ledger-section-head{align-items:flex-start;flex-direction:column}.inventory-ledger-filters{width:100%;flex-direction:column;align-items:stretch}.inventory-ledger-filters input{min-width:0;width:100%}.inventory-ledger-filters select{width:100%}.inventory-ledger-toolbar-hint{display:none}}
+
+
+/* =========================================================
+   V49 - TUỔI ĐƠN LUÂN CHUYỂN
+========================================================= */
+.inventory-aging-panel{
+    overflow:hidden;
+}
+.inventory-aging-header{
+    align-items:flex-start;
+    gap:14px;
+}
+.inventory-aging-header h2{
+    font-size:17px;
+}
+.inventory-aging-header p{
+    font-size:11.5px;
+    line-height:1.55;
+}
+.inventory-aging-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+    gap:8px;
+}
+.inventory-aging-toolbar .select-control{
+    min-width:155px;
+    height:38px;
+    font-size:11.5px;
+}
+.inventory-aging-toolbar .search-input{
+    width:230px;
+    height:38px;
+    font-size:11.5px;
+}
+.inventory-aging-kpis{
+    display:grid;
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:9px;
+    padding:0 12px 12px;
+}
+.inventory-aging-kpi{
+    min-width:0;
+    padding:12px;
+    border:1px solid #dfe7ea;
+    border-radius:9px;
+    background:#fff;
+}
+.inventory-aging-kpi span{
+    display:block;
+    color:#70838b;
+    font-size:9.5px;
+    font-weight:850;
+}
+.inventory-aging-kpi strong{
+    display:block;
+    margin-top:4px;
+    color:#173d49;
+    font-size:25px;
+    line-height:1.1;
+}
+.inventory-aging-kpi small{
+    display:block;
+    margin-top:5px;
+    color:#82949b;
+    font-size:9.5px;
+    line-height:1.4;
+}
+.inventory-aging-kpi.fresh{
+    background:#f1fbf7;
+    border-color:#c3e5d9;
+}
+.inventory-aging-kpi.fresh strong{color:#087b65;}
+.inventory-aging-kpi.watch{
+    background:#fff9eb;
+    border-color:#ecdba8;
+}
+.inventory-aging-kpi.watch strong{color:#a66a0b;}
+.inventory-aging-kpi.late{
+    background:#fff3ed;
+    border-color:#efcbb8;
+}
+.inventory-aging-kpi.late strong{color:#c45c28;}
+.inventory-aging-kpi.critical{
+    background:#fff0f1;
+    border-color:#edc1c5;
+}
+.inventory-aging-kpi.critical strong{color:#c73843;}
+.inventory-aging-kpi.oldest{
+    background:#f4f2fb;
+    border-color:#d9d1ef;
+}
+.inventory-aging-kpi.oldest strong{color:#7151ad;}
+
+.inventory-aging-distribution{
+    margin:0 12px 12px;
+    padding:11px 12px;
+    border:1px solid #e1e8ea;
+    border-radius:9px;
+    background:#fbfcfc;
+}
+.inventory-aging-distribution-copy{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:8px;
+}
+.inventory-aging-distribution-copy strong{
+    font-size:12px;
+    color:#294752;
+}
+.inventory-aging-distribution-copy span{
+    font-size:10px;
+    color:#7c8f97;
+}
+.inventory-aging-track{
+    display:flex;
+    width:100%;
+    height:14px;
+    overflow:hidden;
+    border-radius:999px;
+    background:#edf2f3;
+}
+.inventory-aging-segment{
+    height:100%;
+    min-width:0;
+    transition:width .2s ease;
+}
+.inventory-aging-segment.fresh{background:#28ad8d;}
+.inventory-aging-segment.watch{background:#f1b43a;}
+.inventory-aging-segment.late{background:#ef7b43;}
+.inventory-aging-segment.unknown{background:#a9b5ba;}
+.inventory-aging-legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-top:8px;
+    color:#637982;
+    font-size:9.5px;
+}
+.inventory-aging-legend span{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+}
+.inventory-aging-legend i{
+    width:9px;
+    height:9px;
+    border-radius:999px;
+}
+.inventory-aging-legend i.fresh{background:#28ad8d;}
+.inventory-aging-legend i.watch{background:#f1b43a;}
+.inventory-aging-legend i.late{background:#ef7b43;}
+.inventory-aging-legend i.unknown{background:#a9b5ba;}
+
+.inventory-aging-scroll{
+    margin:0 12px 12px;
+    max-height:430px;
+    border:1px solid #dfe7e9;
+    border-radius:9px;
+}
+.inventory-aging-table{
+    min-width:1250px;
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+}
+.inventory-aging-table th{
+    position:sticky;
+    top:0;
+    z-index:4;
+    padding:10px 9px;
+    background:#f6f9fa;
+    color:#60757e;
+    font-size:10.5px;
+    font-weight:850;
+    white-space:nowrap;
+    border-bottom:1px solid #dbe5e8;
+}
+.inventory-aging-table td{
+    padding:10px 9px;
+    color:#304a54;
+    font-size:11.5px;
+    line-height:1.45;
+    vertical-align:middle;
+    border-bottom:1px solid #edf1f2;
+}
+.inventory-aging-row.watch td{background:#fffdf7;}
+.inventory-aging-row.late td{background:#fff9f5;}
+.inventory-aging-row.critical td{background:#fff5f5;}
+.inventory-aging-order{
+    color:#173f4d;
+    font-size:11.5px;
+    font-weight:900;
+    white-space:nowrap;
+}
+.inventory-aging-days,
+.inventory-aging-bucket,
+.inventory-aging-warning{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:26px;
+    padding:0 8px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:850;
+    white-space:nowrap;
+}
+.inventory-aging-days.0_2,
+.inventory-aging-bucket.0_2{
+    background:#eaf8f3;
+    color:#087c65;
+}
+.inventory-aging-days.3_4,
+.inventory-aging-bucket.3_4{
+    background:#fff4d9;
+    color:#9c660d;
+}
+.inventory-aging-days.5_plus,
+.inventory-aging-bucket.5_plus{
+    background:#ffe8e2;
+    color:#bc4d23;
+}
+.inventory-aging-days.unknown,
+.inventory-aging-bucket.unknown{
+    background:#eef2f3;
+    color:#65777f;
+}
+.inventory-aging-warning.ok{
+    background:#eaf8f3;
+    color:#087c65;
+}
+.inventory-aging-warning.watch{
+    background:#fff4d9;
+    color:#9c660d;
+}
+.inventory-aging-warning.late{
+    background:#fff0e8;
+    color:#b95727;
+}
+.inventory-aging-warning.critical{
+    background:#ffe5e7;
+    color:#bd3540;
+}
+.inventory-aging-warning.unknown{
+    background:#edf2f4;
+    color:#61757e;
+}
+.inventory-aging-warning-detail,
+.inventory-aging-raw-status{
+    display:block;
+    margin-top:4px;
+    color:#7c8e95;
+    font-size:9.5px;
+    line-height:1.4;
+}
+.inventory-aging-raw-status{
+    max-width:230px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.inventory-aging-skus{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    max-width:340px;
+}
+.inventory-aging-sku-chip,
+.inventory-aging-sku-more{
+    display:inline-flex;
+    align-items:center;
+    min-height:24px;
+    padding:0 7px;
+    border-radius:999px;
+    background:#eef4f6;
+    color:#45636f;
+    font-size:9.5px;
+    font-weight:800;
+}
+.inventory-aging-sku-more{
+    background:#f5f0fb;
+    color:#7154a0;
+}
+
+@media(max-width:1350px){
+    .inventory-aging-kpis{grid-template-columns:repeat(3,minmax(0,1fr));}
+    .inventory-aging-header{flex-direction:column;}
+    .inventory-aging-toolbar{justify-content:flex-start;}
+}
+@media(max-width:780px){
+    .inventory-aging-kpis{grid-template-columns:1fr 1fr;}
+    .inventory-aging-toolbar,
+    .inventory-aging-toolbar .select-control,
+    .inventory-aging-toolbar .search-input{width:100%;}
+}
