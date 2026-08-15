@@ -225,9 +225,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V54.0";
+const APP_VERSION = "V55.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "54";
+const APP_CACHE_VERSION = "55";
 
 const systemHealthStateV38 = {
     running: false,
@@ -8070,6 +8070,7 @@ function renderMisaInvoiceHubV54(){
         notice.innerHTML=sourceCount===3?"✓ Đã có đủ 3 nguồn MISA. Có thể đối chiếu Mã đơn → trạng thái HĐ → Số HĐ → chi tiết SKU.":`Đang có <strong>${sourceCount}/3</strong> nguồn MISA. Upload thêm nguồn còn thiếu để đối chiếu đầy đủ hơn.`;
     }
     renderMisaDirectTableV54();
+    renderInvoiceWorkQueueV55();
 }
 
 function renderMisaDirectTableV54(){
@@ -8094,6 +8095,140 @@ function renderMisaDirectTableV54(){
         return `<tr><td>${i+1}</td><td>${escapeHTML(x.orderId)}</td><td>${x.orderDate?formatDateLabel(x.orderDate):'—'}</td><td>${escapeHTML(x.status||'—')}</td><td><span class="v54-status-pill ${resultClass}">${escapeHTML(resultLabel)}</span></td><td><strong>${escapeHTML(m?.invoiceNo||'—')}</strong></td><td>${m?.invoiceDate?formatDateLabel(m.invoiceDate):'—'}</td><td class="right">${m?invoiceMoney(m.totalPayment):'—'}</td><td>${escapeHTML(x.pub?.taxAuthorityStatus||'—')}</td><td>${detailHtml}</td><td><span class="v54-status-pill ${resultClass}">${escapeHTML(resultLabel)}</span>${note?`<small class="v54-result-note">${escapeHTML(note)}</small>`:''}</td></tr>`;
     }).join("");
 }
+
+
+
+/* =========================================================
+   V55 - HÀNG CHỜ HÓA ĐƠN & SLA PHÁT HÀNH
+========================================================= */
+function v55DateKeyFromAny(value){
+    if(!value) return "";
+    const normalized=normalizeOrderDate(value);
+    if(normalized) return normalized;
+    const text=String(value||"").trim();
+    const m=text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if(m) return `${m[3]}-${String(m[2]).padStart(2,"0")}-${String(m[1]).padStart(2,"0")}`;
+    return "";
+}
+
+function v55DaysBetween(fromKey,toKey){
+    if(!fromKey||!toKey) return null;
+    const a=Date.parse(`${fromKey}T00:00:00`), b=Date.parse(`${toKey}T00:00:00`);
+    if(Number.isNaN(a)||Number.isNaN(b)) return null;
+    return Math.floor((b-a)/86400000);
+}
+
+function v55PriorityForRow(row,today){
+    const dueDate=row.unpub ? (v55DateKeyFromAny(row.unpub.suggestedIssueAt)||row.orderDate||"") : "";
+    const overdueDays=dueDate ? v55DaysBetween(dueDate,today) : null;
+
+    if(row.delivered&&!row.pub&&!row.unpub){
+        return {key:"urgent",label:"KHẨN",rank:1,note:"Đơn đã giao nhưng chưa thấy trong MISA",dueDate,overdueDays:null};
+    }
+    if(row.unpub && overdueDays!==null && overdueDays>=3){
+        return {key:"urgent",label:"KHẨN",rank:1,note:`Quá hạn phát hành ${overdueDays} ngày`,dueDate,overdueDays};
+    }
+    if(row.unpub && overdueDays!==null && overdueDays>=1){
+        return {key:"warning",label:"CAO",rank:2,note:`Quá hạn phát hành ${overdueDays} ngày`,dueDate,overdueDays};
+    }
+    if(row.cqtPending){
+        return {key:"cqt",label:"CQT",rank:2,note:"Đã phát hành nhưng trạng thái CQT chưa hoàn tất",dueDate,overdueDays};
+    }
+    if(row.unpub){
+        return {key:"pending",label:"CHỜ",rank:3,note:row.unpub.unissuedReason||"Đang chờ phát hành",dueDate,overdueDays};
+    }
+    if(row.pub){
+        return {key:"done",label:"XONG",rank:9,note:"Đã phát hành",dueDate,overdueDays};
+    }
+    return {key:"info",label:"THEO DÕI",rank:7,note:"Chưa đến bước kết luận hóa đơn",dueDate,overdueDays};
+}
+
+function buildInvoiceWorkQueueV55(){
+    const today=getLocalTodayKey();
+    return buildMisaDirectRowsV54().map(row=>{
+        const priority=v55PriorityForRow(row,today);
+        const overdue=Boolean(row.unpub && priority.overdueDays!==null && priority.overdueDays>0);
+        const done=Boolean(row.pub && !row.cqtPending);
+        const actionable=Boolean((row.delivered&&!row.pub&&!row.unpub)||row.unpub||row.cqtPending);
+        return {...row,priority,overdue,done,actionable};
+    }).sort((a,b)=>a.priority.rank-b.priority.rank || Number(b.priority.overdueDays||0)-Number(a.priority.overdueDays||0) || String(a.orderDate||"").localeCompare(String(b.orderDate||"")));
+}
+
+function v55LateText(row){
+    if(!row.unpub) return "—";
+    const d=row.priority.overdueDays;
+    if(d===null) return "—";
+    if(d<0) return `còn ${Math.abs(d)} ngày`;
+    if(d===0) return "hôm nay";
+    return `+${d} ngày`;
+}
+
+function renderInvoiceWorkQueueV55(){
+    const all=buildInvoiceWorkQueueV55();
+    const actionable=all.filter(x=>x.actionable);
+    const missing=all.filter(x=>x.delivered&&!x.pub&&!x.unpub);
+    const unpublished=all.filter(x=>x.unpub);
+    const overdue=all.filter(x=>x.overdue);
+    const cqt=all.filter(x=>x.cqtPending);
+    const done=all.filter(x=>x.done);
+
+    if($("v55NeedActionCount")) $("v55NeedActionCount").textContent=formatNumber(actionable.length);
+    if($("v55MissingMisaCount")) $("v55MissingMisaCount").textContent=formatNumber(missing.length);
+    if($("v55UnpublishedCount")) $("v55UnpublishedCount").textContent=formatNumber(unpublished.length);
+    if($("v55OverdueCount")) $("v55OverdueCount").textContent=formatNumber(overdue.length);
+    if($("v55CqtCount")) $("v55CqtCount").textContent=formatNumber(cqt.length);
+    if($("v55DoneCount")) $("v55DoneCount").textContent=formatNumber(done.length);
+
+    const summary=$("v55QueueSummary");
+    if(summary){
+        summary.innerHTML=`Có <strong>${formatNumber(actionable.length)}</strong> việc đang mở · `+
+            `<strong>${formatNumber(missing.length)}</strong> đơn đã giao chưa thấy MISA · `+
+            `<strong>${formatNumber(overdue.length)}</strong> đơn quá hạn phát hành · `+
+            `<strong>${formatNumber(cqt.length)}</strong> hóa đơn còn vướng CQT.`;
+    }
+
+    let rows=all;
+    const filter=$("v55InvoiceQueueFilter")?.value||"action";
+    const search=normalizeText($("v55InvoiceQueueSearch")?.value||"");
+    if(filter==="action") rows=rows.filter(x=>x.actionable);
+    else if(filter==="missing") rows=rows.filter(x=>x.delivered&&!x.pub&&!x.unpub);
+    else if(filter==="unpublished") rows=rows.filter(x=>x.unpub);
+    else if(filter==="overdue") rows=rows.filter(x=>x.overdue);
+    else if(filter==="cqt") rows=rows.filter(x=>x.cqtPending);
+    else if(filter==="done") rows=rows.filter(x=>x.done);
+    if(search){
+        rows=rows.filter(x=>normalizeText(`${x.orderId} ${x.misa?.invoiceNo||""} ${x.unpub?.unissuedReason||""} ${x.pub?.taxAuthorityStatus||""} ${x.status||""}`).includes(search));
+    }
+
+    const body=$("v55InvoiceQueueBody");
+    if(!body) return;
+    if(!rows.length){
+        body.innerHTML='<tr><td colspan="11" class="empty-table">Không có đơn phù hợp bộ lọc.</td></tr>';
+        return;
+    }
+    body.innerHTML=rows.slice(0,800).map((x,i)=>{
+        const misa=x.misa;
+        const misaStatus=x.pub?"Đã phát hành":(x.unpub?"Chưa phát hành":"Chưa thấy MISA");
+        const reason=x.unpub?.unissuedReason || (x.cqtPending?`CQT: ${x.pub?.taxAuthorityStatus||"chưa hoàn tất"}`:x.priority.note||"");
+        const due=x.priority.dueDate?formatDateLabel(x.priority.dueDate):"—";
+        return `<tr class="v55-row-${x.priority.key}">
+            <td>${i+1}</td>
+            <td><strong>${escapeHTML(x.orderId)}</strong></td>
+            <td>${x.orderDate?formatDateLabel(x.orderDate):"—"}</td>
+            <td>${escapeHTML(x.status||"—")}</td>
+            <td>${due}</td>
+            <td><span class="v55-late-pill ${x.overdue?'late':''}">${escapeHTML(v55LateText(x))}</span></td>
+            <td><span class="v55-misa-pill ${x.statusKey}">${escapeHTML(misaStatus)}</span></td>
+            <td><strong>${escapeHTML(misa?.invoiceNo||"—")}</strong></td>
+            <td>${escapeHTML(x.pub?.taxAuthorityStatus||"—")}</td>
+            <td class="v55-reason">${escapeHTML(reason||"—")}</td>
+            <td><span class="v55-priority-pill ${x.priority.key}">${escapeHTML(x.priority.label)}</span></td>
+        </tr>`;
+    }).join("");
+}
+
+$("v55InvoiceQueueSearch")?.addEventListener("input",renderInvoiceWorkQueueV55);
+$("v55InvoiceQueueFilter")?.addEventListener("change",renderInvoiceWorkQueueV55);
 
 $("misaPublishedInputV54")?.addEventListener("change",event=>{const file=event.target.files?.[0];if(file)importMisaOrderListV54(file,"published");});
 $("misaUnpublishedInputV54")?.addEventListener("change",event=>{const file=event.target.files?.[0];if(file)importMisaOrderListV54(file,"unpublished");});
@@ -13319,7 +13454,7 @@ async function v39ProbeSystemHealthRpc(client) {
         if (missingRpcs.length || missingTables.length || missingV41.length || missingV47.length || missingV50.length || missingV51.length || missingV52.length || missingV53.length || missingV54.length) {
             return v38HealthCheckItem(
                 "rpc",
-                "RPC & SQL V54",
+                "RPC & SQL nền V54",
                 "error",
                 [
                     missingRpcs.length ? `Thiếu RPC: ${missingRpcs.join(", ")}` : "",
@@ -13337,16 +13472,16 @@ async function v39ProbeSystemHealthRpc(client) {
 
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V54",
+            "RPC & SQL nền V54",
             "ok",
-            `Role ${roleLabelV40()} + kiểm kê + MISA 3 nguồn + ghép Mã ĐH của sàn + đối soát tài chính V54 đã sẵn sàng.`
+            `Role ${roleLabelV40()} + kiểm kê + MISA 3 nguồn + ghép Mã ĐH của sàn + đối soát tài chính + hàng chờ hóa đơn V55 đã sẵn sàng.`
         );
     } catch (error) {
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V54",
+            "RPC & SQL nền V54",
             "error",
-            `Chưa chạy SQL V54 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
+            `Chưa chạy SQL nền V54 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
         );
     }
 }

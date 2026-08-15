@@ -1,0 +1,15 @@
+RUCOS V54 - MISA 3 FILE / GHÉP SHOPEE THEO MÃ ĐH CỦA SÀN
+
+1. Chạy SQL_V54_MISA_3_FILE_DIRECT_MATCH.sql trong Supabase SQL Editor -> Run.
+2. Thay 3 file GitHub: index.html, style.css, script.js.
+3. Commit -> mở web -> Ctrl + F5. Góc trái dưới phải hiện V54.0.
+
+Trong THỐNG KÊ HÓA ĐƠN upload 3 nguồn:
+- HÓA ĐƠN ĐÃ PHÁT HÀNH: file Danh sách hóa đơn đã phát hành.xlsx
+- HÓA ĐƠN CHƯA PHÁT HÀNH: file Danh sách hóa đơn chưa phát hành.xlsx. Nếu có cột Kênh bán hàng, hệ thống chỉ lưu Shopee.
+- CHI TIẾT HÓA ĐƠN ĐÃ SỬ DỤNG: file Bảng kê chi tiết hóa đơn đã sử dụng .xls/.xlsx
+
+Khóa ghép chính xác:
+Shopee.Mã đơn hàng = MISA.Mã ĐH của sàn
+
+Sau khi upload file ĐÃ PHÁT HÀNH, V54 tự tạo cầu nối V50 cho các mã đơn thật sự đang tồn tại trong Shopee Cloud. Cầu nối thủ công chỉ còn là phương án dự phòng.

@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=54">
+    <link rel="stylesheet" href="style.css?v=55">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -269,7 +269,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V54.0</span>
+                <span class="v38-sidebar-version">V55.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -2030,6 +2030,67 @@
                 </div>
             </div>
 
+
+            <!-- ======================== V55 - HÀNG CHỜ HÓA ĐƠN & SLA ======================== -->
+            <div class="panel v55-invoice-queue-panel">
+                <div class="panel-header v55-queue-header">
+                    <div>
+                        <h2>🚦 Hàng chờ hóa đơn cần xử lý</h2>
+                        <p>
+                            Tự gom các đơn cần chú ý từ Shopee + MISA: <strong>đã giao nhưng chưa thấy MISA</strong>,
+                            <strong>chưa phát hành</strong>, <strong>quá hạn phát hành</strong> và
+                            <strong>đã phát hành nhưng còn vướng CQT</strong>.
+                        </p>
+                    </div>
+                    <div class="v55-queue-filters">
+                        <input id="v55InvoiceQueueSearch" type="search" placeholder="Tìm mã đơn / số HĐ / lý do...">
+                        <select id="v55InvoiceQueueFilter">
+                            <option value="action">Chỉ việc cần xử lý</option>
+                            <option value="all">Tất cả đơn</option>
+                            <option value="missing">Đã giao chưa thấy MISA</option>
+                            <option value="unpublished">Chưa phát hành</option>
+                            <option value="overdue">Quá hạn phát hành</option>
+                            <option value="cqt">Vướng CQT</option>
+                            <option value="done">Đã hoàn tất</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="v55-queue-kpis">
+                    <div class="v55-queue-kpi danger"><span>CẦN XỬ LÝ</span><strong id="v55NeedActionCount">0</strong><small>Tổng việc đang mở</small></div>
+                    <div class="v55-queue-kpi missing"><span>ĐÃ GIAO CHƯA MISA</span><strong id="v55MissingMisaCount">0</strong><small>Ưu tiên kiểm tra ngay</small></div>
+                    <div class="v55-queue-kpi pending"><span>CHƯA PHÁT HÀNH</span><strong id="v55UnpublishedCount">0</strong><small>Có trong danh sách MISA</small></div>
+                    <div class="v55-queue-kpi overdue"><span>QUÁ HẠN PHÁT HÀNH</span><strong id="v55OverdueCount">0</strong><small>Theo ngày phát hành đề xuất</small></div>
+                    <div class="v55-queue-kpi cqt"><span>VƯỚNG CQT</span><strong id="v55CqtCount">0</strong><small>Đã phát hành nhưng chưa hoàn tất CQT</small></div>
+                    <div class="v55-queue-kpi done"><span>ĐÃ HOÀN TẤT</span><strong id="v55DoneCount">0</strong><small>Đã phát hành và không còn cảnh báo</small></div>
+                </div>
+
+                <div id="v55QueueSummary" class="v55-queue-summary">Chưa có dữ liệu để lập hàng chờ.</div>
+
+                <div class="v55-queue-table-wrap">
+                    <table class="v55-queue-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã đơn Shopee</th>
+                                <th>Ngày đơn</th>
+                                <th>Trạng thái Shopee</th>
+                                <th>Hạn phát hành</th>
+                                <th>Trễ</th>
+                                <th>Trạng thái MISA</th>
+                                <th>Số HĐ</th>
+                                <th>CQT</th>
+                                <th>Lý do / Ghi chú</th>
+                                <th>Ưu tiên</th>
+                            </tr>
+                        </thead>
+                        <tbody id="v55InvoiceQueueBody">
+                            <tr><td colspan="11" class="empty-table">Đang chờ dữ liệu Shopee và MISA.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- ======================== V50 - CẦU NỐI ĐƠN SHOPEE ↔ SỐ HÓA ĐƠN ======================== -->
             <div class="panel v50-link-panel">
                 <div class="panel-header v50-link-header">
@@ -2842,6 +2903,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=54"></script>
+    <script src="script.js?v=55"></script>
 </body>
 </html>
