@@ -215,9 +215,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V46.0";
+const APP_VERSION = "V47.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "46";
+const APP_CACHE_VERSION = "47";
 
 const systemHealthStateV38 = {
     running: false,
@@ -5147,20 +5147,58 @@ function parseInventoryReconcileNote(note) {
 function getLatestInventoryReconcileRecord(itemCode) {
     const rows = (inventoryState.stocktakes || [])
         .filter(row => row.item_code === itemCode)
-        .map(row => ({ row, parsed: parseInventoryReconcileNote(row.note) }))
+        .map(row => {
+            const hasExplicitTheory = row.theoretical_qty !== null && row.theoretical_qty !== undefined;
+            const hasExplicitVariance = row.variance_qty !== null && row.variance_qty !== undefined;
+
+            if (hasExplicitTheory && hasExplicitVariance) {
+                const theory = Number(row.theoretical_qty || 0);
+                const actual = Number(row.physical_qty || 0);
+                const variance = Number(row.variance_qty || 0);
+                return {
+                    row,
+                    parsed: {
+                        theory,
+                        actual,
+                        variance,
+                        varianceValue:
+                            row.variance_value !== null && row.variance_value !== undefined
+                                ? Number(row.variance_value || 0)
+                                : variance * Number(row.unit_price || 0),
+                        status: String(row.reconcile_status || "").toUpperCase(),
+                        baselineDate: row.baseline_date || ""
+                    }
+                };
+            }
+
+            const parsed = parseInventoryReconcileNote(row.note);
+            return { row, parsed };
+        })
         .filter(entry => entry.parsed)
         .sort((a, b) => {
             const d = String(b.row.stocktake_date || "").localeCompare(String(a.row.stocktake_date || ""));
             return d || String(b.row.created_at || "").localeCompare(String(a.row.created_at || ""));
         });
+
     if (!rows.length) return null;
+
     const latest = rows[0];
+    const variance = Number(latest.parsed.variance || 0);
+
     return {
         date: latest.row.stocktake_date || "",
         createdAt: latest.row.created_at || "",
+        baselineDate: latest.parsed.baselineDate || latest.row.baseline_date || "",
         theory: Number(latest.parsed.theory || 0),
         actual: Number(latest.parsed.actual || 0),
-        variance: Number(latest.parsed.variance || 0)
+        variance,
+        varianceValue:
+            latest.parsed.varianceValue !== undefined
+                ? Number(latest.parsed.varianceValue || 0)
+                : variance * Number(latest.row.unit_price || 0),
+        status: latest.parsed.status || (
+            variance === 0 ? "MATCH" : variance < 0 ? "SHORTAGE" : "SURPLUS"
+        )
     };
 }
 function getInventoryReconcileStatusV36(record) {
@@ -5259,10 +5297,13 @@ function buildInventorySummary() {
             const physical = Number(item.physicalQty || 0);
             const reserved = Number(movement.reserved || 0);
             const delivered = Number(movement.delivered || 0);
-            const available = Math.max(0, physical - reserved);
 
             const theoryRow = theoryByItemCode.get(item.itemCode) || null;
             const currentTheoretical = theoryRow ? Number(theoryRow.theoretical || 0) : physical;
+
+            // V47: khả dụng phải dựa trên tồn hệ thống hiện tại, không lấy số kiểm cũ
+            // rồi trừ đơn mới phát sinh sau ngày kiểm kê.
+            const available = Math.max(0, currentTheoretical - reserved);
             const lastReconcile = getLatestInventoryReconcileRecord(item.itemCode);
             const reconcileStatus = getInventoryReconcileStatusV36(lastReconcile);
 
@@ -5293,9 +5334,19 @@ function buildInventorySummary() {
                 available,
                 currentTheoretical,
                 currentTheoryDate: theoryAsOfDate,
+
+                // V47 - giải thích công thức tồn ngay trên bảng chính
+                baselineDate: theoryRow?.baselineDate || item.stocktakeDate || "",
+                baselineQty: Number(theoryRow?.baselineQty ?? physical),
+                ledgerInbound: Number(theoryRow?.inbound || 0),
+                ledgerReturnIn: Number(theoryRow?.returnIn || 0),
+                ledgerShopeeOut: Number(theoryRow?.shopeeOutDelta || 0),
+                ledgerOutOther: Number(theoryRow?.outOther || 0),
+                ledgerAdjustment: Number(theoryRow?.adjustment || 0),
+
                 lastReconcile,
                 reconcileStatus,
-                stockValue: physical * Number(item.unitPrice || 0)
+                stockValue: currentTheoretical * Number(item.unitPrice || 0)
             };
         });
 }
@@ -6058,6 +6109,7 @@ function renderInventoryReconciliation() {
         });
     });
 
+    if ($("reconcileCountedCount")) $("reconcileCountedCount").textContent = `${formatNumber(stats.counted)}/${formatNumber(rows.length)}`;
     if ($("reconcileMatchedCount")) $("reconcileMatchedCount").textContent = formatNumber(stats.matched);
     if ($("reconcileShortageCount")) $("reconcileShortageCount").textContent = formatNumber(stats.shortage);
     if ($("reconcileSurplusCount")) $("reconcileSurplusCount").textContent = formatNumber(stats.surplus);
@@ -6109,11 +6161,24 @@ async function commitInventoryReconciliation() {
     const surplus = counted.filter(row => row.actual > row.theoretical).length;
     const matched = counted.filter(row => row.actual === row.theoretical).length;
 
+    if (counted.length < rows.length) {
+        const continuePartial = confirm(
+            `Bạn mới đếm ${counted.length}/${rows.length} mặt hàng.
+
+` +
+            `Nếu tiếp tục, V47 chỉ chốt ${counted.length} SKU đã nhập; các SKU còn lại giữ nguyên mốc cũ.
+
+` +
+            `Tiếp tục chốt một phần?`
+        );
+        if (!continuePartial) return;
+    }
+
     const ok = confirm(
         `Chốt kiểm kê ngày ${formatDateLabel(asOfDate)}?\n\n` +
         `Đã đếm: ${counted.length} mặt hàng\n` +
         `Khớp: ${matched}\nThiếu: ${shortage}\nThừa: ${surplus}\n\n` +
-        `Sau khi chốt, số đếm thực tế sẽ trở thành mốc tính tồn mới.`
+        `Sau khi chốt, số đếm thực tế sẽ trở thành mốc tính tồn mới; chênh lệch được lưu riêng trên Cloud.`
     );
 
     if (!ok) return;
@@ -6153,16 +6218,31 @@ async function commitInventoryReconciliation() {
 
             if (itemError) throw itemError;
 
-            const payload = counted.map(row => ({
-                stocktake_date: asOfDate,
-                item_code: row.itemCode,
-                physical_qty: row.actual,
-                unit_price: Number(row.unitPrice || 0),
-                note:
-                    `Kiểm kê V36 · Lý thuyết ${row.theoretical} · ` +
-                    `Thực tế ${row.actual} · Chênh ${row.actual - row.theoretical}`,
-                created_by: state.user?.id || null
-            }));
+            const payload = counted.map(row => {
+                const variance = row.actual - row.theoretical;
+                const varianceValue = variance * Number(row.unitPrice || 0);
+                const status = variance === 0 ? "MATCH" : variance < 0 ? "SHORTAGE" : "SURPLUS";
+
+                return {
+                    stocktake_date: asOfDate,
+                    item_code: row.itemCode,
+                    physical_qty: row.actual,
+                    unit_price: Number(row.unitPrice || 0),
+
+                    // V47 - lưu cấu trúc đối chiếu rõ ràng trên Cloud
+                    baseline_date: row.baselineDate || null,
+                    theoretical_qty: Number(row.theoretical || 0),
+                    variance_qty: variance,
+                    variance_value: varianceValue,
+                    reconcile_status: status,
+
+                    note:
+                        `Kiểm kê V47 · Lý thuyết ${row.theoretical} · ` +
+                        `Thực tế ${row.actual} · Chênh ${variance} · ` +
+                        `Giá trị chênh ${varianceValue} · ${status}`,
+                    created_by: state.user?.id || null
+                };
+            });
 
             const { data: inserted, error: stocktakeError } = await client
                 .from(DB_INVENTORY_STOCKTAKES)
@@ -6174,17 +6254,28 @@ async function commitInventoryReconciliation() {
         } else {
             const now = new Date().toISOString();
             inventoryState.stocktakes.unshift(
-                ...counted.map((row,index) => ({
-                    id:`local-reconcile-${Date.now()}-${index}`,
-                    stocktake_date:asOfDate,
-                    item_code:row.itemCode,
-                    physical_qty:row.actual,
-                    unit_price:Number(row.unitPrice||0),
-                    note:
-                        `Kiểm kê V36 · Lý thuyết ${row.theoretical} · ` +
-                        `Thực tế ${row.actual} · Chênh ${row.actual - row.theoretical}`,
-                    created_at:now
-                }))
+                ...counted.map((row,index) => {
+                    const variance = row.actual - row.theoretical;
+                    const varianceValue = variance * Number(row.unitPrice || 0);
+                    const status = variance === 0 ? "MATCH" : variance < 0 ? "SHORTAGE" : "SURPLUS";
+                    return {
+                        id:`local-reconcile-${Date.now()}-${index}`,
+                        stocktake_date:asOfDate,
+                        item_code:row.itemCode,
+                        physical_qty:row.actual,
+                        unit_price:Number(row.unitPrice||0),
+                        baseline_date:row.baselineDate||null,
+                        theoretical_qty:Number(row.theoretical||0),
+                        variance_qty:variance,
+                        variance_value:varianceValue,
+                        reconcile_status:status,
+                        note:
+                            `Kiểm kê V47 · Lý thuyết ${row.theoretical} · ` +
+                            `Thực tế ${row.actual} · Chênh ${variance} · ` +
+                            `Giá trị chênh ${varianceValue} · ${status}`,
+                        created_at:now
+                    };
+                })
             );
         }
 
@@ -6350,6 +6441,12 @@ function renderInventoryModule() {
     const totals = summary.reduce((acc, item) => {
         acc.opening += Number(item.openingQty || 0);
         acc.physical += Number(item.physicalQty || 0);
+        acc.baseline += Number(item.baselineQty || 0);
+        acc.inbound += Number(item.ledgerInbound || 0);
+        acc.returnIn += Number(item.ledgerReturnIn || 0);
+        acc.shopeeOut += Number(item.ledgerShopeeOut || 0);
+        acc.outOther += Number(item.ledgerOutOther || 0);
+        acc.adjustment += Number(item.ledgerAdjustment || 0);
         acc.theoretical += Number(item.currentTheoretical || 0);
         acc.reserved += Number(item.reserved || 0);
         acc.available += Number(item.available || 0);
@@ -6369,6 +6466,12 @@ function renderInventoryModule() {
     }, {
         opening:0,
         physical:0,
+        baseline:0,
+        inbound:0,
+        returnIn:0,
+        shopeeOut:0,
+        outOther:0,
+        adjustment:0,
         theoretical:0,
         reserved:0,
         available:0,
@@ -6382,7 +6485,9 @@ function renderInventoryModule() {
     });
 
     if ($("inventoryPhysicalTotal")) $("inventoryPhysicalTotal").textContent = formatNumber(totals.physical);
+    if ($("inventoryTheoreticalTotal")) $("inventoryTheoreticalTotal").textContent = formatNumber(totals.theoretical);
     if ($("inventoryReservedTotal")) $("inventoryReservedTotal").textContent = formatNumber(totals.reserved);
+    if ($("inventoryAvailableTotal")) $("inventoryAvailableTotal").textContent = formatNumber(totals.available);
     if ($("inventoryTransitTotal")) $("inventoryTransitTotal").textContent = formatNumber(totals.transit);
     if ($("inventoryDeliveredTotal")) $("inventoryDeliveredTotal").textContent = formatNumber(totals.delivered);
     if ($("inventoryInvoicedTotal")) $("inventoryInvoicedTotal").textContent = formatNumber(totals.invoiced);
@@ -6425,7 +6530,7 @@ function renderInventoryModule() {
         if (!reconcileOverview.latestDate) {
             messages.push(
                 `<strong>Chưa có lần kiểm kê đối chiếu nào được chốt.</strong> ` +
-                `V36 chưa thể kết luận kho “Khớp / Thiếu / Thừa”. Hãy vào tab <b>Kiểm kê & đối chiếu</b> để nhập số đếm thực tế.`
+                `V47 chưa thể kết luận kho “Khớp / Thiếu / Thừa”. Hãy vào tab <b>Kiểm kê & đối chiếu</b> để nhập số đếm thực tế.`
             );
         } else if (reconcileOverview.counted < reconcileOverview.totalItems) {
             messages.push(
@@ -6465,13 +6570,23 @@ function renderInventoryModule() {
     const foot = $("inventorySummaryFoot");
     if (body && foot) {
         if (!filtered.length) {
-            body.innerHTML = '<tr><td colspan="18" class="empty-table">Không có mặt hàng phù hợp.</td></tr>';
+            body.innerHTML = '<tr><td colspan="24" class="empty-table">Không có mặt hàng phù hợp.</td></tr>';
             foot.innerHTML = "";
         } else {
             body.innerHTML = filtered.map((item, index) => {
                 const safety = Number(item.safetyStock || 0);
                 const alertClass = item.available <= 0 ? "out" : item.available <= safety ? "low" : "ok";
                 const alertText = item.available <= 0 ? "Hết khả dụng" : item.available <= safety ? "Sắp hết" : "Ổn";
+                const variance = item.lastReconcile ? Number(item.lastReconcile.variance || 0) : null;
+                const varianceValue = item.lastReconcile
+                    ? Number(item.lastReconcile.varianceValue ?? (variance * Number(item.unitPrice || 0)))
+                    : null;
+
+                const signed = value => {
+                    const n = Number(value || 0);
+                    return `${n > 0 ? "+" : ""}${formatNumber(n)}`;
+                };
+
                 return `
                     <tr>
                         <td>${index + 1}</td>
@@ -6495,22 +6610,53 @@ function renderInventoryModule() {
                                         : '<span class="inventory-transit-item-empty">Chưa upload file luân chuyển</span>'
                             }
                         </td>
+
                         <td class="inventory-num">${formatNumber(item.openingQty || 0)}</td>
+
                         <td class="inventory-num inventory-col-physical">
-                            ${formatNumber(item.physicalQty || 0)}
-                            <span class="inventory-theory-date-v36">${item.stocktakeDate ? formatDateLabel(item.stocktakeDate) : "chưa có ngày kiểm"}</span>
+                            ${formatNumber(item.baselineQty || 0)}
+                            <span class="inventory-theory-date-v36">
+                                ${item.baselineDate ? formatDateLabel(item.baselineDate) : "chưa có mốc"}
+                            </span>
                         </td>
-                        <td class="inventory-num inventory-col-theory-v36">
+
+                        <td class="inventory-num inventory-v47-positive">
+                            ${item.ledgerInbound ? `+${formatNumber(item.ledgerInbound)}` : "0"}
+                        </td>
+                        <td class="inventory-num inventory-v47-positive">
+                            ${item.ledgerReturnIn ? `+${formatNumber(item.ledgerReturnIn)}` : "0"}
+                        </td>
+                        <td class="inventory-num inventory-v47-negative">
+                            ${item.ledgerShopeeOut > 0
+                                ? `−${formatNumber(item.ledgerShopeeOut)}`
+                                : item.ledgerShopeeOut < 0
+                                    ? `+${formatNumber(Math.abs(item.ledgerShopeeOut))}`
+                                    : "0"}
+                        </td>
+                        <td class="inventory-num inventory-v47-negative">
+                            ${item.ledgerOutOther ? `−${formatNumber(item.ledgerOutOther)}` : "0"}
+                        </td>
+                        <td class="inventory-num inventory-v47-adjustment">
+                            ${signed(item.ledgerAdjustment)}
+                        </td>
+
+                        <td class="inventory-num inventory-col-theory-v36 inventory-v47-theory-strong">
                             ${formatNumber(item.currentTheoretical || 0)}
                             <span class="inventory-theory-date-v36">tới ${formatDateLabel(item.currentTheoryDate)}</span>
                         </td>
                         <td class="inventory-num inventory-col-reserved">${formatNumber(item.reserved || 0)}</td>
                         <td class="inventory-num inventory-col-available">${formatNumber(item.available || 0)}</td>
+
                         <td class="inventory-num inventory-col-variance-v36">
                             ${item.lastReconcile
-                                ? `<span class="inventory-stock-variance ${Number(item.lastReconcile.variance||0)===0?"zero":Number(item.lastReconcile.variance||0)<0?"shortage":"surplus"}">${Number(item.lastReconcile.variance||0)>0?"+":""}${formatNumber(item.lastReconcile.variance||0)}</span>`
+                                ? `<span class="inventory-stock-variance ${variance===0?"zero":variance<0?"shortage":"surplus"}">${variance>0?"+":""}${formatNumber(variance)}</span>`
                                 : '<span class="inventory-stock-variance pending">—</span>'}
                         </td>
+
+                        <td class="right inventory-v47-variance-value-cell ${variance===null?"pending":variance<0?"shortage":variance>0?"surplus":"match"}">
+                            ${item.lastReconcile ? inventoryMoney(varianceValue) : "—"}
+                        </td>
+
                         <td class="center inventory-col-result-v36">
                             <span class="inventory-stock-result-v36 ${escapeHTML(item.reconcileStatus.key)}">${escapeHTML(item.reconcileStatus.label)}</span>
                             ${item.lastReconcile?.date ? `<span class="inventory-stock-result-date-v36">${formatDateLabel(item.lastReconcile.date)}</span>` : ""}
@@ -6551,10 +6697,17 @@ function renderInventoryModule() {
                     <td>${formatNumber(summary.length)} mặt hàng</td>
 
                     <td class="center">${formatNumber(totals.opening)}</td>
-                    <td class="center">${formatNumber(totals.physical)}</td>
+                    <td class="center">${formatNumber(totals.baseline)}</td>
+                    <td class="center">${formatNumber(totals.inbound)}</td>
+                    <td class="center">${formatNumber(totals.returnIn)}</td>
+                    <td class="center">${formatNumber(totals.shopeeOut)}</td>
+                    <td class="center">${formatNumber(totals.outOther)}</td>
+                    <td class="center">${totals.adjustment > 0 ? "+" : ""}${formatNumber(totals.adjustment)}</td>
                     <td class="center">${formatNumber(totals.theoretical)}</td>
                     <td class="center">${formatNumber(totals.reserved)}</td>
                     <td class="center">${formatNumber(totals.available)}</td>
+
+                    <td class="center">—</td>
                     <td class="center">—</td>
                     <td class="center">Xem từng SKU</td>
 
@@ -10470,6 +10623,7 @@ async function v39ProbeSystemHealthRpc(client) {
         const rpcs = data?.rpcs || {};
         const tables = data?.tables || {};
         const v41 = data?.v41 || {};
+        const v47 = data?.v47 || {};
 
         const requiredRpcs = [
             "app_user_context",
@@ -10501,31 +10655,41 @@ async function v39ProbeSystemHealthRpc(client) {
 
         const missingV41 = requiredV41.filter(name => v41[name] !== true);
 
-        if (missingRpcs.length || missingTables.length || missingV41.length) {
+        const requiredV47 = [
+            "stocktake_baseline_date",
+            "stocktake_theoretical_qty",
+            "stocktake_variance_qty",
+            "stocktake_variance_value",
+            "stocktake_reconcile_status"
+        ];
+        const missingV47 = requiredV47.filter(name => v47[name] !== true);
+
+        if (missingRpcs.length || missingTables.length || missingV41.length || missingV47.length) {
             return v38HealthCheckItem(
                 "rpc",
-                "RPC & SQL V41",
+                "RPC & SQL V47",
                 "error",
                 [
                     missingRpcs.length ? `Thiếu RPC: ${missingRpcs.join(", ")}` : "",
                     missingTables.length ? `Thiếu bảng: ${missingTables.join(", ")}` : "",
-                    missingV41.length ? `Thiếu cột V41: ${missingV41.join(", ")}` : ""
+                    missingV41.length ? `Thiếu cột V41: ${missingV41.join(", ")}` : "",
+                    missingV47.length ? `Thiếu cột kiểm kê V47: ${missingV47.join(", ")}` : ""
                 ].filter(Boolean).join(" · ")
             );
         }
 
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V41",
+            "RPC & SQL V47",
             "ok",
-            `Role ${roleLabelV40()} + RPC + lịch sử Cloud + cột Mã đơn V41 đã sẵn sàng.`
+            `Role ${roleLabelV40()} + RPC + lịch sử hóa đơn + cấu trúc kiểm kê V47 đã sẵn sàng.`
         );
     } catch (error) {
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V41",
+            "RPC & SQL V47",
             "error",
-            `Chưa chạy SQL V41 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
+            `Chưa chạy SQL V47 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
         );
     }
 }

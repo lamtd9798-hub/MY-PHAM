@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=46">
+    <link rel="stylesheet" href="style.css?v=47">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -266,7 +266,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V44.0</span>
+                <span class="v38-sidebar-version">V47.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -973,23 +973,35 @@
                 </div>
             </div>
 
-            <div class="inventory-kpi-grid">
+            <div class="inventory-kpi-grid inventory-kpi-grid-v47">
                 <div class="inventory-kpi-card primary">
-                    <span>TỒN THỰC TẾ TẠI KHO</span>
+                    <span>TỒN KIỂM GẦN NHẤT</span>
                     <strong id="inventoryPhysicalTotal">0</strong>
-                    <small>Số lượng đếm/kiểm kê gần nhất</small>
+                    <small>Số đếm thực tế ở lần kiểm kê gần nhất</small>
+                </div>
+
+                <div class="inventory-kpi-card theory-v47">
+                    <span>TỒN LÝ THUYẾT HIỆN TẠI</span>
+                    <strong id="inventoryTheoreticalTotal">0</strong>
+                    <small>Mốc kiểm + nhập + hoàn − xuất ± điều chỉnh</small>
                 </div>
 
                 <div class="inventory-kpi-card">
                     <span>ĐÃ GIỮ CHO ĐƠN</span>
                     <strong id="inventoryReservedTotal">0</strong>
-                    <small>Chờ xác nhận + Chờ giao hàng</small>
+                    <small>Hàng có đơn nhưng chưa rời kho</small>
+                </div>
+
+                <div class="inventory-kpi-card available-v47">
+                    <span>KHẢ DỤNG DỰ KIẾN</span>
+                    <strong id="inventoryAvailableTotal">0</strong>
+                    <small>Tồn lý thuyết hiện tại − Giữ đơn</small>
                 </div>
 
                 <div class="inventory-kpi-card blue">
                     <span>ĐANG GIAO</span>
                     <strong id="inventoryTransitTotal">0</strong>
-                    <small>Hàng đã đi khỏi kho, đang vận chuyển</small>
+                    <small>Hàng đã rời kho, đang vận chuyển</small>
                 </div>
 
                 <div class="inventory-kpi-card purple">
@@ -1005,9 +1017,9 @@
                 </div>
 
                 <div class="inventory-kpi-card value">
-                    <span>GIÁ TRỊ TỒN THỰC TẾ</span>
+                    <span>GIÁ TRỊ TỒN LÝ THUYẾT</span>
                     <strong id="inventoryStockValue">0 đ</strong>
-                    <small>Tồn thực tế × đơn giá</small>
+                    <small>Tồn lý thuyết hiện tại × đơn giá</small>
                 </div>
             </div>
 
@@ -1033,47 +1045,53 @@
                                 <th rowspan="2">STT</th>
                                 <th rowspan="2">SKU kho</th>
                                 <th rowspan="2">Tên sản phẩm</th>
-                                <th colspan="5" class="inventory-group-stock">📦 KHO TẠI CHỖ</th>
-                                <th colspan="2" class="inventory-group-reconcile-v36">🔎 ĐỐI CHIẾU KHO</th>
+                                <th colspan="10" class="inventory-group-stock">📦 KHO TẠI CHỖ & CÔNG THỨC TỒN</th>
+                                <th colspan="3" class="inventory-group-reconcile-v36">🔎 ĐỐI CHIẾU KIỂM KÊ</th>
                                 <th colspan="3" class="inventory-group-transit">🚚 LUÂN CHUYỂN HIỆN TẠI</th>
                                 <th colspan="2" class="inventory-group-invoice">🧾 ĐỐI CHIẾU HÓA ĐƠN</th>
                                 <th colspan="3" class="inventory-group-value">💰 GIÁ TRỊ & CẢNH BÁO</th>
                             </tr>
                             <tr class="inventory-column-header">
-                                <th class="center">Tồn đầu</th>
-                                <th class="center inventory-col-physical" title="Số đếm thực tế ở lần kiểm kê gần nhất.">Tồn thực tế</th>
-                                <th class="center inventory-col-theory-v36" title="Tồn lý thuyết hiện tại = mốc kiểm kê + nhập + hoàn nhập - hàng rời kho - xuất khác +/- điều chỉnh.">Tồn LT hiện tại</th>
+                                <th class="center">Tồn đầu gốc</th>
+                                <th class="center inventory-col-physical" title="Số đếm thực tế ở mốc kiểm kê gần nhất.">Mốc kiểm</th>
+                                <th class="center inventory-v47-in" title="Nhập kho sau mốc kiểm gần nhất.">+ Nhập</th>
+                                <th class="center inventory-v47-return" title="Hàng hoàn đã thực sự nhập lại kho sau mốc kiểm.">+ Hoàn nhập</th>
+                                <th class="center inventory-v47-out" title="Số lượng Shopee đã rời kho tăng thêm sau mốc kiểm.">− Shopee</th>
+                                <th class="center inventory-v47-out" title="Xuất kho ngoài Shopee sau mốc kiểm.">− Xuất khác</th>
+                                <th class="center inventory-v47-adjust" title="Điều chỉnh kho thủ công sau mốc kiểm.">± Điều chỉnh</th>
+                                <th class="center inventory-col-theory-v36" title="Tồn LT = Mốc kiểm + Nhập + Hoàn nhập − Shopee − Xuất khác ± Điều chỉnh.">Tồn LT hiện tại</th>
                                 <th class="center inventory-col-reserved" title="Hàng đã có đơn nhưng chưa rời kho.">Giữ đơn</th>
-                                <th class="center inventory-col-available" title="Khả dụng = Tồn thực tế - Giữ đơn">Khả dụng</th>
-                                <th class="center inventory-col-variance-v36" title="Chênh lần kiểm = Thực tế đếm - Tồn lý thuyết tại thời điểm kiểm kê.">Chênh lần kiểm</th>
-                                <th class="center inventory-col-result-v36">Kết quả</th>
+                                <th class="center inventory-col-available" title="Khả dụng dự kiến = max(0, Tồn LT hiện tại − Giữ đơn).">Khả dụng LT</th>
+                                <th class="center inventory-col-variance-v36" title="Chênh kiểm = Số đếm thực tế − Tồn lý thuyết tại đúng thời điểm kiểm kê.">Chênh SL</th>
+                                <th class="right inventory-v47-variance-value">Giá trị CL</th>
+                                <th class="center inventory-col-result-v36">Kết luận</th>
                                 <th class="center inventory-col-transit">Đang giao</th>
                                 <th class="center inventory-col-delivered">Đã giao</th>
                                 <th class="center inventory-col-returning">Hoàn đang về</th>
                                 <th class="center inventory-col-invoice">Đã xuất HĐ</th>
                                 <th class="center inventory-col-waiting">Chờ HĐ*</th>
                                 <th class="right">Đơn giá</th>
-                                <th class="right">Giá trị tồn</th>
+                                <th class="right">Giá trị tồn LT</th>
                                 <th class="center">Cảnh báo</th>
                             </tr>
                         </thead>
                         <tbody id="inventorySummaryBody">
-                            <tr><td colspan="18" class="empty-table">Chưa có dữ liệu tồn kho.</td></tr>
+                            <tr><td colspan="24" class="empty-table">Chưa có dữ liệu tồn kho.</td></tr>
                         </tbody>
                         <tfoot id="inventorySummaryFoot"></tfoot>
                     </table>
                 </div>
 
-                <div class="inventory-table-note inventory-v35-legend inventory-v36-legend">
+                <div class="inventory-table-note inventory-v35-legend inventory-v36-legend inventory-v47-legend">
                     <div>
-                        <strong>📦 Kho tại chỗ:</strong>
-                        <b>Tồn LT hiện tại</b> là số hệ thống dự kiến còn trong kho dựa trên mốc kiểm kê và phát sinh sau mốc.
-                        <b>Khả dụng = Tồn thực tế − Giữ đơn.</b>
+                        <strong>📦 Công thức tồn:</strong>
+                        <b>Tồn LT hiện tại = Mốc kiểm + Nhập + Hoàn nhập − Shopee − Xuất khác ± Điều chỉnh.</b>
+                        <b>Khả dụng LT = max(0, Tồn LT hiện tại − Giữ đơn).</b>
                     </div>
                     <div>
-                        <strong>🔎 Đối chiếu kho:</strong>
-                        <b>Chênh lần kiểm = Số đếm thực tế − Tồn lý thuyết tại thời điểm kiểm kê.</b>
-                        0 = Khớp; âm = Thiếu; dương = Thừa. Chưa chốt kiểm kê thì hiển thị “Chưa đối chiếu”.
+                        <strong>🔎 Kiểm kê:</strong>
+                        <b>Chênh SL = Số đếm thực tế − Tồn lý thuyết tại đúng ngày kiểm.</b>
+                        0 = Khớp; âm = Thiếu; dương = Thừa. Giá trị CL = Chênh SL × Đơn giá.
                     </div>
                     <div>
                         <strong>🚚 Luân chuyển:</strong>
@@ -1369,7 +1387,11 @@
                         </div>
                     </div>
 
-                    <div class="inventory-reconcile-kpis">
+                    <div class="inventory-reconcile-kpis inventory-reconcile-kpis-v47">
+                        <div class="inventory-reconcile-kpi counted-v47">
+                            <span>ĐÃ ĐẾM</span>
+                            <strong id="reconcileCountedCount">0/0</strong>
+                        </div>
                         <div class="inventory-reconcile-kpi ok">
                             <span>SKU KHỚP</span>
                             <strong id="reconcileMatchedCount">0</strong>
@@ -1420,9 +1442,9 @@
                         </table>
                     </div>
 
-                    <div class="inventory-v31-note warning">
-                        <strong>Chốt kiểm kê</strong> sẽ lấy số bạn nhập làm mốc tồn thực tế mới.
-                        Từ ngày tiếp theo, hệ thống sẽ tính lại tồn lý thuyết bắt đầu từ mốc mới này.
+                    <div class="inventory-v31-note warning inventory-v47-note">
+                        <strong>Chốt kiểm kê</strong> sẽ lưu riêng Tồn lý thuyết, Số đếm thực tế, Chênh lệch, Giá trị chênh và Kết luận cho từng SKU.
+                        Số đếm thực tế sau khi chốt trở thành <b>mốc kiểm mới</b> để tính tồn cho các ngày tiếp theo.
                     </div>
                 </div>
             </div>
@@ -2058,6 +2080,6 @@
 </div>
 
 <div id="toast" class="toast"></div>
-    <script src="script.js?v=46"></script>
+    <script src="script.js?v=47"></script>
 </body>
 </html>
