@@ -215,9 +215,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V44.0";
+const APP_VERSION = "V45.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "44";
+const APP_CACHE_VERSION = "45";
 
 const systemHealthStateV38 = {
     running: false,
@@ -531,9 +531,23 @@ async function loadInventoryData() {
 
         await loadLatestInventoryTransitSnapshot(client);
         saveInventoryLocal();
+
+        // V45: badge menu tồn kho phải hiện ngay sau khi tải Cloud,
+        // không cần chờ người dùng mở tab Tồn kho.
+        if ($("navInventoryCount")) {
+            $("navInventoryCount").textContent = formatNumber(
+                inventoryState.items.filter(item => item.active !== false).length
+            );
+        }
     } catch (error) {
         console.warn("Inventory Cloud chưa sẵn sàng, dùng LocalStorage:", error);
         loadInventoryLocal();
+
+        if ($("navInventoryCount")) {
+            $("navInventoryCount").textContent = formatNumber(
+                inventoryState.items.filter(item => item.active !== false).length
+            );
+        }
     }
 }
 
@@ -1448,8 +1462,18 @@ async function enterAuthenticatedApp(session) {
 
     let initialReportDate = savedUi.reportDate || latestReportDate;
 
-    // Cho phép giữ cả ngày chưa có dữ liệu nếu user đang chuẩn bị upload.
+    // V45:
+    // - Ở màn Thống kê SKU chi tiết, vẫn cho giữ ngày chưa có dữ liệu để chuẩn bị upload.
+    // - Ở Tổng quan / Tồn kho / Hóa đơn..., nếu ngày đã lưu không còn dữ liệu thì tự về ngày mới nhất có dữ liệu.
+    const canKeepEmptyReportDate = savedUi.view === "sku-stats";
+
     if (!/^\d{4}-\d{2}-\d{2}$/.test(initialReportDate)) {
+        initialReportDate = latestReportDate;
+    } else if (
+        reportDates.length &&
+        !reportDates.includes(initialReportDate) &&
+        !canKeepEmptyReportDate
+    ) {
         initialReportDate = latestReportDate;
     }
 
@@ -1512,7 +1536,7 @@ async function enterAuthenticatedApp(session) {
     // V38: kiểm tra hệ thống nền sau khi toàn bộ dữ liệu Cloud đã tải.
     setTimeout(() => {
         runSystemHealthCheckV38({ silent: true }).catch(error => {
-            console.warn("V42 health check:", error);
+            console.warn(`${APP_VERSION} health check:`, error);
         });
     }, 150);
 
@@ -10521,19 +10545,19 @@ async function runSystemHealthCheckV38({ silent = false } = {}) {
     systemHealthStateV38.checks = [
         v38HealthCheckItem(
             "version",
-            "Phiên bản V42",
+            `Phiên bản ${APP_VERSION}`,
             (
-                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=42") &&
-                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=42")
+                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes(`v=${APP_CACHE_VERSION}`) &&
+                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes(`v=${APP_CACHE_VERSION}`)
             )
                 ? "ok"
                 : "warning",
             (
-                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=42") &&
-                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=42")
+                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes(`v=${APP_CACHE_VERSION}`) &&
+                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes(`v=${APP_CACHE_VERSION}`)
             )
-                ? "index.html đang gọi style.css?v=42 và script.js?v=42."
-                : "Trình duyệt có thể đang dùng file cache hoặc index cũ."
+                ? `index.html đang gọi đúng style.css?v=${APP_CACHE_VERSION} và script.js?v=${APP_CACHE_VERSION}.`
+                : `Trình duyệt/index.html chưa đồng bộ cache V${APP_CACHE_VERSION}. Hãy Ctrl + F5.`
         ),
 
         v38HealthCheckItem(
@@ -10690,7 +10714,7 @@ $("btnV38RunHealthCheck")?.addEventListener("click", () => {
 /* =========================================================
    V42 - SIDEBAR THU GỌN
 ========================================================= */
-const V42_SIDEBAR_KEY = "rucos_sidebar_collapsed_v44";
+const V42_SIDEBAR_KEY = "rucos_sidebar_collapsed_v45";
 
 function applySidebarCollapsedV42(collapsed, persist = true) {
     const isCollapsed = Boolean(collapsed);
