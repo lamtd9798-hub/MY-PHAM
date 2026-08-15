@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=53">
+    <link rel="stylesheet" href="style.css?v=54">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -269,7 +269,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V53.0</span>
+                <span class="v38-sidebar-version">V54.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -1881,39 +1881,60 @@
         <!-- ======================== THỐNG KÊ HÓA ĐƠN ======================== -->
         <section id="view-invoice-stats" class="view">
 
-            <div class="panel invoice-upload-panel">
-                <div class="invoice-upload-layout">
-                    <div class="invoice-upload-copy">
-                        <div class="invoice-upload-icon">🧾</div>
-                        <div>
-                            <h2>Thống kê hóa đơn</h2>
-                            <p>
-                                Upload file <strong>Bảng kê chi tiết hóa đơn đã sử dụng</strong>.
-                                Hệ thống tự gom theo Tên hàng và cộng Số lượng / Thuế GTGT /
-                                Tổng tiền thanh toán / Tiền trước thuế.
-                            </p>
-                        </div>
+            <div class="panel invoice-upload-panel v54-invoice-hub">
+                <div class="v54-hub-heading">
+                    <div>
+                        <h2>🧾 Trung tâm hóa đơn MISA ↔ Shopee</h2>
+                        <p>
+                            Dùng 3 nguồn riêng để đối chiếu chính xác: <strong>Danh sách HĐ đã phát hành</strong>,
+                            <strong>Danh sách HĐ chưa phát hành</strong> và <strong>Bảng kê chi tiết hóa đơn đã sử dụng</strong>.
+                            Mã đơn Shopee được ghép trực tiếp với cột <strong>Mã ĐH của sàn</strong> trong MISA.
+                        </p>
                     </div>
-
-                    <div class="invoice-upload-actions">
-                        <button type="button" id="btnInvoiceHistory" class="invoice-history-button">
-                            ☁️ Lịch sử Cloud
-                            <span id="invoiceHistoryCount" class="invoice-history-count">0</span>
-                        </button>
-
-                        <label class="invoice-upload-button">
-                            📥 Chọn file hóa đơn
-                            <input id="invoiceFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv">
-                        </label>
-
-                        <button type="button" id="btnClearInvoiceStats" class="btn btn-danger-outline">
-                            Xóa bảng hiện tại
-                        </button>
+                    <div class="v54-hub-top-actions">
+                        <button type="button" id="btnMisaV54Refresh" class="btn btn-light">↻ Đồng bộ MISA Cloud</button>
+                        <button type="button" id="btnInvoiceHistory" class="invoice-history-button">☁️ Lịch sử chi tiết HĐ <span id="invoiceHistoryCount" class="invoice-history-count">0</span></button>
                     </div>
                 </div>
 
-                <div id="invoiceFileInfo" class="invoice-file-info">
-                    Chưa có file hóa đơn. Hãy chọn file Excel để bắt đầu.
+                <div class="v54-source-grid">
+                    <div class="v54-source-card published">
+                        <div class="v54-source-icon">✅</div>
+                        <div class="v54-source-copy">
+                            <strong>1. HÓA ĐƠN ĐÃ PHÁT HÀNH</strong>
+                            <span>MISA: Mã ĐH của sàn → Số hóa đơn → Ngày HĐ → trạng thái CQT.</span>
+                            <small id="v54PublishedFileInfo">Chưa có file Cloud.</small>
+                        </div>
+                        <label class="btn btn-primary v54-upload-btn">📥 Upload đã phát hành<input id="misaPublishedInputV54" type="file" accept=".xls,.xlsx,.xlsm,.csv" hidden></label>
+                    </div>
+
+                    <div class="v54-source-card unpublished">
+                        <div class="v54-source-icon">⏳</div>
+                        <div class="v54-source-copy">
+                            <strong>2. HÓA ĐƠN CHƯA PHÁT HÀNH</strong>
+                            <span>Nếu file có nhiều sàn, hệ thống chỉ lưu dòng <b>Shopee</b> theo cột Kênh bán hàng.</span>
+                            <small id="v54UnpublishedFileInfo">Chưa có file Cloud.</small>
+                        </div>
+                        <label class="btn btn-light v54-upload-btn">📥 Upload chưa phát hành<input id="misaUnpublishedInputV54" type="file" accept=".xls,.xlsx,.xlsm,.csv" hidden></label>
+                    </div>
+
+                    <div class="v54-source-card detail">
+                        <div class="v54-source-icon">📋</div>
+                        <div class="v54-source-copy">
+                            <strong>3. CHI TIẾT HÓA ĐƠN ĐÃ SỬ DỤNG</strong>
+                            <span>Dùng Mã hàng / Tên hàng / Số lượng để kiểm tra từng SKU đã xuất.</span>
+                            <small id="invoiceFileInfo">Chưa có file chi tiết hóa đơn.</small>
+                        </div>
+                        <label class="btn btn-light v54-upload-btn">📥 Upload chi tiết HĐ<input id="invoiceFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv" hidden></label>
+                    </div>
+                </div>
+
+                <div id="v54MisaImportNotice" class="v54-import-notice">
+                    Chưa đủ 3 nguồn. Bạn có thể upload từng file độc lập; hệ thống sẽ ghép phần dữ liệu đã có trước.
+                </div>
+
+                <div class="v54-hub-bottom-actions">
+                    <button type="button" id="btnClearInvoiceStats" class="btn btn-danger-outline">Xóa bảng chi tiết HĐ hiện tại</button>
                 </div>
             </div>
 
@@ -1951,13 +1972,71 @@
 
 
 
+
+            <!-- ======================== V54 - ĐỐI CHIẾU TRỰC TIẾP SHOPEE ↔ MISA ======================== -->
+            <div class="panel v54-direct-panel">
+                <div class="panel-header v54-direct-header">
+                    <div>
+                        <h2>🔗 Đối chiếu trực tiếp Shopee ↔ MISA theo Mã ĐH của sàn</h2>
+                        <p>
+                            Khóa ghép chuẩn: <strong>Shopee.Mã đơn hàng = MISA.Mã ĐH của sàn</strong>.
+                            Không còn phải đoán bằng SKU + số lượng khi MISA đã có mã đơn của sàn.
+                        </p>
+                    </div>
+                    <div class="v54-direct-filters">
+                        <input id="v54InvoiceOrderSearch" type="search" placeholder="Tìm mã đơn / số HĐ...">
+                        <select id="v54InvoiceStatusFilter">
+                            <option value="all">Tất cả kết quả</option>
+                            <option value="published">Đã phát hành</option>
+                            <option value="unpublished">Chưa phát hành</option>
+                            <option value="missing">Chưa thấy trong MISA</option>
+                            <option value="cqt">Đã HĐ nhưng chưa gửi CQT</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="v54-direct-kpis">
+                    <div class="v54-direct-kpi"><span>ĐƠN SHOPEE CLOUD</span><strong id="v54ShopeeOrderCount">0</strong><small>Mã đơn không trùng đang lưu</small></div>
+                    <div class="v54-direct-kpi published"><span>ĐÃ PHÁT HÀNH</span><strong id="v54PublishedMatchCount">0</strong><small>Khớp chính xác Mã ĐH của sàn</small></div>
+                    <div class="v54-direct-kpi pending"><span>CHƯA PHÁT HÀNH</span><strong id="v54UnpublishedMatchCount">0</strong><small>Có trong danh sách MISA chưa phát hành</small></div>
+                    <div class="v54-direct-kpi danger"><span>ĐÃ GIAO CHƯA THẤY MISA</span><strong id="v54DeliveredMissingCount">0</strong><small>Cần kiểm tra nghiệp vụ hóa đơn</small></div>
+                    <div class="v54-direct-kpi info"><span>CHƯA GỬI CQT</span><strong id="v54CqtPendingCount">0</strong><small>Đã phát hành nhưng CQT chưa nhận/gửi</small></div>
+                    <div class="v54-direct-kpi detail"><span>CÓ CHI TIẾT SKU</span><strong id="v54DetailMatchedCount">0</strong><small>Số đơn HĐ đã nối được bảng kê chi tiết</small></div>
+                </div>
+
+                <div id="v54DirectSummary" class="v54-direct-summary">Chưa có dữ liệu MISA trạng thái.</div>
+
+                <div class="v54-direct-table-wrap">
+                    <table class="v54-direct-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã đơn Shopee</th>
+                                <th>Ngày đơn</th>
+                                <th>Trạng thái Shopee</th>
+                                <th>Trạng thái hóa đơn</th>
+                                <th>Số HĐ</th>
+                                <th>Ngày HĐ</th>
+                                <th class="right">Tổng TT MISA</th>
+                                <th>CQT</th>
+                                <th>Chi tiết HĐ</th>
+                                <th>Kết quả</th>
+                            </tr>
+                        </thead>
+                        <tbody id="v54DirectBody">
+                            <tr><td colspan="11" class="empty-table">Upload file MISA để bắt đầu đối chiếu.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- ======================== V50 - CẦU NỐI ĐƠN SHOPEE ↔ SỐ HÓA ĐƠN ======================== -->
             <div class="panel v50-link-panel">
                 <div class="panel-header v50-link-header">
                     <div>
-                        <h2>🧩 Cầu nối Mã đơn Shopee ↔ Số hóa đơn MISA</h2>
+                        <h2>🧩 Cầu nối thủ công (DỰ PHÒNG)</h2>
                         <p>
-                            Dùng khi file MISA không có cột Mã đơn Shopee. Có thể upload một file cầu nối
+                            Chỉ dùng khi file MISA không có cột <strong>Mã ĐH của sàn</strong>. Với file MISA mới, V54 tự ghép trực tiếp nên thường không cần mục này. Có thể upload một file cầu nối
                             <strong>Mã đơn Shopee + Số hóa đơn</strong>, hoặc xác nhận thủ công từng cặp.
                             Gợi ý tự động chỉ là ứng viên và <strong>không tự ghi nhận</strong> nếu bạn chưa xác nhận.
                         </p>
@@ -2763,6 +2842,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=53"></script>
+    <script src="script.js?v=54"></script>
 </body>
 </html>

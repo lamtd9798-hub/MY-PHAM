@@ -73,6 +73,10 @@ const DB_INVOICE_GROUPS = "invoice_groups";
 const DB_INVOICE_LINES = "invoice_lines";
 const DB_INVOICE_ORDER_LINKS = "invoice_order_links";
 
+// V54 - danh sách trạng thái hóa đơn MISA có Mã ĐH của sàn.
+const DB_MISA_ORDER_IMPORTS_V54 = "misa_order_invoice_imports";
+const DB_MISA_ORDER_ROWS_V54 = "misa_order_invoice_rows";
+
 const inventoryState = {
     items: [],
     stocktakes: [],
@@ -221,9 +225,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V53.0";
+const APP_VERSION = "V54.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "53";
+const APP_CACHE_VERSION = "54";
 
 const systemHealthStateV38 = {
     running: false,
@@ -1524,6 +1528,9 @@ async function enterAuthenticatedApp(session) {
     // V50: tải bảng cầu nối Mã đơn Shopee ↔ Số hóa đơn.
     await loadInvoiceOrderLinksV50({ silent: true });
 
+    // V54: tải danh sách hóa đơn MISA đã/chưa phát hành để ghép trực tiếp Mã ĐH của sàn.
+    await loadMisaOrderCloudV54({ silent: true });
+
     // V53: tải snapshot tài chính Shopee mới nhất nếu SQL V53 đã sẵn sàng.
     await loadFinanceCloudV53({ silent: true });
 
@@ -1890,7 +1897,7 @@ function openView(viewName) {
     if (viewName === "issues") renderFinanceAllV53();
     if (viewName === "returns") renderReturnsTab();
     if (viewName === "history") renderHistory();
-    if (viewName === "invoice-stats") renderInvoiceStats();
+    if (viewName === "invoice-stats") { renderInvoiceStats(); renderMisaInvoiceHubV54(); }
     if (viewName === "inventory-flow") {
         renderInventoryModule();
         applyRoleUiV40();
@@ -7829,6 +7836,271 @@ function renderInventoryOrderAgingV49() {
 
 
 
+
+/* =========================================================
+   V54 - MISA 3 FILE / ĐỐI CHIẾU MÃ ĐƠN SÀN
+========================================================= */
+const misaOrderStateV54 = {
+    imports: [],
+    publishedImportId: "",
+    unpublishedImportId: "",
+    publishedRows: [],
+    unpublishedRows: [],
+    loading: false,
+    cloudReady: false
+};
+
+function mapMisaImportCloudV54(row) {
+    return {
+        id: String(row?.id || ""),
+        importType: String(row?.import_type || ""),
+        fileHash: row?.file_hash || "",
+        fileName: row?.file_name || "",
+        sheetName: row?.sheet_name || "",
+        sourceRowCount: Number(row?.source_row_count || 0),
+        rowCount: Number(row?.row_count || 0),
+        filteredOutCount: Number(row?.filtered_out_count || 0),
+        importedAt: row?.imported_at || "",
+        createdEmail: row?.created_email || ""
+    };
+}
+
+function mapMisaOrderRowCloudV54(row) {
+    return {
+        id: Number(row?.id || 0),
+        importId: String(row?.import_id || ""),
+        importType: String(row?.import_type || ""),
+        rowNo: Number(row?.row_no || 0),
+        platformOrderId: String(row?.platform_order_id || "").trim(),
+        misaOrderId: String(row?.misa_order_id || "").trim(),
+        invoiceNo: String(row?.invoice_no || "").trim(),
+        invoiceDate: row?.invoice_date || "",
+        invoiceSymbol: String(row?.invoice_symbol || "").trim(),
+        totalPayment: Number(row?.total_payment || 0),
+        orderStatus: String(row?.order_status || "").trim(),
+        platformPaymentStatus: String(row?.platform_payment_status || "").trim(),
+        orderCreatedAt: String(row?.order_created_at || "").trim(),
+        platformPaidAt: String(row?.platform_paid_at || "").trim(),
+        channel: String(row?.channel || "").trim(),
+        shop: String(row?.shop || "").trim(),
+        invoiceType: String(row?.invoice_type || "").trim(),
+        invoiceStatus: String(row?.invoice_status || "").trim(),
+        issueStatus: String(row?.issue_status || "").trim(),
+        taxAuthorityStatus: String(row?.tax_authority_status || "").trim(),
+        suggestedIssueAt: String(row?.suggested_issue_at || "").trim(),
+        unissuedReason: String(row?.unissued_reason || "").trim(),
+        refundRequestId: String(row?.refund_request_id || "").trim(),
+        buyerName: String(row?.buyer_name || "").trim(),
+        storeName: String(row?.store_name || "").trim(),
+        raw: row?.raw || {}
+    };
+}
+
+function findMisaOrderHeaderRowV54(matrix, importType) {
+    const limit = Math.min(matrix?.length || 0, 80);
+    for (let i = 0; i < limit; i++) {
+        const headers = matrix[i] || [];
+        const platformOrder = findInvoiceHeaderIndex(headers, ["Mã ĐH của sàn", "Mã đơn của sàn", "Mã đơn sàn"]);
+        const misaOrder = findInvoiceHeaderIndex(headers, ["Mã đơn MISA eShop", "Mã đơn MISA"]);
+        const invoiceNo = findInvoiceHeaderIndex(headers, ["Số hóa đơn", "Số HĐ"]);
+        const issueStatus = findInvoiceHeaderIndex(headers, ["Trạng thái phát hành"]);
+        if (platformOrder >= 0 && misaOrder >= 0 && (importType === "published" ? invoiceNo >= 0 : issueStatus >= 0)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+function misaDateTextV54(value) {
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        const dd=String(value.getDate()).padStart(2,"0"), mm=String(value.getMonth()+1).padStart(2,"0"), yyyy=value.getFullYear();
+        const hh=String(value.getHours()).padStart(2,"0"), mi=String(value.getMinutes()).padStart(2,"0"), ss=String(value.getSeconds()).padStart(2,"0");
+        return `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+    }
+    return String(value ?? "").trim();
+}
+
+function misaRawObjectV54(headers,row) {
+    const obj={};
+    (headers||[]).forEach((h,i)=>{
+        const key=String(h||`COL_${i+1}`).trim()||`COL_${i+1}`;
+        obj[key]=row?.[i] instanceof Date ? row[i].toISOString() : (row?.[i] ?? "");
+    });
+    return obj;
+}
+
+function parseMisaOrderListV54(matrix, file, importType, sheetName="") {
+    if (!Array.isArray(matrix) || !matrix.length) throw new Error("File MISA không có dữ liệu.");
+    const headerRowIndex=findMisaOrderHeaderRowV54(matrix,importType);
+    if(headerRowIndex<0) throw new Error(importType==="published" ? "Không tìm thấy tiêu đề Mã ĐH của sàn + Mã đơn MISA eShop + Số hóa đơn." : "Không tìm thấy tiêu đề Mã ĐH của sàn + Mã đơn MISA eShop + Trạng thái phát hành.");
+    const headers=matrix[headerRowIndex]||[];
+    const idx=(aliases)=>findInvoiceHeaderIndex(headers,aliases);
+    const col={
+        stt:idx(["STT"]), invoiceDate:idx(["Ngày hóa đơn"]), invoiceSymbol:idx(["Ký hiệu"]), invoiceNo:idx(["Số hóa đơn","Số HĐ"]),
+        misaOrderId:idx(["Mã đơn MISA eShop","Mã đơn MISA"]), totalPayment:idx(["Tổng thanh toán"]), buyerName:idx(["Tên người mua"]),
+        orderStatus:idx(["Trạng thái đơn"]), platformPaymentStatus:idx(["Trạng thái sàn thanh toán"]), orderCreatedAt:idx(["Thời gian tạo đơn"]), platformPaidAt:idx(["Thời gian sàn thanh toán"]),
+        platformOrderId:idx(["Mã ĐH của sàn","Mã đơn của sàn","Mã đơn sàn"]), invoiceType:idx(["Loại hóa đơn"]), invoiceStatus:idx(["Trạng thái hóa đơn","Trạng thái HĐ"]),
+        issueStatus:idx(["Trạng thái phát hành"]), taxAuthorityStatus:idx(["Trạng thái gửi CQT"]), storeName:idx(["Cửa hàng"]),
+        suggestedIssueAt:idx(["Ngày phát hành đề xuất"]), channel:idx(["Kênh bán hàng"]), shop:idx(["Gian hàng"]), unissuedReason:idx(["Lý do chưa phát hành"]), refundRequestId:idx(["Mã yêu cầu hoàn"])
+    };
+    const all=[];
+    for(let i=headerRowIndex+1;i<matrix.length;i++){
+        const row=matrix[i]||[];
+        if(!row.some(v=>String(v??"").trim())) continue;
+        const get=k=>col[k]>=0?row[col[k]]:"";
+        const platformOrderId=String(get("platformOrderId")??"").trim();
+        const misaOrderId=String(get("misaOrderId")??"").trim();
+        if(!platformOrderId && !misaOrderId) continue;
+        all.push({
+            rowNo:i+1, platformOrderId, misaOrderId,
+            invoiceNo:String(get("invoiceNo")??"").trim(), invoiceDate:normalizeOrderDate(get("invoiceDate"))||"", invoiceSymbol:String(get("invoiceSymbol")??"").trim(),
+            totalPayment:toInvoiceNumber(get("totalPayment")), orderStatus:String(get("orderStatus")??"").trim(), platformPaymentStatus:String(get("platformPaymentStatus")??"").trim(),
+            orderCreatedAt:misaDateTextV54(get("orderCreatedAt")), platformPaidAt:misaDateTextV54(get("platformPaidAt")), channel:String(get("channel")??"").trim(), shop:String(get("shop")??"").trim(),
+            invoiceType:String(get("invoiceType")??"").trim(), invoiceStatus:String(get("invoiceStatus")??"").trim(), issueStatus:String(get("issueStatus")??"").trim(), taxAuthorityStatus:String(get("taxAuthorityStatus")??"").trim(),
+            suggestedIssueAt:misaDateTextV54(get("suggestedIssueAt")), unissuedReason:String(get("unissuedReason")??"").trim(), refundRequestId:String(get("refundRequestId")??"").trim(), buyerName:String(get("buyerName")??"").trim(), storeName:String(get("storeName")??"").trim(),
+            raw:misaRawObjectV54(headers,row)
+        });
+    }
+    if(!all.length) throw new Error("Không tìm thấy dòng đơn MISA hợp lệ.");
+    let rows=all;
+    if(importType==="unpublished" && col.channel>=0){
+        rows=all.filter(r=>normalizeText(r.channel).includes("shopee"));
+    }
+    return {importType,fileName:file.name,fileSize:file.size,sheetName,sourceRowCount:all.length,rowCount:rows.length,filteredOutCount:all.length-rows.length,rows};
+}
+
+async function fetchMisaRowsV54(importId){
+    if(!importId) return [];
+    const client=initSupabaseClient(),result=[];let from=0;const page=1000;
+    while(true){
+        const {data,error}=await client.from(DB_MISA_ORDER_ROWS_V54).select("*").eq("import_id",importId).order("row_no",{ascending:true}).range(from,from+page-1);
+        if(error) throw error; result.push(...(data||[])); if((data||[]).length<page) break; from+=page;
+    }
+    return result.map(mapMisaOrderRowCloudV54);
+}
+
+async function loadMisaOrderCloudV54({silent=false}={}){
+    if(!state.user) return;
+    misaOrderStateV54.loading=true;
+    try{
+        const imports=(await cloudSelectAll(DB_MISA_ORDER_IMPORTS_V54,"imported_at")).map(mapMisaImportCloudV54).sort((a,b)=>String(b.importedAt).localeCompare(String(a.importedAt)));
+        misaOrderStateV54.imports=imports;
+        const latestPub=imports.find(x=>x.importType==="published");
+        const latestUnpub=imports.find(x=>x.importType==="unpublished");
+        misaOrderStateV54.publishedImportId=latestPub?.id||"";
+        misaOrderStateV54.unpublishedImportId=latestUnpub?.id||"";
+        const [pubRows,unpubRows]=await Promise.all([fetchMisaRowsV54(misaOrderStateV54.publishedImportId),fetchMisaRowsV54(misaOrderStateV54.unpublishedImportId)]);
+        misaOrderStateV54.publishedRows=pubRows; misaOrderStateV54.unpublishedRows=unpubRows; misaOrderStateV54.cloudReady=true;
+        renderMisaInvoiceHubV54();
+    }catch(error){
+        misaOrderStateV54.cloudReady=false;
+        if(!silent) alert("Không đọc được dữ liệu MISA V54. Hãy chạy SQL V54 trước.\n\n"+(error?.message||"")); else console.warn("MISA V54 chưa sẵn sàng:",error?.message||error);
+    }finally{misaOrderStateV54.loading=false;}
+}
+
+async function importMisaOrderListV54(file,importType){
+    if(!requirePermissionV40("UPLOAD_INVOICE")) return;
+    if(!file) return;
+    const input=importType==="published"?$("misaPublishedInputV54"):$("misaUnpublishedInputV54");
+    const notice=$("v54MisaImportNotice");
+    try{
+        if(notice){notice.className="v54-import-notice";notice.textContent="Đang đọc file MISA...";}
+        const read=await readInvoiceExcelFile(file);
+        const parsed=parseMisaOrderListV54(read.matrix,file,importType,read.sheetName||"");
+        const hash=await createFileFingerprint(file); const client=initSupabaseClient();
+        const {data:begin,error:beginError}=await client.rpc("begin_misa_order_import_v54",{p_import:{importType,fileHash:hash,fileName:file.name,fileSize:file.size,sheetName:parsed.sheetName,sourceRowCount:parsed.sourceRowCount,rowCount:parsed.rowCount,filteredOutCount:parsed.filteredOutCount}});
+        if(beginError) throw beginError;
+        const importId=begin?.import_id||begin?.importId||begin; if(!importId) throw new Error("RPC không trả về import_id.");
+        for(let i=0;i<parsed.rows.length;i+=500){
+            const {error}=await client.rpc("append_misa_order_rows_v54",{p_import_id:importId,p_rows:parsed.rows.slice(i,i+500)}); if(error) throw error;
+            if(notice) notice.textContent=`Đang lưu ${Math.min(i+500,parsed.rows.length)}/${parsed.rows.length} dòng...`;
+        }
+        const {data:finalize,error:finalError}=await client.rpc("finalize_misa_order_import_v54",{p_import_id:importId}); if(finalError) throw finalError;
+        await loadMisaOrderCloudV54({silent:true}); await loadInvoiceOrderLinksV50({silent:true});
+        const autoLinks=Number(finalize?.auto_links||0);
+        if(notice){notice.className="v54-import-notice good";notice.innerHTML=`✓ Đã lưu <strong>${formatNumber(parsed.rowCount)}</strong> dòng ${importType==="published"?"đã phát hành":"chưa phát hành Shopee"}. ${parsed.filteredOutCount?`Đã bỏ ${formatNumber(parsed.filteredOutCount)} dòng sàn khác. `:""}${autoLinks?`Tự nối chính xác ${formatNumber(autoLinks)} Mã đơn Shopee ↔ Số HĐ.`:""}`;}
+        showToast(`Đã upload ${importType==="published"?"HĐ đã phát hành":"HĐ chưa phát hành"} MISA.`);
+    }catch(error){console.error("V54 import MISA",error); if(notice){notice.className="v54-import-notice danger";notice.textContent=`Không upload được: ${error?.message||error}`;} alert("Không upload được file MISA.\n\n"+(error?.message||""));}
+    finally{if(input) input.value="";}
+}
+
+function latestMisaImportV54(type){return misaOrderStateV54.imports.find(x=>x.importType===type)||null;}
+
+function buildShopeeOrderGroupsV54(){
+    const map=new Map();
+    (state.skuRows||[]).forEach(row=>{
+        const id=String(row.orderId||"").trim(); if(!id) return; const key=normalizeOrderReferenceV41(id); if(!key) return;
+        if(!map.has(key)) map.set(key,{key,orderId:id,orderDate:row.sourceOrderDate||row.orderDate||"",reportDate:row.orderDate||"",status:row.status||"",qty:0,skus:new Map()});
+        const g=map.get(key); g.qty+=Number(row.quantity||0); if(row.sku) g.skus.set(row.sku,Number(g.skus.get(row.sku)||0)+Number(row.quantity||0)); if(!g.status&&row.status)g.status=row.status; if(!g.orderDate&&(row.sourceOrderDate||row.orderDate))g.orderDate=row.sourceOrderDate||row.orderDate;
+    });
+    return [...map.values()].sort((a,b)=>String(b.orderDate).localeCompare(String(a.orderDate))||a.orderId.localeCompare(b.orderId));
+}
+
+function buildInvoiceDetailByNoV54(){
+    const map=new Map();
+    (invoiceState.lineRows||[]).filter(r=>r?.issued===true&&String(r.invoiceNo||"").trim()).forEach(r=>{
+        const key=normalizeInvoiceNoV50(r.invoiceNo); if(!key)return; if(!map.has(key))map.set(key,{invoiceNo:r.invoiceNo,lines:0,qty:0,items:new Map()}); const g=map.get(key); g.lines++; g.qty+=Number(r.quantity||0); const item=String(r.productCode||r.productName||"").trim(); if(item)g.items.set(item,Number(g.items.get(item)||0)+Number(r.quantity||0));
+    });
+    return map;
+}
+
+function buildMisaDirectRowsV54(){
+    const pubMap=new Map(),unpubMap=new Map();
+    misaOrderStateV54.publishedRows.forEach(r=>{const k=normalizeOrderReferenceV41(r.platformOrderId);if(k&&!pubMap.has(k))pubMap.set(k,r);});
+    misaOrderStateV54.unpublishedRows.forEach(r=>{const k=normalizeOrderReferenceV41(r.platformOrderId);if(k&&!unpubMap.has(k))unpubMap.set(k,r);});
+    const detailMap=buildInvoiceDetailByNoV54();
+    return buildShopeeOrderGroupsV54().map(order=>{
+        const pub=pubMap.get(order.key)||null,unpub=pub?null:(unpubMap.get(order.key)||null); const misa=pub||unpub; const detail=pub?detailMap.get(normalizeInvoiceNoV50(pub.invoiceNo)):null;
+        const delivered=classifyInventoryShopeeStatus(order.status)==="delivered";
+        let statusKey="missing",statusLabel="Chưa thấy trong MISA";
+        if(pub){statusKey="published";statusLabel="Đã phát hành";} else if(unpub){statusKey="unpublished";statusLabel="Chưa phát hành";}
+        const tax=normalizeText(pub?.taxAuthorityStatus||""); const cqtPending=Boolean(pub)&&(!tax||tax.includes("chuagui")||tax.includes("chuatiepnhan")||tax.includes("tuchoi"));
+        return {...order,pub,unpub,misa,detail,delivered,statusKey,statusLabel,cqtPending};
+    });
+}
+
+function renderMisaInvoiceHubV54(){
+    const pub=latestMisaImportV54("published"),unpub=latestMisaImportV54("unpublished");
+    const pubInfo=$("v54PublishedFileInfo"),unpubInfo=$("v54UnpublishedFileInfo");
+    if(pubInfo)pubInfo.textContent=pub?`${pub.fileName} · ${formatNumber(pub.rowCount)} dòng · ${pub.importedAt?formatDateTimeVi(pub.importedAt):"—"}`:"Chưa có file đã phát hành trên Cloud.";
+    if(unpubInfo)unpubInfo.textContent=unpub?`${unpub.fileName} · ${formatNumber(unpub.rowCount)} dòng Shopee${unpub.filteredOutCount?` · bỏ ${formatNumber(unpub.filteredOutCount)} dòng sàn khác`:""} · ${unpub.importedAt?formatDateTimeVi(unpub.importedAt):"—"}`:"Chưa có file chưa phát hành trên Cloud.";
+    const notice=$("v54MisaImportNotice"); if(notice&&!notice.classList.contains("danger")){
+        const detailReady=Boolean(invoiceState?.lineRows?.length); const sourceCount=[Boolean(pub),Boolean(unpub),detailReady].filter(Boolean).length;
+        notice.className=`v54-import-notice ${sourceCount===3?"good":sourceCount?"warning":""}`;
+        notice.innerHTML=sourceCount===3?"✓ Đã có đủ 3 nguồn MISA. Có thể đối chiếu Mã đơn → trạng thái HĐ → Số HĐ → chi tiết SKU.":`Đang có <strong>${sourceCount}/3</strong> nguồn MISA. Upload thêm nguồn còn thiếu để đối chiếu đầy đủ hơn.`;
+    }
+    renderMisaDirectTableV54();
+}
+
+function renderMisaDirectTableV54(){
+    const all=buildMisaDirectRowsV54();
+    const published=all.filter(x=>x.pub),unpublished=all.filter(x=>x.unpub),deliveredMissing=all.filter(x=>x.delivered&&!x.pub&&!x.unpub),cqt=all.filter(x=>x.cqtPending),detail=all.filter(x=>x.detail);
+    if($("v54ShopeeOrderCount"))$("v54ShopeeOrderCount").textContent=formatNumber(all.length);
+    if($("v54PublishedMatchCount"))$("v54PublishedMatchCount").textContent=formatNumber(published.length);
+    if($("v54UnpublishedMatchCount"))$("v54UnpublishedMatchCount").textContent=formatNumber(unpublished.length);
+    if($("v54DeliveredMissingCount"))$("v54DeliveredMissingCount").textContent=formatNumber(deliveredMissing.length);
+    if($("v54CqtPendingCount"))$("v54CqtPendingCount").textContent=formatNumber(cqt.length);
+    if($("v54DetailMatchedCount"))$("v54DetailMatchedCount").textContent=formatNumber(detail.length);
+    const summary=$("v54DirectSummary"); if(summary)summary.innerHTML=`MISA đã phát hành: <strong>${formatNumber(misaOrderStateV54.publishedRows.length)}</strong> dòng · MISA chưa phát hành Shopee: <strong>${formatNumber(misaOrderStateV54.unpublishedRows.length)}</strong> dòng · Chi tiết hóa đơn đang xem: <strong>${formatNumber(invoiceState?.invoiceCount||0)}</strong> số HĐ.`;
+    let rows=all; const search=normalizeText($("v54InvoiceOrderSearch")?.value||""); const filter=$("v54InvoiceStatusFilter")?.value||"all";
+    if(search)rows=rows.filter(x=>normalizeText(`${x.orderId} ${x.misa?.invoiceNo||""} ${x.misa?.misaOrderId||""} ${x.status}`).includes(search));
+    if(filter==="published")rows=rows.filter(x=>x.pub); else if(filter==="unpublished")rows=rows.filter(x=>x.unpub); else if(filter==="missing")rows=rows.filter(x=>!x.pub&&!x.unpub); else if(filter==="cqt")rows=rows.filter(x=>x.cqtPending);
+    const body=$("v54DirectBody"); if(!body)return;
+    if(!rows.length){body.innerHTML='<tr><td colspan="11" class="empty-table">Không có đơn phù hợp bộ lọc.</td></tr>';return;}
+    body.innerHTML=rows.slice(0,800).map((x,i)=>{
+        const m=x.misa; let resultClass=x.statusKey,resultLabel=x.statusLabel,note="";
+        if(x.pub&&x.cqtPending){resultClass="cqt";note="Cần theo dõi CQT";} else if(x.unpub){note=x.unpub.unissuedReason||"Đang chờ phát hành";} else if(!x.pub&&!x.unpub){note=x.delivered?"Đơn đã giao nhưng chưa thấy MISA":"Chưa đến bước kết luận HĐ";}
+        const detailHtml=x.detail?`<span class="v54-detail-pill">${formatNumber(x.detail.lines)} dòng · ${formatNumber(x.detail.qty)} SP</span>`:'—';
+        return `<tr><td>${i+1}</td><td>${escapeHTML(x.orderId)}</td><td>${x.orderDate?formatDateLabel(x.orderDate):'—'}</td><td>${escapeHTML(x.status||'—')}</td><td><span class="v54-status-pill ${resultClass}">${escapeHTML(resultLabel)}</span></td><td><strong>${escapeHTML(m?.invoiceNo||'—')}</strong></td><td>${m?.invoiceDate?formatDateLabel(m.invoiceDate):'—'}</td><td class="right">${m?invoiceMoney(m.totalPayment):'—'}</td><td>${escapeHTML(x.pub?.taxAuthorityStatus||'—')}</td><td>${detailHtml}</td><td><span class="v54-status-pill ${resultClass}">${escapeHTML(resultLabel)}</span>${note?`<small class="v54-result-note">${escapeHTML(note)}</small>`:''}</td></tr>`;
+    }).join("");
+}
+
+$("misaPublishedInputV54")?.addEventListener("change",event=>{const file=event.target.files?.[0];if(file)importMisaOrderListV54(file,"published");});
+$("misaUnpublishedInputV54")?.addEventListener("change",event=>{const file=event.target.files?.[0];if(file)importMisaOrderListV54(file,"unpublished");});
+$("btnMisaV54Refresh")?.addEventListener("click",async()=>{await loadMisaOrderCloudV54({silent:false});await loadInvoiceOrderLinksV50({silent:true});showToast("Đã đồng bộ dữ liệu MISA V54.");});
+$("v54InvoiceOrderSearch")?.addEventListener("input",renderMisaDirectTableV54);
+$("v54InvoiceStatusFilter")?.addEventListener("change",renderMisaDirectTableV54);
+
 /* =========================================================
    V53 - ĐỐI SOÁT TÀI CHÍNH SHOPEE
 ========================================================= */
@@ -12986,6 +13258,7 @@ async function v39ProbeSystemHealthRpc(client) {
         const v51 = data?.v51 || {};
         const v52 = data?.v52 || {};
         const v53 = data?.v53 || {};
+        const v54 = data?.v54 || {};
 
         const requiredRpcs = [
             "app_user_context",
@@ -13040,11 +13313,13 @@ async function v39ProbeSystemHealthRpc(client) {
         const missingV52 = requiredV52.filter(name => v52[name] !== true);
         const requiredV53 = ["finance_imports_ready", "finance_rows_ready", "finance_begin_rpc", "finance_append_rpc", "finance_delete_rpc"];
         const missingV53 = requiredV53.filter(name => v53[name] !== true);
+        const requiredV54 = ["misa_imports_ready", "misa_rows_ready", "misa_begin_rpc", "misa_append_rpc", "misa_finalize_rpc"];
+        const missingV54 = requiredV54.filter(name => v54[name] !== true);
 
-        if (missingRpcs.length || missingTables.length || missingV41.length || missingV47.length || missingV50.length || missingV51.length || missingV52.length || missingV53.length) {
+        if (missingRpcs.length || missingTables.length || missingV41.length || missingV47.length || missingV50.length || missingV51.length || missingV52.length || missingV53.length || missingV54.length) {
             return v38HealthCheckItem(
                 "rpc",
-                "RPC & SQL V53",
+                "RPC & SQL V54",
                 "error",
                 [
                     missingRpcs.length ? `Thiếu RPC: ${missingRpcs.join(", ")}` : "",
@@ -13054,23 +13329,24 @@ async function v39ProbeSystemHealthRpc(client) {
                     missingV50.length ? `Thiếu V50: ${missingV50.join(", ")}` : "",
                     missingV51.length ? `Thiếu V51: ${missingV51.join(", ")}` : "",
                     missingV52.length ? `Thiếu V52: ${missingV52.join(", ")}` : "",
-                    missingV53.length ? `Thiếu V53: ${missingV53.join(", ")}` : ""
+                    missingV53.length ? `Thiếu V53: ${missingV53.join(", ")}` : "",
+                    missingV54.length ? `Thiếu V54: ${missingV54.join(", ")}` : ""
                 ].filter(Boolean).join(" · ")
             );
         }
 
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V53",
+            "RPC & SQL V54",
             "ok",
-            `Role ${roleLabelV40()} + kiểm kê + cầu nối HĐ + hoàn kho + dự báo tồn + đối soát tài chính V53 đã sẵn sàng.`
+            `Role ${roleLabelV40()} + kiểm kê + MISA 3 nguồn + ghép Mã ĐH của sàn + đối soát tài chính V54 đã sẵn sàng.`
         );
     } catch (error) {
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V53",
+            "RPC & SQL V54",
             "error",
-            `Chưa chạy SQL V53 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
+            `Chưa chạy SQL V54 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
         );
     }
 }
@@ -13221,6 +13497,13 @@ async function runSystemHealthCheckV38({ silent = false } = {}) {
                 [DB_FINANCE_IMPORTS_V53, DB_FINANCE_ROWS_V53]
             ),
 
+            v38ProbeTableGroup(
+                client,
+                "misa-status-cloud-v54",
+                "Trạng thái hóa đơn MISA Cloud V54",
+                [DB_MISA_ORDER_IMPORTS_V54, DB_MISA_ORDER_ROWS_V54]
+            ),
+
             v39ProbeSystemHealthRpc(client)
         ]);
 
@@ -13337,6 +13620,7 @@ function renderAll() {
     renderStatsCalendar();
     refreshNavCounts();
     renderInvoiceStats();
+    renderMisaInvoiceHubV54();
     renderInvoiceOrderLinksV50();
 
     // V38/V39
@@ -13396,3 +13680,7 @@ async function initApp() {
 
 initSidebarToggleV42();
 initApp();
+
+
+// V54: khi file chi tiết HĐ được xử lý bởi module cũ, cập nhật lại cột "Chi tiết HĐ".
+$("invoiceFileInput")?.addEventListener("change",()=>setTimeout(()=>renderMisaInvoiceHubV54(),1200));
