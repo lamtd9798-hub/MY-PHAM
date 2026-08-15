@@ -70,6 +70,7 @@ const DB_INVENTORY_TRANSIT_ROWS = "inventory_transit_rows";
 const DB_INVOICE_IMPORTS = "invoice_imports";
 const DB_INVOICE_GROUPS = "invoice_groups";
 const DB_INVOICE_LINES = "invoice_lines";
+const DB_INVOICE_ORDER_LINKS = "invoice_order_links";
 
 const inventoryState = {
     items: [],
@@ -215,9 +216,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V49.0";
+const APP_VERSION = "V50.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "49";
+const APP_CACHE_VERSION = "50";
 
 const systemHealthStateV38 = {
     running: false,
@@ -932,7 +933,8 @@ const ROLE_PERMISSIONS_V40 = {
         "DELETE_INVOICE",
         "INVENTORY_WRITE",
         "TRANSIT_UPLOAD",
-        "MANAGE_USERS"
+        "MANAGE_USERS",
+        "MANAGE_INVOICE_LINKS"
     ]),
 
     KHO: new Set([
@@ -943,7 +945,8 @@ const ROLE_PERMISSIONS_V40 = {
 
     KETOAN: new Set([
         "VIEW",
-        "UPLOAD_INVOICE"
+        "UPLOAD_INVOICE",
+        "MANAGE_INVOICE_LINKS"
     ]),
 
     NHAN_VIEN: new Set([
@@ -977,7 +980,8 @@ function permissionMessageV40(permission) {
         DELETE_INVOICE: "Chỉ ADMIN được xóa lịch sử hóa đơn Cloud.",
         INVENTORY_WRITE: "Chỉ ADMIN hoặc KHO được cập nhật tồn kho, nhập/xuất và kiểm kê.",
         TRANSIT_UPLOAD: "Chỉ ADMIN hoặc KHO được upload snapshot luân chuyển.",
-        MANAGE_USERS: "Chỉ ADMIN được phân quyền người dùng."
+        MANAGE_USERS: "Chỉ ADMIN được phân quyền người dùng.",
+        MANAGE_INVOICE_LINKS: "Chỉ ADMIN hoặc KẾ TOÁN được tạo/sửa liên kết Mã đơn Shopee ↔ Số hóa đơn MISA."
     };
 
     return map[permission] || "Tài khoản hiện tại không có quyền thực hiện thao tác này.";
@@ -1121,6 +1125,8 @@ function applyRoleUiV40() {
     applyPermissionElementV40("invoiceFileInput", "UPLOAD_INVOICE");
     applyPermissionElementV40("inventoryMisaFileInput", "UPLOAD_INVOICE");
     applyPermissionElementV40("btnInventoryMisaChooseFile", "UPLOAD_INVOICE");
+    applyPermissionElementV40("v50BridgeFileInput", "MANAGE_INVOICE_LINKS");
+    applyPermissionElementV40("btnV50ManualLink", "MANAGE_INVOICE_LINKS");
 
     // Inventory
     applyPermissionElementV40("inventoryStockFileInput", "INVENTORY_WRITE");
@@ -1449,6 +1455,9 @@ async function enterAuthenticatedApp(session) {
         migrateLocal: true,
         loadLatestIfEmpty: true
     });
+
+    // V50: tải bảng cầu nối Mã đơn Shopee ↔ Số hóa đơn.
+    await loadInvoiceOrderLinksV50({ silent: true });
 
     const savedUi = readUiStateV17();
 
@@ -9228,6 +9237,654 @@ function getInvoiceTotals() {
 }
 
 
+
+/* =========================================================
+   V50 - CẦU NỐI MÃ ĐƠN SHOPEE ↔ SỐ HÓA ĐƠN MISA
+========================================================= */
+
+const invoiceOrderLinkStateV50 = {
+    items: [],
+    loaded: false,
+    cloudReady: false,
+    bridgeFileName: "",
+    suggestions: []
+};
+
+function normalizeInvoiceNoV50(value) {
+    const raw = String(value ?? "")
+        .trim()
+        .toUpperCase()
+        .replace(/^['"`]+/, "")
+        .replace(/\s+/g, "");
+
+    if (/^\d+$/.test(raw)) {
+        return raw.replace(/^0+(?=\d)/, "");
+    }
+
+    return raw;
+}
+
+function sourceLabelV50(source) {
+    const map = {
+        bridge_excel: "File cầu nối",
+        manual: "Thủ công",
+        suggestion_confirmed: "Gợi ý đã xác nhận",
+        misa_direct: "MISA trực tiếp"
+    };
+    return map[source] || source || "—";
+}
+
+function sourceClassV50(source) {
+    if (source === "manual") return "manual";
+    if (source === "suggestion_confirmed") return "suggestion";
+    return "bridge";
+}
+
+function mapInvoiceOrderLinkCloudV50(row) {
+    return {
+        id: String(row?.id || ""),
+        orderId: String(row?.shopee_order_id || "").trim(),
+        normalizedOrderId: normalizeOrderReferenceV41(row?.shopee_order_id),
+        invoiceNo: String(row?.invoice_no || "").trim(),
+        normalizedInvoiceNo: normalizeInvoiceNoV50(row?.invoice_no),
+        invoiceDate: row?.invoice_date || "",
+        source: row?.source || "manual",
+        confidence: row?.confidence || "confirmed",
+        note: row?.note || "",
+        createdEmail: row?.created_email || "",
+        createdAt: row?.created_at || "",
+        updatedAt: row?.updated_at || ""
+    };
+}
+
+async function loadInvoiceOrderLinksV50({ silent = false } = {}) {
+    if (!state.user) return [];
+
+    try {
+        const client = initSupabaseClient();
+        const { data, error } = await client
+            .from(DB_INVOICE_ORDER_LINKS)
+            .select("*")
+            .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+
+        invoiceOrderLinkStateV50.items = (data || []).map(mapInvoiceOrderLinkCloudV50);
+        invoiceOrderLinkStateV50.loaded = true;
+        invoiceOrderLinkStateV50.cloudReady = true;
+
+        renderInvoiceOrderLinksV50();
+        renderInvoiceStats();
+
+        if (!silent) {
+            showToast(`Đã đồng bộ ${formatNumber(invoiceOrderLinkStateV50.items.length)} liên kết hóa đơn.`);
+        }
+
+        return invoiceOrderLinkStateV50.items;
+    } catch (error) {
+        invoiceOrderLinkStateV50.cloudReady = false;
+        invoiceOrderLinkStateV50.loaded = true;
+        console.warn("V50 không tải được invoice_order_links:", error);
+
+        const box = $("v50LinkStatus");
+        if (box) {
+            box.className = "v50-link-status error";
+            box.textContent = `Chưa đọc được bảng invoice_order_links. Hãy chạy SQL V50 trước. ${error?.message || ""}`;
+        }
+
+        if (!silent) {
+            alert("Chưa đọc được bảng cầu nối V50. Hãy chạy SQL_V50_INVOICE_ORDER_LINKS.sql trong Supabase trước.");
+        }
+        return [];
+    }
+}
+
+async function saveInvoiceOrderLinkV50(link) {
+    if (!requirePermissionV40("MANAGE_INVOICE_LINKS")) return null;
+
+    const orderId = String(link?.orderId || "").trim();
+    const invoiceNo = String(link?.invoiceNo || "").trim();
+
+    if (!orderId || !invoiceNo) {
+        throw new Error("Mã đơn Shopee và Số hóa đơn là bắt buộc.");
+    }
+
+    const client = initSupabaseClient();
+    const payload = {
+        shopee_order_id: orderId,
+        invoice_no: invoiceNo,
+        invoice_date: link?.invoiceDate || null,
+        source: link?.source || "manual",
+        confidence: link?.confidence || "confirmed",
+        note: link?.note || "",
+        created_email: state.user?.email || "",
+        updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await client
+        .from(DB_INVOICE_ORDER_LINKS)
+        .upsert(payload, { onConflict: "shopee_order_id" })
+        .select("*")
+        .single();
+
+    if (error) throw error;
+
+    const saved = mapInvoiceOrderLinkCloudV50(data);
+    const existingIndex = invoiceOrderLinkStateV50.items.findIndex(item =>
+        item.normalizedOrderId === saved.normalizedOrderId
+    );
+
+    if (existingIndex >= 0) {
+        invoiceOrderLinkStateV50.items.splice(existingIndex, 1, saved);
+    } else {
+        invoiceOrderLinkStateV50.items.unshift(saved);
+    }
+
+    invoiceOrderLinkStateV50.cloudReady = true;
+    renderInvoiceOrderLinksV50();
+    renderInvoiceStats();
+    return saved;
+}
+
+async function deleteInvoiceOrderLinkV50(id) {
+    if (!requirePermissionV40("MANAGE_INVOICE_LINKS")) return;
+    if (!id) return;
+
+    if (!confirm("Xóa liên kết Mã đơn Shopee ↔ Số hóa đơn này?")) return;
+
+    const client = initSupabaseClient();
+    const { error } = await client
+        .from(DB_INVOICE_ORDER_LINKS)
+        .delete()
+        .eq("id", id);
+
+    if (error) throw error;
+
+    invoiceOrderLinkStateV50.items = invoiceOrderLinkStateV50.items.filter(item => item.id !== id);
+    renderInvoiceOrderLinksV50();
+    renderInvoiceStats();
+    showToast("Đã xóa liên kết hóa đơn.");
+}
+
+function findBridgeHeaderIndexV50(headers, aliases) {
+    const normalized = (headers || []).map(value => normalizeText(value));
+
+    for (const alias of aliases) {
+        const needle = normalizeText(alias);
+        const exact = normalized.indexOf(needle);
+        if (exact >= 0) return exact;
+    }
+
+    for (const alias of aliases) {
+        const needle = normalizeText(alias);
+        const partial = normalized.findIndex(value =>
+            value && needle && (value.includes(needle) || needle.includes(value))
+        );
+        if (partial >= 0) return partial;
+    }
+
+    return -1;
+}
+
+function parseBridgeMatrixV50(matrix) {
+    const orderAliases = [
+        "Mã đơn Shopee", "Mã đơn hàng Shopee", "Shopee Order ID",
+        "Order ID Shopee", "Mã đơn hàng", "Mã đơn"
+    ];
+    const invoiceAliases = [
+        "Số hóa đơn", "Số HĐ", "Invoice No", "Invoice Number", "Số HD"
+    ];
+    const dateAliases = ["Ngày hóa đơn", "Ngày HĐ", "Invoice Date"];
+    const noteAliases = ["Ghi chú", "Note", "Diễn giải"];
+
+    let headerRowIndex = -1;
+    let columns = null;
+
+    for (let rowIndex = 0; rowIndex < Math.min(matrix.length, 40); rowIndex++) {
+        const headers = matrix[rowIndex] || [];
+        const orderCol = findBridgeHeaderIndexV50(headers, orderAliases);
+        const invoiceCol = findBridgeHeaderIndexV50(headers, invoiceAliases);
+
+        if (orderCol >= 0 && invoiceCol >= 0) {
+            headerRowIndex = rowIndex;
+            columns = {
+                order: orderCol,
+                invoice: invoiceCol,
+                date: findBridgeHeaderIndexV50(headers, dateAliases),
+                note: findBridgeHeaderIndexV50(headers, noteAliases)
+            };
+            break;
+        }
+    }
+
+    if (headerRowIndex < 0 || !columns) {
+        throw new Error("Không tìm thấy đồng thời cột Mã đơn Shopee và Số hóa đơn trong file cầu nối.");
+    }
+
+    const rawRows = [];
+    for (let i = headerRowIndex + 1; i < matrix.length; i++) {
+        const row = matrix[i] || [];
+        const orderId = String(row[columns.order] ?? "").trim();
+        const invoiceNo = String(row[columns.invoice] ?? "").trim();
+
+        if (!orderId && !invoiceNo) continue;
+        if (!orderId || !invoiceNo) continue;
+
+        rawRows.push({
+            orderId,
+            invoiceNo,
+            invoiceDate: columns.date >= 0 ? normalizeOrderDate(row[columns.date]) : "",
+            note: columns.note >= 0 ? String(row[columns.note] ?? "").trim() : ""
+        });
+    }
+
+    const orderCounter = new Map();
+    const invoiceCounter = new Map();
+
+    rawRows.forEach(row => {
+        const orderKey = normalizeOrderReferenceV41(row.orderId);
+        const invoiceKey = normalizeInvoiceNoV50(row.invoiceNo);
+        if (!orderCounter.has(orderKey)) orderCounter.set(orderKey, new Set());
+        if (!invoiceCounter.has(invoiceKey)) invoiceCounter.set(invoiceKey, new Set());
+        orderCounter.get(orderKey).add(invoiceKey);
+        invoiceCounter.get(invoiceKey).add(orderKey);
+    });
+
+    const seen = new Set();
+    const valid = [];
+    let conflicts = 0;
+
+    rawRows.forEach(row => {
+        const orderKey = normalizeOrderReferenceV41(row.orderId);
+        const invoiceKey = normalizeInvoiceNoV50(row.invoiceNo);
+        const pairKey = `${orderKey}|${invoiceKey}`;
+        if (seen.has(pairKey)) return;
+        seen.add(pairKey);
+
+        if (
+            !orderKey || !invoiceKey ||
+            orderCounter.get(orderKey)?.size !== 1 ||
+            invoiceCounter.get(invoiceKey)?.size !== 1
+        ) {
+            conflicts++;
+            return;
+        }
+
+        valid.push(row);
+    });
+
+    return { valid, conflicts, sourceCount: rawRows.length };
+}
+
+async function handleBridgeFileV50(file) {
+    if (!file) return;
+    if (!requirePermissionV40("MANAGE_INVOICE_LINKS")) return;
+
+    try {
+        const { matrix } = await readInvoiceExcelFile(file);
+        const parsed = parseBridgeMatrixV50(matrix);
+
+        if (!parsed.valid.length) {
+            throw new Error("File không có cặp Mã đơn Shopee ↔ Số hóa đơn hợp lệ để lưu.");
+        }
+
+        const knownOrderIds = new Set(
+            (state.skuRows || [])
+                .map(row => normalizeOrderReferenceV41(row.orderId))
+                .filter(Boolean)
+        );
+
+        let saved = 0;
+        let unknownOrders = 0;
+        let failed = 0;
+
+        for (const row of parsed.valid) {
+            if (!knownOrderIds.has(normalizeOrderReferenceV41(row.orderId))) {
+                unknownOrders++;
+                continue;
+            }
+
+            try {
+                await saveInvoiceOrderLinkV50({
+                    ...row,
+                    source: "bridge_excel",
+                    confidence: "confirmed",
+                    note: row.note || `Import từ ${file.name}`
+                });
+                saved++;
+            } catch (error) {
+                console.warn("Không lưu được bridge row:", row, error);
+                failed++;
+            }
+        }
+
+        invoiceOrderLinkStateV50.bridgeFileName = file.name;
+        await loadInvoiceOrderLinksV50({ silent: true });
+
+        alert(
+            `Đã đọc file cầu nối: ${file.name}\n\n` +
+            `• Cặp đọc được: ${parsed.sourceCount}\n` +
+            `• Đã lưu: ${saved}\n` +
+            `• Mã đơn chưa có trong Shopee Cloud: ${unknownOrders}\n` +
+            `• Cặp xung đột 1↔1 đã bỏ qua: ${parsed.conflicts}\n` +
+            `• Lỗi lưu: ${failed}`
+        );
+    } catch (error) {
+        console.error("Lỗi file cầu nối V50:", error);
+        alert(`Không đọc/lưu được file cầu nối.\n\n${error?.message || error}`);
+    } finally {
+        if ($("v50BridgeFileInput")) $("v50BridgeFileInput").value = "";
+    }
+}
+
+function getInvoiceGroupsForSuggestionsV50() {
+    const map = new Map();
+
+    getIssuedMisaLines().forEach(line => {
+        const invoiceNo = String(line.invoiceNo || "").trim();
+        const key = normalizeInvoiceNoV50(invoiceNo);
+        if (!key) return;
+
+        if (!map.has(key)) {
+            map.set(key, {
+                invoiceNo,
+                normalizedInvoiceNo: key,
+                invoiceDate: line.invoiceDate || "",
+                qtyBySku: new Map(),
+                unresolved: 0
+            });
+        }
+
+        const group = map.get(key);
+        if (line.invoiceDate && (!group.invoiceDate || line.invoiceDate < group.invoiceDate)) {
+            group.invoiceDate = line.invoiceDate;
+        }
+
+        const resolved = v41ResolveMisaBaseSku(line);
+        if (!resolved.sku) {
+            group.unresolved++;
+            return;
+        }
+
+        group.qtyBySku.set(
+            resolved.sku,
+            Number(group.qtyBySku.get(resolved.sku) || 0) + Number(line.quantity || 0)
+        );
+    });
+
+    return [...map.values()];
+}
+
+function compositionSignatureV50(qtyBySku) {
+    return [...(qtyBySku || new Map()).entries()]
+        .filter(([, qty]) => Number(qty || 0) !== 0)
+        .sort(([a], [b]) => String(a).localeCompare(String(b)))
+        .map(([sku, qty]) => `${String(sku).trim().toUpperCase()}:${Number(qty || 0)}`)
+        .join("|");
+}
+
+function dateDiffDaysV50(fromKey, toKey) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fromKey || "") || !/^\d{4}-\d{2}-\d{2}$/.test(toKey || "")) {
+        return null;
+    }
+    const from = new Date(`${fromKey}T00:00:00Z`);
+    const to = new Date(`${toKey}T00:00:00Z`);
+    return Math.round((to - from) / 86400000);
+}
+
+function buildInvoiceLinkSuggestionsV50() {
+    if (!invoiceState.lineRows?.length) return [];
+
+    const lookbackDays = Math.max(3, Number($("v41LookbackDays")?.value || 7));
+    const allOrders = buildShopeeDeliveredOrdersV41();
+    const scopeOrders = v41GetScopeDeliveredOrders(allOrders, lookbackDays);
+    const invoiceGroups = getInvoiceGroupsForSuggestionsV50();
+
+    const linkedOrders = new Set(invoiceOrderLinkStateV50.items.map(item => item.normalizedOrderId));
+    const linkedInvoices = new Set(invoiceOrderLinkStateV50.items.map(item => item.normalizedInvoiceNo));
+
+    const availableInvoices = invoiceGroups.filter(group =>
+        !linkedInvoices.has(group.normalizedInvoiceNo) &&
+        !group.unresolved &&
+        compositionSignatureV50(group.qtyBySku)
+    );
+
+    const suggestions = [];
+
+    scopeOrders.forEach(order => {
+        if (linkedOrders.has(order.normalizedOrderId)) return;
+
+        const signature = compositionSignatureV50(order.expectedBySku);
+        if (!signature) return;
+
+        const candidates = availableInvoices.filter(group => {
+            if (compositionSignatureV50(group.qtyBySku) !== signature) return false;
+
+            const diff = dateDiffDaysV50(order.orderDate, group.invoiceDate);
+            if (diff === null) return true;
+            return diff >= 0 && diff <= Math.max(lookbackDays, 10);
+        });
+
+        if (!candidates.length) return;
+
+        suggestions.push({
+            order,
+            signature,
+            candidates: candidates.sort((a, b) => {
+                const da = dateDiffDaysV50(order.orderDate, a.invoiceDate);
+                const db = dateDiffDaysV50(order.orderDate, b.invoiceDate);
+                return (da ?? 999) - (db ?? 999);
+            }),
+            unique: candidates.length === 1
+        });
+    });
+
+    return suggestions;
+}
+
+function compositionHtmlV50(qtyBySku) {
+    const entries = [...(qtyBySku || new Map()).entries()];
+    if (!entries.length) return '<span class="v50-empty-detail">—</span>';
+    return `<div class="v50-composition">${entries.map(([sku, qty]) =>
+        `<span>${escapeHTML(sku)} × ${formatNumber(qty)}</span>`
+    ).join("")}</div>`;
+}
+
+function renderInvoiceOrderLinksV50() {
+    const status = $("v50LinkStatus");
+    const body = $("v50LinkTableBody");
+    const suggestionBody = $("v50SuggestionBody");
+    if (!body || !suggestionBody) return;
+
+    const allOrders = buildShopeeDeliveredOrdersV41();
+    const currentInvoiceNos = new Set(getIssuedMisaLines().map(line => normalizeInvoiceNoV50(line.invoiceNo)).filter(Boolean));
+
+    const linkedOrderCount = invoiceOrderLinkStateV50.items.filter(item => allOrders.has(item.normalizedOrderId)).length;
+    const linkedInvoiceCount = invoiceOrderLinkStateV50.items.filter(item => currentInvoiceNos.has(item.normalizedInvoiceNo)).length;
+
+    invoiceOrderLinkStateV50.suggestions = buildInvoiceLinkSuggestionsV50();
+
+    if ($("v50LinkCount")) $("v50LinkCount").textContent = formatNumber(invoiceOrderLinkStateV50.items.length);
+    if ($("v50LinkedOrderCount")) $("v50LinkedOrderCount").textContent = formatNumber(linkedOrderCount);
+    if ($("v50LinkedInvoiceCount")) $("v50LinkedInvoiceCount").textContent = formatNumber(linkedInvoiceCount);
+    if ($("v50SuggestionCount")) $("v50SuggestionCount").textContent = formatNumber(invoiceOrderLinkStateV50.suggestions.length);
+
+    if (status) {
+        if (!invoiceOrderLinkStateV50.cloudReady) {
+            status.className = "v50-link-status warning";
+            status.textContent = "Chưa sẵn sàng Cloud V50. Nếu vừa nâng cấp, hãy chạy SQL V50 rồi bấm Đồng bộ liên kết.";
+        } else {
+            status.className = "v50-link-status good";
+            status.textContent = `✓ Cloud V50 sẵn sàng · ${formatNumber(invoiceOrderLinkStateV50.items.length)} liên kết đã lưu` +
+                (invoiceOrderLinkStateV50.bridgeFileName ? ` · File cầu nối gần nhất: ${invoiceOrderLinkStateV50.bridgeFileName}` : "") + ".";
+        }
+    }
+
+    const search = normalizeText($("v50LinkSearch")?.value || "");
+    const filtered = invoiceOrderLinkStateV50.items.filter(item =>
+        !search || normalizeText(`${item.orderId} ${item.invoiceNo} ${item.createdEmail} ${item.note}`).includes(search)
+    );
+
+    if (!filtered.length) {
+        body.innerHTML = '<tr><td colspan="7" class="empty-table">Chưa có liên kết phù hợp.</td></tr>';
+    } else {
+        body.innerHTML = filtered.map((item, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td><span class="v50-code">${escapeHTML(item.orderId)}</span></td>
+                <td><span class="v50-code">${escapeHTML(item.invoiceNo)}</span></td>
+                <td>${item.invoiceDate ? escapeHTML(formatDateLabel(item.invoiceDate)) : "—"}</td>
+                <td><span class="v50-source-badge ${sourceClassV50(item.source)}">${escapeHTML(sourceLabelV50(item.source))}</span></td>
+                <td>${escapeHTML(item.createdEmail || "—")}</td>
+                <td>
+                    <div class="v50-row-actions">
+                        ${hasPermissionV40("MANAGE_INVOICE_LINKS") ? `<button type="button" class="v50-mini-btn danger" data-v50-delete-link="${escapeHTML(item.id)}">Xóa</button>` : ""}
+                    </div>
+                </td>
+            </tr>
+        `).join("");
+    }
+
+    const suggestions = invoiceOrderLinkStateV50.suggestions.slice(0, 100);
+    if (!suggestions.length) {
+        suggestionBody.innerHTML = '<tr><td colspan="6" class="empty-table">Không có gợi ý ghép đơn duy nhất trong phạm vi đang xem.</td></tr>';
+    } else {
+        suggestionBody.innerHTML = suggestions.map(item => {
+            const first = item.candidates[0];
+            return `
+                <tr>
+                    <td><span class="v50-code">${escapeHTML(item.order.orderId)}</span></td>
+                    <td>${item.order.orderDate ? escapeHTML(formatDateLabel(item.order.orderDate)) : "—"}</td>
+                    <td>${compositionHtmlV50(item.order.expectedBySku)}</td>
+                    <td>
+                        ${item.unique
+                            ? `<span class="v50-code">${escapeHTML(first.invoiceNo)}</span>`
+                            : `<span class="v50-candidate-badge ambiguous">${item.candidates.length} hóa đơn giống nhau</span>`}
+                    </td>
+                    <td>${item.unique && first.invoiceDate ? escapeHTML(formatDateLabel(first.invoiceDate)) : "—"}</td>
+                    <td>
+                        ${item.unique
+                            ? `<button type="button" class="v50-mini-btn confirm" data-v50-confirm-suggestion="${escapeHTML(item.order.normalizedOrderId)}">✓ Xác nhận</button>`
+                            : `<span class="v50-candidate-badge ambiguous">Cần chọn thủ công</span>`}
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    }
+}
+
+function openManualLinkModalV50(prefill = {}) {
+    if (!requirePermissionV40("MANAGE_INVOICE_LINKS")) return;
+    if ($("v50ManualOrderId")) $("v50ManualOrderId").value = prefill.orderId || "";
+    if ($("v50ManualInvoiceNo")) $("v50ManualInvoiceNo").value = prefill.invoiceNo || "";
+    if ($("v50ManualInvoiceDate")) $("v50ManualInvoiceDate").value = prefill.invoiceDate || "";
+    if ($("v50ManualNote")) $("v50ManualNote").value = prefill.note || "";
+    if ($("v50ManualError")) {
+        $("v50ManualError").textContent = "";
+        $("v50ManualError").classList.remove("show");
+    }
+    $("v50ManualLinkModal")?.classList.remove("hidden");
+    setTimeout(() => $("v50ManualOrderId")?.focus(), 20);
+}
+
+function closeManualLinkModalV50() {
+    $("v50ManualLinkModal")?.classList.add("hidden");
+}
+
+async function saveManualLinkModalV50() {
+    const errorBox = $("v50ManualError");
+    try {
+        const orderId = $("v50ManualOrderId")?.value.trim() || "";
+        const invoiceNo = $("v50ManualInvoiceNo")?.value.trim() || "";
+        const invoiceDate = $("v50ManualInvoiceDate")?.value || "";
+        const note = $("v50ManualNote")?.value.trim() || "";
+
+        if (!orderId || !invoiceNo) {
+            throw new Error("Phải nhập Mã đơn Shopee và Số hóa đơn.");
+        }
+
+        const knownOrder = (state.skuRows || []).some(row =>
+            normalizeOrderReferenceV41(row.orderId) === normalizeOrderReferenceV41(orderId)
+        );
+        if (!knownOrder) {
+            throw new Error("Mã đơn này chưa có trong dữ liệu Shopee Cloud đang lưu.");
+        }
+
+        await saveInvoiceOrderLinkV50({
+            orderId,
+            invoiceNo,
+            invoiceDate,
+            note,
+            source: "manual",
+            confidence: "confirmed"
+        });
+
+        closeManualLinkModalV50();
+        showToast("Đã lưu liên kết Mã đơn ↔ Số hóa đơn.");
+    } catch (error) {
+        if (errorBox) {
+            errorBox.textContent = error?.message || String(error);
+            errorBox.classList.add("show");
+        }
+    }
+}
+
+$("v50BridgeFileInput")?.addEventListener("change", event => {
+    handleBridgeFileV50(event.target.files?.[0]);
+});
+$("btnV50ManualLink")?.addEventListener("click", () => openManualLinkModalV50());
+$("btnV50ReloadLinks")?.addEventListener("click", () => loadInvoiceOrderLinksV50({ silent: false }));
+$("v50LinkSearch")?.addEventListener("input", renderInvoiceOrderLinksV50);
+$("btnV50CloseManual")?.addEventListener("click", closeManualLinkModalV50);
+$("btnV50CancelManual")?.addEventListener("click", closeManualLinkModalV50);
+$("btnV50SaveManual")?.addEventListener("click", saveManualLinkModalV50);
+$("v50ManualLinkModal")?.addEventListener("click", event => {
+    if (event.target === $("v50ManualLinkModal")) closeManualLinkModalV50();
+});
+
+document.addEventListener("click", async event => {
+    const deleteButton = event.target.closest("[data-v50-delete-link]");
+    if (deleteButton) {
+        try {
+            await deleteInvoiceOrderLinkV50(deleteButton.dataset.v50DeleteLink);
+        } catch (error) {
+            alert(`Không xóa được liên kết.\n\n${error?.message || error}`);
+        }
+        return;
+    }
+
+    const suggestionButton = event.target.closest("[data-v50-confirm-suggestion]");
+    if (suggestionButton) {
+        if (!requirePermissionV40("MANAGE_INVOICE_LINKS")) return;
+
+        const orderKey = suggestionButton.dataset.v50ConfirmSuggestion;
+        const suggestion = invoiceOrderLinkStateV50.suggestions.find(item =>
+            item.order.normalizedOrderId === orderKey && item.unique
+        );
+        if (!suggestion) return;
+
+        const candidate = suggestion.candidates[0];
+        if (!confirm(
+            `Xác nhận ghép:\n\nMã đơn: ${suggestion.order.orderId}\nSố HĐ: ${candidate.invoiceNo}\n\n` +
+            `V50 chỉ gợi ý vì thành phần SKU + số lượng trùng chính xác. Bạn đã kiểm tra và xác nhận đúng?`
+        )) return;
+
+        try {
+            await saveInvoiceOrderLinkV50({
+                orderId: suggestion.order.orderId,
+                invoiceNo: candidate.invoiceNo,
+                invoiceDate: candidate.invoiceDate,
+                source: "suggestion_confirmed",
+                confidence: "confirmed",
+                note: "Người dùng xác nhận từ gợi ý V50: trùng SKU + số lượng."
+            });
+            showToast("Đã xác nhận và lưu liên kết gợi ý.");
+        } catch (error) {
+            alert(`Không lưu được liên kết.\n\n${error?.message || error}`);
+        }
+    }
+});
+
 /* =========================================================
    V41 - ĐỐI CHIẾU TỪNG ĐƠN SHOPEE ↔ HÓA ĐƠN MISA
 ========================================================= */
@@ -9428,24 +10085,40 @@ function buildMisaOrderAssignmentsV41(allShopeeOrders) {
     const unknownOrderRefs = [];
     const noOrderRefLines = [];
     let usableRefLineCount = 0;
+    let usableBridgeLineCount = 0;
+
+    const linkByInvoice = new Map();
+    (invoiceOrderLinkStateV50.items || []).forEach(link => {
+        if (link.normalizedInvoiceNo && link.normalizedOrderId) {
+            linkByInvoice.set(link.normalizedInvoiceNo, link);
+        }
+    });
 
     issuedLines.forEach(line => {
         const rawRef = String(line.orderRef || "").trim();
-        const normalizedRef = normalizeOrderReferenceV41(rawRef);
+        const directRef = normalizeOrderReferenceV41(rawRef);
+        const bridgeLink = directRef
+            ? null
+            : linkByInvoice.get(normalizeInvoiceNoV50(line.invoiceNo));
+
+        const normalizedRef = directRef || bridgeLink?.normalizedOrderId || "";
+        const matchSource = directRef ? "misa_direct" : (bridgeLink ? "bridge_v50" : "");
 
         if (!normalizedRef) {
             noOrderRefLines.push(line);
             return;
         }
 
-        usableRefLineCount++;
+        if (directRef) usableRefLineCount++;
+        if (bridgeLink) usableBridgeLineCount++;
 
         const shopeeOrder = allShopeeOrders.get(normalizedRef);
 
         if (!shopeeOrder) {
             unknownOrderRefs.push({
                 ...line,
-                normalizedRef
+                normalizedRef,
+                matchSource
             });
             return;
         }
@@ -9457,11 +10130,13 @@ function buildMisaOrderAssignmentsV41(allShopeeOrders) {
                 orderId: shopeeOrder.orderId,
                 invoiceNos: new Set(),
                 qtyBySku: new Map(),
-                unresolvedLines: []
+                unresolvedLines: [],
+                matchSources: new Set()
             });
         }
 
         const assignment = orderAssignments.get(normalizedRef);
+        assignment.matchSources.add(matchSource);
 
         if (line.invoiceNo) {
             assignment.invoiceNos.add(String(line.invoiceNo).trim());
@@ -9482,6 +10157,8 @@ function buildMisaOrderAssignmentsV41(allShopeeOrders) {
     return {
         issuedLines,
         usableRefLineCount,
+        usableBridgeLineCount,
+        usableLinkedLineCount: usableRefLineCount + usableBridgeLineCount,
         orderAssignments,
         unknownOrderRefs,
         noOrderRefLines
@@ -9587,7 +10264,7 @@ function buildOrderReconciliationV41() {
     const misaAssignment = buildMisaOrderAssignmentsV41(allOrders);
 
     const exactMode =
-        misaAssignment.usableRefLineCount > 0;
+        misaAssignment.usableLinkedLineCount > 0;
 
     // Nếu MISA có mã đơn tham chiếu đến đơn ngoài cửa sổ ngày,
     // vẫn đưa đơn đó vào bảng để không bỏ mất một match chính xác.
@@ -9794,7 +10471,7 @@ function renderInvoiceOrderReconciliationV41() {
 
     if ($("v41OrderRefCoverage")) {
         $("v41OrderRefCoverage").textContent =
-            `${formatNumber(reconciliation.usableRefLineCount)}` +
+            `${formatNumber(reconciliation.usableLinkedLineCount)}` +
             `/` +
             `${formatNumber(reconciliation.issuedLines.length)}`;
     }
@@ -9802,8 +10479,10 @@ function renderInvoiceOrderReconciliationV41() {
     if ($("v41OrderRefHeaderText")) {
         $("v41OrderRefHeaderText").textContent =
             invoiceState.orderRefHeader
-                ? `Cột: ${invoiceState.orderRefHeader}`
-                : "Chưa phát hiện cột mã đơn";
+                ? `MISA trực tiếp: ${invoiceState.orderRefHeader}`
+                : (invoiceOrderLinkStateV50.items.length
+                    ? `Qua cầu nối V50: ${formatNumber(invoiceOrderLinkStateV50.items.length)} liên kết`
+                    : "Chưa có khóa ghép theo đơn");
     }
 
     const notice = $("v41OrderRefNotice");
@@ -9813,13 +10492,12 @@ function renderInvoiceOrderReconciliationV41() {
         if (notice) {
             notice.className = "v41-order-ref-notice good";
             notice.innerHTML =
-                `✓ File MISA có <strong>${formatNumber(reconciliation.usableRefLineCount)}</strong> ` +
-                `dòng có mã đơn. V41 đang ghép trực tiếp với Mã đơn Shopee đã lưu trên Cloud.` +
-                (
-                    reconciliation.unknownOrderRefs.length
-                        ? ` Có <strong>${formatNumber(reconciliation.unknownOrderRefs.length)}</strong> dòng MISA có mã đơn nhưng chưa tìm thấy trong dữ liệu Shopee đang lưu.`
-                        : ""
-                );
+                `✓ Đã có khóa ghép theo đơn cho <strong>${formatNumber(reconciliation.usableLinkedLineCount)}</strong> dòng MISA: ` +
+                `<strong>${formatNumber(reconciliation.usableRefLineCount)}</strong> dòng từ Mã đơn có sẵn trong MISA + ` +
+                `<strong>${formatNumber(reconciliation.usableBridgeLineCount)}</strong> dòng qua cầu nối V50.` +
+                (reconciliation.unknownOrderRefs.length
+                    ? ` Có <strong>${formatNumber(reconciliation.unknownOrderRefs.length)}</strong> dòng tham chiếu chưa tìm thấy Mã đơn Shopee tương ứng.`
+                    : "");
         }
 
         if (modeBadge) {
@@ -9830,9 +10508,9 @@ function renderInvoiceOrderReconciliationV41() {
         if (notice) {
             notice.className = "v41-order-ref-notice warning";
             notice.innerHTML =
-                `⚠ File MISA hiện tại <strong>không có Mã đơn Shopee sử dụng được</strong>. ` +
-                `V41 không tự đoán đơn nào đã xuất hóa đơn. ` +
-                `Bảng theo từng đơn chỉ hiển thị “Chưa thể ghép”; bảng tổng SKU bên dưới vẫn dùng để kiểm tra tổng số lượng.`;
+                `⚠ File MISA hiện tại <strong>không có Mã đơn Shopee sử dụng được</strong> và chưa có cầu nối V50 phù hợp. ` +
+                `Hãy upload file cầu nối hoặc ghép thủ công ở khung phía trên. ` +
+                `V50 không tự đoán đơn nào đã xuất hóa đơn; gợi ý SKU + số lượng chỉ được dùng sau khi bạn xác nhận.`;
         }
 
         if (modeBadge) {
@@ -10093,7 +10771,8 @@ function renderInvoiceStats() {
         }
     }
 
-    // V41: render riêng trước các nhánh return của bảng thống kê hóa đơn.
+    // V50/V41: render cầu nối và đối chiếu theo đơn trước các nhánh return.
+    renderInvoiceOrderLinksV50();
     renderInvoiceOrderReconciliationV41();
 
     if ($("invoiceSummarySubtitle")) {
@@ -11244,6 +11923,7 @@ async function v39ProbeSystemHealthRpc(client) {
         const tables = data?.tables || {};
         const v41 = data?.v41 || {};
         const v47 = data?.v47 || {};
+        const v50 = data?.v50 || {};
 
         const requiredRpcs = [
             "app_user_context",
@@ -11261,7 +11941,8 @@ async function v39ProbeSystemHealthRpc(client) {
             "app_user_roles",
             "invoice_imports",
             "invoice_groups",
-            "invoice_lines"
+            "invoice_lines",
+            "invoice_order_links"
         ];
 
         const missingTables = requiredTables.filter(name => tables[name] !== true);
@@ -11284,32 +11965,36 @@ async function v39ProbeSystemHealthRpc(client) {
         ];
         const missingV47 = requiredV47.filter(name => v47[name] !== true);
 
-        if (missingRpcs.length || missingTables.length || missingV41.length || missingV47.length) {
+        const requiredV50 = ["invoice_order_links_ready"];
+        const missingV50 = requiredV50.filter(name => v50[name] !== true);
+
+        if (missingRpcs.length || missingTables.length || missingV41.length || missingV47.length || missingV50.length) {
             return v38HealthCheckItem(
                 "rpc",
-                "RPC & SQL V47",
+                "RPC & SQL V50",
                 "error",
                 [
                     missingRpcs.length ? `Thiếu RPC: ${missingRpcs.join(", ")}` : "",
                     missingTables.length ? `Thiếu bảng: ${missingTables.join(", ")}` : "",
                     missingV41.length ? `Thiếu cột V41: ${missingV41.join(", ")}` : "",
-                    missingV47.length ? `Thiếu cột kiểm kê V47: ${missingV47.join(", ")}` : ""
+                    missingV47.length ? `Thiếu cột kiểm kê V47: ${missingV47.join(", ")}` : "",
+                    missingV50.length ? `Thiếu V50: ${missingV50.join(", ")}` : ""
                 ].filter(Boolean).join(" · ")
             );
         }
 
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V47",
+            "RPC & SQL V50",
             "ok",
-            `Role ${roleLabelV40()} + RPC + lịch sử hóa đơn + cấu trúc kiểm kê V47 đã sẵn sàng.`
+            `Role ${roleLabelV40()} + RPC + kiểm kê V47 + cầu nối hóa đơn V50 đã sẵn sàng.`
         );
     } catch (error) {
         return v38HealthCheckItem(
             "rpc",
-            "RPC & SQL V47",
+            "RPC & SQL V50",
             "error",
-            `Chưa chạy SQL V47 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
+            `Chưa chạy SQL V50 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
         );
     }
 }
@@ -11446,6 +12131,13 @@ async function runSystemHealthCheckV38({ silent = false } = {}) {
                 ]
             ),
 
+            v38ProbeTableGroup(
+                client,
+                "invoice-links-cloud",
+                "Cầu nối đơn ↔ hóa đơn V50",
+                [DB_INVOICE_ORDER_LINKS]
+            ),
+
             v39ProbeSystemHealthRpc(client)
         ]);
 
@@ -11562,6 +12254,7 @@ function renderAll() {
     renderStatsCalendar();
     refreshNavCounts();
     renderInvoiceStats();
+    renderInvoiceOrderLinksV50();
 
     // V38/V39
     renderOperationalAlertsV38();

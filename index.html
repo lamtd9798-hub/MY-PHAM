@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=49">
+    <link rel="stylesheet" href="style.css?v=50">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1844,6 +1844,160 @@
             </div>
 
 
+
+            <!-- ======================== V50 - CẦU NỐI ĐƠN SHOPEE ↔ SỐ HÓA ĐƠN ======================== -->
+            <div class="panel v50-link-panel">
+                <div class="panel-header v50-link-header">
+                    <div>
+                        <h2>🧩 Cầu nối Mã đơn Shopee ↔ Số hóa đơn MISA</h2>
+                        <p>
+                            Dùng khi file MISA không có cột Mã đơn Shopee. Có thể upload một file cầu nối
+                            <strong>Mã đơn Shopee + Số hóa đơn</strong>, hoặc xác nhận thủ công từng cặp.
+                            Gợi ý tự động chỉ là ứng viên và <strong>không tự ghi nhận</strong> nếu bạn chưa xác nhận.
+                        </p>
+                    </div>
+
+                    <div class="v50-link-actions">
+                        <label id="v50BridgeUploadLabel" class="btn secondary v50-bridge-upload-btn">
+                            📥 Upload file cầu nối
+                            <input id="v50BridgeFileInput" type="file" accept=".xls,.xlsx,.xlsm,.csv" hidden>
+                        </label>
+                        <button type="button" id="btnV50ManualLink" class="btn secondary">＋ Ghép thủ công</button>
+                        <button type="button" id="btnV50ReloadLinks" class="btn secondary">↻ Đồng bộ liên kết</button>
+                    </div>
+                </div>
+
+                <div id="v50LinkStatus" class="v50-link-status">
+                    Chưa tải danh sách liên kết Cloud.
+                </div>
+
+                <div class="v50-link-kpis">
+                    <div class="v50-link-kpi">
+                        <span>LIÊN KẾT ĐÃ LƯU</span>
+                        <strong id="v50LinkCount">0</strong>
+                        <small>Mã đơn ↔ Số hóa đơn trên Cloud</small>
+                    </div>
+                    <div class="v50-link-kpi good">
+                        <span>ĐƠN ĐÃ GHÉP</span>
+                        <strong id="v50LinkedOrderCount">0</strong>
+                        <small>Khớp với dữ liệu Shopee đang lưu</small>
+                    </div>
+                    <div class="v50-link-kpi info">
+                        <span>HÓA ĐƠN ĐÃ GHÉP</span>
+                        <strong id="v50LinkedInvoiceCount">0</strong>
+                        <small>Khớp với file MISA đang xem</small>
+                    </div>
+                    <div class="v50-link-kpi warning">
+                        <span>GỢI Ý CHỜ XÁC NHẬN</span>
+                        <strong id="v50SuggestionCount">0</strong>
+                        <small>Trùng chính xác SKU + số lượng</small>
+                    </div>
+                </div>
+
+                <div class="v50-format-help">
+                    <strong>File cầu nối tối thiểu cần 2 cột:</strong>
+                    <code>Mã đơn Shopee</code> + <code>Số hóa đơn</code>.
+                    Có thể có thêm <code>Ngày hóa đơn</code> và <code>Ghi chú</code>.
+                    V50 chỉ lưu quan hệ 1 đơn ↔ 1 hóa đơn để tránh ghép nhầm.
+                </div>
+
+                <div class="v50-link-grid">
+                    <div class="v50-link-card">
+                        <div class="v50-card-title">
+                            <div>
+                                <strong>Liên kết đã xác nhận</strong>
+                                <span id="v50LinkTableHint">Dữ liệu dùng chung cho tất cả máy.</span>
+                            </div>
+                            <input id="v50LinkSearch" type="search" placeholder="Tìm mã đơn / số HĐ...">
+                        </div>
+
+                        <div class="v50-table-wrap">
+                            <table class="v50-link-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Mã đơn Shopee</th>
+                                        <th>Số HĐ MISA</th>
+                                        <th>Ngày HĐ</th>
+                                        <th>Nguồn</th>
+                                        <th>Người lưu</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="v50LinkTableBody">
+                                    <tr><td colspan="7" class="empty-table">Chưa có liên kết.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="v50-link-card">
+                        <div class="v50-card-title">
+                            <div>
+                                <strong>Gợi ý ứng viên</strong>
+                                <span>So thành phần SKU + số lượng và khoảng ngày. Bạn phải bấm Xác nhận mới được dùng.</span>
+                            </div>
+                        </div>
+
+                        <div class="v50-table-wrap">
+                            <table class="v50-suggestion-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã đơn Shopee</th>
+                                        <th>Ngày đơn</th>
+                                        <th>Thành phần</th>
+                                        <th>HĐ ứng viên</th>
+                                        <th>Ngày HĐ</th>
+                                        <th>Kết quả</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="v50SuggestionBody">
+                                    <tr><td colspan="6" class="empty-table">Chưa có gợi ý.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="v50ManualLinkModal" class="v50-modal-overlay hidden">
+                <div class="v50-modal">
+                    <div class="v50-modal-header">
+                        <div>
+                            <h3>Ghép Mã đơn Shopee ↔ Số hóa đơn</h3>
+                            <p>Chỉ lưu khi bạn đã kiểm tra đúng quan hệ giữa đơn Shopee và hóa đơn MISA.</p>
+                        </div>
+                        <button type="button" id="btnV50CloseManual" class="v50-modal-close">×</button>
+                    </div>
+
+                    <div class="v50-modal-body">
+                        <label>
+                            <span>Mã đơn Shopee *</span>
+                            <input id="v50ManualOrderId" type="text" autocomplete="off" placeholder="Ví dụ: 2608138...">
+                        </label>
+                        <label>
+                            <span>Số hóa đơn MISA *</span>
+                            <input id="v50ManualInvoiceNo" type="text" autocomplete="off" placeholder="Ví dụ: 00004569">
+                        </label>
+                        <label>
+                            <span>Ngày hóa đơn</span>
+                            <input id="v50ManualInvoiceDate" type="date">
+                        </label>
+                        <label class="wide">
+                            <span>Ghi chú</span>
+                            <input id="v50ManualNote" type="text" autocomplete="off" placeholder="Nguồn đối chiếu / ghi chú nếu cần">
+                        </label>
+                    </div>
+
+                    <div id="v50ManualError" class="v50-manual-error"></div>
+
+                    <div class="v50-modal-footer">
+                        <button type="button" id="btnV50CancelManual" class="btn secondary">Hủy</button>
+                        <button type="button" id="btnV50SaveManual" class="btn primary">✓ Lưu liên kết</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- ======================== V41 - ĐỐI CHIẾU ĐƠN SHOPEE ↔ MISA ======================== -->
             <div class="panel v41-reconcile-panel">
                 <div class="panel-header v41-reconcile-header">
@@ -1916,9 +2070,9 @@
                     </div>
 
                     <div class="v41-kpi info">
-                        <span>DÒNG MISA CÓ MÃ ĐƠN</span>
+                        <span>DÒNG MISA GHÉP ĐƯỢC</span>
                         <strong id="v41OrderRefCoverage">0/0</strong>
-                        <small id="v41OrderRefHeaderText">Chưa phát hiện cột mã đơn</small>
+                        <small id="v41OrderRefHeaderText">Trực tiếp hoặc qua cầu nối V50</small>
                     </div>
                 </div>
 
@@ -2253,6 +2407,6 @@
 </div>
 
 <div id="toast" class="toast"></div>
-    <script src="script.js?v=49"></script>
+    <script src="script.js?v=50"></script>
 </body>
 </html>
