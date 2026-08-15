@@ -205,6 +205,16 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
+const APP_VERSION = "V38.0";
+const APP_BUILD_DATE = "2026-08-15";
+const APP_CACHE_VERSION = "38";
+
+const systemHealthStateV38 = {
+    running: false,
+    checkedAt: "",
+    checks: []
+};
+
 const SUPABASE_URL = "https://mnqwnnxmemegruwtyyox.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fmlR3AtJuEiqqNMLp7nCMQ_0FNiyBIr";
 
@@ -1002,6 +1012,13 @@ async function enterAuthenticatedApp(session) {
 
     openView(restoreView);
 
+    // V38: kiểm tra hệ thống nền sau khi toàn bộ dữ liệu Cloud đã tải.
+    setTimeout(() => {
+        runSystemHealthCheckV38({ silent: true }).catch(error => {
+            console.warn("V38 health check:", error);
+        });
+    }, 150);
+
     if (restoreView === "sku-stats") {
         if (savedUi.skuMode === "detail") {
             openStatsDay(initialReportDate);
@@ -1271,6 +1288,11 @@ function openView(viewName) {
     if (viewName === "history") renderHistory();
     if (viewName === "invoice-stats") renderInvoiceStats();
     if (viewName === "inventory-flow") renderInventoryModule();
+
+    if (viewName === "overview") {
+        renderOperationalAlertsV38();
+        renderSystemHealthPanelV38();
+    }
 
     if (viewName === "sku-stats") {
         // Chỉ cập nhật dữ liệu; sidebar sẽ quyết định hiện lịch hay chi tiết.
@@ -7768,6 +7790,868 @@ function renderHistory() {
     });
 }
 
+
+/* =========================================================
+   V38 - TRUNG TÂM CẢNH BÁO VẬN HÀNH + SYSTEM HEALTH
+========================================================= */
+
+function v38DateDiffDays(fromKey, toKey) {
+    if (!fromKey || !toKey) return null;
+
+    const fromParts = String(fromKey).split("-").map(Number);
+    const toParts = String(toKey).split("-").map(Number);
+
+    if (
+        fromParts.length !== 3 ||
+        toParts.length !== 3 ||
+        fromParts.some(Number.isNaN) ||
+        toParts.some(Number.isNaN)
+    ) {
+        return null;
+    }
+
+    const fromUtc = Date.UTC(fromParts[0], fromParts[1] - 1, fromParts[2]);
+    const toUtc = Date.UTC(toParts[0], toParts[1] - 1, toParts[2]);
+
+    return Math.floor((toUtc - fromUtc) / 86400000);
+}
+
+function v38HoursSince(value) {
+    if (!value) return null;
+
+    const time = new Date(value).getTime();
+    if (!Number.isFinite(time)) return null;
+
+    return (Date.now() - time) / 3600000;
+}
+
+function v38ShortList(values, maxItems = 3) {
+    const list = [...new Set(
+        (Array.isArray(values) ? values : [])
+            .map(value => String(value || "").trim())
+            .filter(Boolean)
+    )];
+
+    if (!list.length) return "";
+
+    const shown = list.slice(0, maxItems).join(", ");
+    const extra = list.length - maxItems;
+
+    return extra > 0
+        ? `${shown} +${extra}`
+        : shown;
+}
+
+function buildOperationalAlertsV38() {
+    try {
+        ensureInvoiceStatsLoaded();
+    } catch (error) {
+        console.warn("V38 không đọc được invoice local khi tạo cảnh báo.", error);
+    }
+
+    const alerts = [];
+
+    let inventorySummary = [];
+
+    try {
+        inventorySummary = buildInventorySummary();
+    } catch (error) {
+        console.warn("V38 không tạo được inventory summary.", error);
+    }
+
+    const add = ({
+        severity = "info",
+        icon = "ℹ️",
+        title = "",
+        detail = "",
+        view = "",
+        tab = "",
+        action = "Xem chi tiết"
+    }) => {
+        alerts.push({
+            id: `v38_${alerts.length + 1}_${severity}`,
+            severity,
+            icon,
+            title,
+            detail,
+            view,
+            tab,
+            action
+        });
+    };
+
+    // ---------------------------------------------------------
+    // 1. Hết hàng / sắp chạm tồn an toàn
+    // ---------------------------------------------------------
+    const outOfStock = inventorySummary.filter(item =>
+        Number(item.available || 0) <= 0
+    );
+
+    if (outOfStock.length) {
+        add({
+            severity: "critical",
+            icon: "⛔",
+            title: `${outOfStock.length} mặt hàng hết khả dụng`,
+            detail:
+                `Không còn hàng có thể tiếp tục giữ cho đơn: ` +
+                `${v38ShortList(outOfStock.map(item => item.name))}.`,
+            view: "inventory-flow",
+            tab: "overview",
+            action: "Xem tồn kho"
+        });
+    }
+
+    const lowStock = inventorySummary.filter(item => {
+        const available = Number(item.available || 0);
+        const safety = Number(item.safetyStock || 0);
+
+        return available > 0 && safety > 0 && available <= safety;
+    });
+
+    if (lowStock.length) {
+        add({
+            severity: "warning",
+            icon: "📉",
+            title: `${lowStock.length} mặt hàng chạm tồn an toàn`,
+            detail:
+                `${v38ShortList(lowStock.map(item =>
+                    `${item.name} (${formatNumber(item.available)})`
+                ))}.`,
+            view: "inventory-flow",
+            tab: "overview",
+            action: "Xem tồn"
+        });
+    }
+
+    // ---------------------------------------------------------
+    // 2. Kiểm kê kho
+    // ---------------------------------------------------------
+    const stockShortage = inventorySummary.filter(item =>
+        item.lastReconcile &&
+        Number(item.lastReconcile.variance || 0) < 0
+    );
+
+    const stockSurplus = inventorySummary.filter(item =>
+        item.lastReconcile &&
+        Number(item.lastReconcile.variance || 0) > 0
+    );
+
+    if (stockShortage.length || stockSurplus.length) {
+        const shortageQty = stockShortage.reduce(
+            (sum, item) => sum + Math.abs(Number(item.lastReconcile?.variance || 0)),
+            0
+        );
+
+        const surplusQty = stockSurplus.reduce(
+            (sum, item) => sum + Number(item.lastReconcile?.variance || 0),
+            0
+        );
+
+        add({
+            severity: "warning",
+            icon: "🔎",
+            title:
+                `Kiểm kê đang lệch: ` +
+                `${stockShortage.length} thiếu / ${stockSurplus.length} thừa`,
+            detail:
+                `Thiếu ${formatNumber(shortageQty)} SP · ` +
+                `Thừa ${formatNumber(surplusQty)} SP. ` +
+                `Cần kiểm tra từng SKU trước khi chốt lại kho.`,
+            view: "inventory-flow",
+            tab: "reconcile",
+            action: "Đối chiếu kho"
+        });
+    }
+
+    const notReconciled = inventorySummary.filter(item => !item.lastReconcile);
+
+    if (inventorySummary.length && notReconciled.length) {
+        add({
+            severity: "info",
+            icon: "🧮",
+            title: `${notReconciled.length}/${inventorySummary.length} mặt hàng chưa có kết quả kiểm kê`,
+            detail:
+                `Web chưa tự kết luận Khớp/Thiếu/Thừa cho các mặt hàng chưa từng Chốt kiểm kê.`,
+            view: "inventory-flow",
+            tab: "reconcile",
+            action: "Kiểm kê"
+        });
+    }
+
+    // ---------------------------------------------------------
+    // 3. File luân chuyển
+    // ---------------------------------------------------------
+    const transitRows = Array.isArray(inventoryState.movementRows) &&
+        inventoryState.movementRows.length
+        ? inventoryState.movementRows
+        : (() => {
+            try {
+                return buildInventoryMovementRows();
+            } catch (error) {
+                return [];
+            }
+        })();
+
+    const today = getLocalTodayKey();
+
+    const agedTransit = transitRows.filter(row => {
+        if (row.bucket !== "in_transit") return false;
+        const age = v38DateDiffDays(row.sourceOrderDate, today);
+        return age !== null && age >= 5;
+    });
+
+    if (agedTransit.length) {
+        const orderCount = new Set(
+            agedTransit.map(row => row.orderId).filter(Boolean)
+        ).size;
+
+        const qty = agedTransit.reduce(
+            (sum, row) => sum + Number(row.quantity || 0),
+            0
+        );
+
+        const oldestDate = agedTransit
+            .map(row => row.sourceOrderDate)
+            .filter(Boolean)
+            .sort()[0] || "";
+
+        add({
+            severity: "warning",
+            icon: "🚚",
+            title: `${formatNumber(orderCount)} đơn đang giao có ngày đặt hàng từ 5 ngày trở lên`,
+            detail:
+                `${formatNumber(qty)} SP đang theo dõi` +
+                `${oldestDate ? ` · ngày đơn cũ nhất ${formatDateLabel(oldestDate)}` : ""}. ` +
+                `Nên kiểm tra các đơn giao lâu chưa hoàn tất.`,
+            view: "inventory-flow",
+            tab: "current",
+            action: "Xem luân chuyển"
+        });
+    }
+
+    const transitSnapshot = inventoryState.transitSnapshot;
+
+    if (!transitSnapshot?.rows?.length) {
+        add({
+            severity: "warning",
+            icon: "📤",
+            title: "Chưa có snapshot đơn luân chuyển Shopee",
+            detail:
+                "Giữ đơn / Đang giao / Đã giao / Hoàn đang về chưa có nguồn snapshot hiện tại.",
+            view: "inventory-flow",
+            tab: "overview",
+            action: "Upload snapshot"
+        });
+    } else {
+        const ageHours = v38HoursSince(transitSnapshot.importedAt);
+
+        if (ageHours !== null && ageHours >= 24) {
+            add({
+                severity: "warning",
+                icon: "🕒",
+                title: `Snapshot luân chuyển đã cũ ${Math.floor(ageHours)} giờ`,
+                detail:
+                    `${transitSnapshot.fileName || "File snapshot"} chưa được cập nhật trong hơn 24 giờ.`,
+                view: "inventory-flow",
+                tab: "overview",
+                action: "Cập nhật file"
+            });
+        }
+    }
+
+    // ---------------------------------------------------------
+    // 4. Mapping SKU của snapshot
+    // ---------------------------------------------------------
+    let unmapped = [];
+
+    try {
+        unmapped = getInventoryUnmappedSkus();
+    } catch (error) {
+        unmapped = [];
+    }
+
+    if (unmapped.length) {
+        const unmappedQty = unmapped.reduce(
+            (sum, item) => sum + Number(item.quantity || 0),
+            0
+        );
+
+        add({
+            severity: "warning",
+            icon: "🏷️",
+            title: `${unmapped.length} mã trong file luân chuyển chưa ghép được vào kho`,
+            detail:
+                `${formatNumber(unmappedQty)} SP chưa map · ` +
+                `${v38ShortList(unmapped.map(item => item.sku))}.`,
+            view: "inventory-flow",
+            tab: "overview",
+            action: "Xem mapping"
+        });
+    }
+
+    // ---------------------------------------------------------
+    // 5. MISA / Chờ hóa đơn
+    // ---------------------------------------------------------
+    const scopeMismatch = inventorySummary.filter(item =>
+        item.invoiceScopeMismatch
+    );
+
+    if (scopeMismatch.length) {
+        add({
+            severity: "warning",
+            icon: "🧾",
+            title: `${scopeMismatch.length} mặt hàng MISA và snapshot đang khác kỳ`,
+            detail:
+                `Không dùng Chờ HĐ = 0 để kết luận. ` +
+                `Cần đối chiếu đúng phạm vi ngày hoặc tiến tới ghép theo Mã đơn Shopee.`,
+            view: "inventory-flow",
+            tab: "misa",
+            action: "Đối chiếu MISA"
+        });
+    }
+
+    const waitingInvoice = inventorySummary.filter(item =>
+        item.waitingInvoiceComparable &&
+        Number(item.waitingInvoice || 0) > 0
+    );
+
+    if (waitingInvoice.length) {
+        const waitingQty = waitingInvoice.reduce(
+            (sum, item) => sum + Number(item.waitingInvoice || 0),
+            0
+        );
+
+        add({
+            severity: "warning",
+            icon: "⏳",
+            title: `${formatNumber(waitingQty)} SP đã giao đang chờ hóa đơn`,
+            detail:
+                `${v38ShortList(waitingInvoice.map(item =>
+                    `${item.name} (${formatNumber(item.waitingInvoice)})`
+                ))}.`,
+            view: "inventory-flow",
+            tab: "misa",
+            action: "Xem chờ HĐ"
+        });
+    }
+
+    const deliveredTotal = inventorySummary.reduce(
+        (sum, item) => sum + Number(item.delivered || 0),
+        0
+    );
+
+    if (deliveredTotal > 0 && !invoiceState.rows?.length) {
+        add({
+            severity: "warning",
+            icon: "📄",
+            title: "Có hàng đã giao nhưng chưa có file MISA để đối chiếu",
+            detail:
+                `${formatNumber(deliveredTotal)} SP đã giao trong snapshot hiện tại. ` +
+                `Upload bảng kê MISA để kiểm tra tình trạng xuất hóa đơn.`,
+            view: "invoice-stats",
+            action: "Upload MISA"
+        });
+    }
+
+    // ---------------------------------------------------------
+    // 6. Chưa có dữ liệu Shopee theo ngày
+    // ---------------------------------------------------------
+    if (!state.skuRows?.length) {
+        add({
+            severity: "info",
+            icon: "📊",
+            title: "Chưa có dữ liệu thống kê SKU trên Cloud",
+            detail:
+                "Chọn ngày trong Thống kê SKU và upload file Sáng/Chiều để bắt đầu.",
+            view: "sku-stats",
+            action: "Mở thống kê"
+        });
+    }
+
+    const rank = {
+        critical: 0,
+        warning: 1,
+        info: 2,
+        success: 3
+    };
+
+    return alerts.sort((a, b) =>
+        (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9)
+    );
+}
+
+function renderOperationalAlertsV38() {
+    const list = $("v38AlertList");
+
+    if (!list) return;
+
+    const alerts = buildOperationalAlertsV38();
+
+    const critical = alerts.filter(item => item.severity === "critical").length;
+    const warning = alerts.filter(item => item.severity === "warning").length;
+    const info = alerts.filter(item => item.severity === "info").length;
+
+    if ($("v38CriticalCount")) $("v38CriticalCount").textContent = formatNumber(critical);
+    if ($("v38WarningCount")) $("v38WarningCount").textContent = formatNumber(warning);
+    if ($("v38InfoCount")) $("v38InfoCount").textContent = formatNumber(info);
+
+    if (!alerts.length) {
+        list.innerHTML = `
+            <div class="v38-alert-empty ok">
+                ✓ Không phát hiện cảnh báo vận hành cần xử lý ở dữ liệu hiện tại.
+            </div>
+        `;
+        return;
+    }
+
+    list.innerHTML = alerts.map(item => `
+        <div class="v38-alert-item ${escapeHTML(item.severity)}">
+            <div class="v38-alert-icon">${escapeHTML(item.icon)}</div>
+
+            <div class="v38-alert-copy">
+                <strong>${escapeHTML(item.title)}</strong>
+                <span>${escapeHTML(item.detail)}</span>
+            </div>
+
+            ${item.view
+                ? `<button
+                    type="button"
+                    class="v38-alert-action"
+                    data-v38-alert-view="${escapeHTML(item.view)}"
+                    data-v38-alert-tab="${escapeHTML(item.tab || "")}"
+                >
+                    ${escapeHTML(item.action || "Xem")}
+                </button>`
+                : ""}
+        </div>
+    `).join("");
+}
+
+function navigateOperationalAlertV38(button) {
+    const view = button?.dataset?.v38AlertView || "";
+    const tab = button?.dataset?.v38AlertTab || "";
+
+    if (!view) return;
+
+    openView(view);
+
+    if (view === "inventory-flow" && tab) {
+        setInventoryTab(tab);
+
+        const targetMap = {
+            overview: "inventoryTabOverview",
+            current: "inventoryTabCurrent",
+            transactions: "inventoryTabTransactions",
+            reconcile: "inventoryTabReconcile",
+            misa: "inventoryTabMisa"
+        };
+
+        setTimeout(() => {
+            const target = $(targetMap[tab] || "");
+            target?.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        }, 80);
+    }
+}
+
+$("v38AlertList")?.addEventListener("click", event => {
+    const button = event.target.closest("[data-v38-alert-view]");
+    if (!button) return;
+    navigateOperationalAlertV38(button);
+});
+
+/* ======================== V38 SYSTEM HEALTH ======================== */
+
+function v38HealthCheckItem(key, label, status, detail) {
+    return {
+        key,
+        label,
+        status,
+        detail
+    };
+}
+
+function v38HealthIcon(status) {
+    if (status === "ok") return "✓";
+    if (status === "warning") return "!";
+    if (status === "error") return "×";
+    return "…";
+}
+
+function v38HealthClock(value) {
+    const date = value ? new Date(value) : new Date();
+
+    if (Number.isNaN(date.getTime())) return "";
+
+    return new Intl.DateTimeFormat("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    }).format(date);
+}
+
+function renderSystemHealthPanelV38() {
+    const checks = systemHealthStateV38.checks || [];
+    const list = $("v38HealthList");
+
+    if ($("v38VersionText")) {
+        $("v38VersionText").textContent = APP_VERSION;
+    }
+
+    if ($("v38HealthCheckedAt")) {
+        $("v38HealthCheckedAt").textContent = systemHealthStateV38.checkedAt
+            ? `Kiểm tra ${v38HealthClock(systemHealthStateV38.checkedAt)}`
+            : "Chưa kiểm tra";
+    }
+
+    if (list) {
+        if (!checks.length) {
+            list.innerHTML = `
+                <div class="v38-health-row">
+                    <span class="v38-health-status checking">…</span>
+                    <div>
+                        <strong>Đang chờ kiểm tra</strong>
+                        <small>Bấm “Kiểm tra lại” hoặc đăng nhập hệ thống.</small>
+                    </div>
+                </div>
+            `;
+        } else {
+            list.innerHTML = checks.map(item => `
+                <div class="v38-health-row">
+                    <span class="v38-health-status ${escapeHTML(item.status)}">
+                        ${v38HealthIcon(item.status)}
+                    </span>
+
+                    <div>
+                        <strong>${escapeHTML(item.label)}</strong>
+                        <small>${escapeHTML(item.detail || "")}</small>
+                    </div>
+                </div>
+            `).join("");
+        }
+    }
+
+    const errors = checks.filter(item => item.status === "error").length;
+    const warnings = checks.filter(item => item.status === "warning").length;
+    const overall = errors
+        ? "error"
+        : warnings
+            ? "warning"
+            : checks.length
+                ? "ok"
+                : "checking";
+
+    const dot = $("v38HealthOverallDot");
+    const overallText = $("v38HealthOverallText");
+    const detail = $("v38HealthOverallDetail");
+    const sidebar = $("v38SidebarHealth");
+
+    if (dot) {
+        dot.classList.remove("ok", "warning", "error", "checking");
+        dot.classList.add(overall);
+    }
+
+    if (overallText) {
+        overallText.textContent =
+            overall === "ok"
+                ? "Hệ thống hoạt động bình thường"
+                : overall === "warning"
+                    ? "Hệ thống có mục cần kiểm tra"
+                    : overall === "error"
+                        ? "Có lỗi cấu hình cần xử lý"
+                        : "Đang chờ kiểm tra";
+    }
+
+    if (detail) {
+        detail.textContent = checks.length
+            ? `${checks.length} mục · ${errors} lỗi · ${warnings} cảnh báo`
+            : "Kiểm tra phiên bản, thư viện, Cloud và RPC.";
+    }
+
+    if (sidebar) {
+        sidebar.classList.remove("ok", "warning", "error", "checking");
+        sidebar.classList.add(overall);
+        sidebar.textContent =
+            overall === "ok"
+                ? "Hệ thống OK"
+                : overall === "warning"
+                    ? "Cần kiểm tra"
+                    : overall === "error"
+                        ? "Có lỗi"
+                        : "Đang kiểm tra";
+    }
+}
+
+async function v38ProbeTableGroup(client, key, label, tables) {
+    try {
+        const results = await Promise.all(
+            tables.map(async table => {
+                const { error } = await client
+                    .from(table)
+                    .select("*")
+                    .limit(1);
+
+                return {
+                    table,
+                    error
+                };
+            })
+        );
+
+        const failed = results.filter(item => item.error);
+
+        if (failed.length) {
+            return v38HealthCheckItem(
+                key,
+                label,
+                "error",
+                `Không đọc được: ${failed.map(item => item.table).join(", ")}.`
+            );
+        }
+
+        return v38HealthCheckItem(
+            key,
+            label,
+            "ok",
+            `Đọc được ${tables.length}/${tables.length} bảng Cloud.`
+        );
+    } catch (error) {
+        return v38HealthCheckItem(
+            key,
+            label,
+            "error",
+            error?.message || "Không kiểm tra được bảng Cloud."
+        );
+    }
+}
+
+async function v38ProbeRpcOpenApi(client) {
+    try {
+        const { data } = await client.auth.getSession();
+        const token =
+            data?.session?.access_token ||
+            SUPABASE_PUBLISHABLE_KEY;
+
+        const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/`,
+            {
+                method: "GET",
+                headers: {
+                    apikey: SUPABASE_PUBLISHABLE_KEY,
+                    Authorization: `Bearer ${token}`,
+                    Accept: "application/openapi+json"
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`OpenAPI HTTP ${response.status}`);
+        }
+
+        const schema = await response.json();
+        const paths = schema?.paths || {};
+
+        const requiredRpc = [
+            "replace_shift_data",
+            "admin_delete_shopee_data"
+        ];
+
+        const missing = requiredRpc.filter(name =>
+            !paths[`/rpc/${name}`]
+        );
+
+        if (missing.length) {
+            return v38HealthCheckItem(
+                "rpc",
+                "RPC Supabase",
+                "error",
+                `Thiếu: ${missing.join(", ")}. Cần kiểm tra SQL migration.`
+            );
+        }
+
+        return v38HealthCheckItem(
+            "rpc",
+            "RPC Supabase",
+            "ok",
+            "Có replace_shift_data và admin_delete_shopee_data."
+        );
+    } catch (error) {
+        return v38HealthCheckItem(
+            "rpc",
+            "RPC Supabase",
+            "warning",
+            `Không đọc được OpenAPI để xác minh RPC: ${error?.message || "không rõ lỗi"}.`
+        );
+    }
+}
+
+async function runSystemHealthCheckV38({ silent = false } = {}) {
+    if (systemHealthStateV38.running) return;
+
+    systemHealthStateV38.running = true;
+
+    const button = $("btnV38RunHealthCheck");
+
+    if (button) {
+        button.disabled = true;
+        button.textContent = "Đang kiểm tra...";
+    }
+
+    systemHealthStateV38.checks = [
+        v38HealthCheckItem(
+            "version",
+            "Phiên bản V38",
+            (
+                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=38") &&
+                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=38")
+            )
+                ? "ok"
+                : "warning",
+            (
+                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=38") &&
+                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=38")
+            )
+                ? "index.html đang gọi style.css?v=38 và script.js?v=38."
+                : "Trình duyệt có thể đang dùng file cache hoặc index cũ."
+        ),
+
+        v38HealthCheckItem(
+            "xlsx",
+            "Thư viện đọc Excel",
+            typeof XLSX !== "undefined" ? "ok" : "error",
+            typeof XLSX !== "undefined"
+                ? "SheetJS XLSX đã sẵn sàng."
+                : "Không tải được XLSX; upload Excel sẽ không hoạt động."
+        ),
+
+        v38HealthCheckItem(
+            "supabase-js",
+            "Thư viện Supabase",
+            window.supabase?.createClient ? "ok" : "error",
+            window.supabase?.createClient
+                ? "Supabase JS v2 đã sẵn sàng."
+                : "Không tải được thư viện Supabase."
+        ),
+
+        v38HealthCheckItem(
+            "auth",
+            "Phiên đăng nhập",
+            state.user ? "ok" : "warning",
+            state.user
+                ? `Đã đăng nhập: ${state.user.email || "user"}.`
+                : "Chưa có session đăng nhập."
+        )
+    ];
+
+    renderSystemHealthPanelV38();
+
+    if (!state.user || !window.supabase?.createClient) {
+        systemHealthStateV38.checkedAt = new Date().toISOString();
+        systemHealthStateV38.running = false;
+
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Kiểm tra lại";
+        }
+
+        renderSystemHealthPanelV38();
+        return;
+    }
+
+    try {
+        const client = initSupabaseClient();
+
+        const cloudChecks = await Promise.all([
+            v38ProbeTableGroup(
+                client,
+                "shopee-cloud",
+                "Dữ liệu Shopee Cloud",
+                [DB_ROWS, DB_IMPORTS]
+            ),
+
+            v38ProbeTableGroup(
+                client,
+                "conversion-cloud",
+                "Quy đổi SKU Cloud",
+                [DB_TARGETS, DB_RULES]
+            ),
+
+            v38ProbeTableGroup(
+                client,
+                "inventory-cloud",
+                "Tồn kho Cloud",
+                [
+                    DB_INVENTORY_ITEMS,
+                    DB_INVENTORY_STOCKTAKES,
+                    DB_INVENTORY_TRANSACTIONS
+                ]
+            ),
+
+            v38ProbeTableGroup(
+                client,
+                "transit-cloud",
+                "Luân chuyển Cloud",
+                [
+                    DB_INVENTORY_TRANSIT_SNAPSHOTS,
+                    DB_INVENTORY_TRANSIT_ROWS
+                ]
+            ),
+
+            v38ProbeRpcOpenApi(client)
+        ]);
+
+        systemHealthStateV38.checks.push(...cloudChecks);
+    } catch (error) {
+        systemHealthStateV38.checks.push(
+            v38HealthCheckItem(
+                "cloud-generic",
+                "Kết nối Cloud",
+                "error",
+                error?.message || "Không kiểm tra được Supabase."
+            )
+        );
+    } finally {
+        systemHealthStateV38.checkedAt = new Date().toISOString();
+        systemHealthStateV38.running = false;
+
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Kiểm tra lại";
+        }
+
+        renderSystemHealthPanelV38();
+
+        if (!silent) {
+            const errors = systemHealthStateV38.checks.filter(
+                item => item.status === "error"
+            ).length;
+
+            const warnings = systemHealthStateV38.checks.filter(
+                item => item.status === "warning"
+            ).length;
+
+            if (errors) {
+                showToast(`Kiểm tra hệ thống: ${errors} lỗi cần xử lý.`);
+            } else if (warnings) {
+                showToast(`Kiểm tra hệ thống: ${warnings} mục cần xem.`);
+            } else {
+                showToast("Kiểm tra hệ thống: tất cả mục đều OK.");
+            }
+        }
+    }
+}
+
+$("btnV38RunHealthCheck")?.addEventListener("click", () => {
+    runSystemHealthCheckV38({ silent: false });
+});
+
+
 function renderAll() {
     renderTopFileState();
     renderImportSummary();
@@ -7783,6 +8667,10 @@ function renderAll() {
     renderStatsCalendar();
     refreshNavCounts();
     renderInvoiceStats();
+
+    // V38
+    renderOperationalAlertsV38();
+    renderSystemHealthPanelV38();
 }
 
 async function initApp() {

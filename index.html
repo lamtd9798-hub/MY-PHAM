@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- V37 SPLIT: index.html + style.css + script.js | giữ nguyên UI & chức năng V36 -->
+    <!-- V38: Trung tâm cảnh báo vận hành + kiểm tra hệ thống | giữ nguyên toàn bộ chức năng V37 -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=37">
+    <link rel="stylesheet" href="style.css?v=38">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -190,6 +190,13 @@
                     <div class="shop-platform">Shopee</div>
                 </div>
             </div>
+
+            <div class="v38-sidebar-system">
+                <span class="v38-sidebar-version">V38.0</span>
+                <span id="v38SidebarHealth" class="v38-sidebar-health checking">
+                    Đang kiểm tra
+                </span>
+            </div>
         </div>
     </aside>
 
@@ -238,6 +245,84 @@
                     <div class="kpi-value" id="overviewConvertedTotal">0</div>
                     <div class="kpi-footer">Tổng sản phẩm kho cần chuẩn bị</div>
                 </div>
+            </div>
+
+            <!-- ======================== V38 - TRUNG TÂM VẬN HÀNH ======================== -->
+            <div class="v38-operations-grid">
+
+                <div class="panel v38-alert-panel">
+                    <div class="panel-header v38-panel-header">
+                        <div>
+                            <h2>🚨 Việc cần xử lý</h2>
+                            <p>Tự tổng hợp cảnh báo từ tồn kho, luân chuyển Shopee, kiểm kê và hóa đơn MISA.</p>
+                        </div>
+
+                        <div class="v38-alert-summary">
+                            <span class="v38-alert-count critical">
+                                <b id="v38CriticalCount">0</b>
+                                Khẩn
+                            </span>
+
+                            <span class="v38-alert-count warning">
+                                <b id="v38WarningCount">0</b>
+                                Cần xem
+                            </span>
+
+                            <span class="v38-alert-count info">
+                                <b id="v38InfoCount">0</b>
+                                Thông tin
+                            </span>
+                        </div>
+                    </div>
+
+                    <div id="v38AlertList" class="v38-alert-list">
+                        <div class="v38-alert-empty">
+                            Đang tổng hợp tình trạng vận hành...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel v38-health-panel">
+                    <div class="panel-header v38-panel-header">
+                        <div>
+                            <h2>🩺 Kiểm tra hệ thống</h2>
+                            <p>
+                                <strong id="v38VersionText">V38.0</strong>
+                                · <span id="v38HealthCheckedAt">Chưa kiểm tra</span>
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            id="btnV38RunHealthCheck"
+                            class="btn btn-light v38-health-refresh"
+                        >
+                            Kiểm tra lại
+                        </button>
+                    </div>
+
+                    <div class="v38-health-overall">
+                        <span id="v38HealthOverallDot" class="v38-health-dot checking"></span>
+
+                        <div>
+                            <strong id="v38HealthOverallText">Đang chờ kiểm tra</strong>
+                            <small id="v38HealthOverallDetail">
+                                Kiểm tra phiên bản, thư viện, Cloud và RPC.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div id="v38HealthList" class="v38-health-list">
+                        <div class="v38-health-row">
+                            <span class="v38-health-status checking">…</span>
+                            <div>
+                                <strong>Phiên bản giao diện</strong>
+                                <small>Đang xác minh style.css và script.js.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <div class="dashboard-grid">
@@ -1742,6 +1827,6 @@
 </div>
 
 <div id="toast" class="toast"></div>
-    <script src="script.js?v=37"></script>
+    <script src="script.js?v=38"></script>
 </body>
 </html>
