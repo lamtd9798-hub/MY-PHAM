@@ -4288,3 +4288,80 @@ button{cursor:pointer}
         justify-content:flex-start
     }
 }
+
+
+/* =========================================================
+   V39 - LỊCH SỬ HÓA ĐƠN SUPABASE CLOUD
+========================================================= */
+.invoice-history-cloud-meta{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:7px;
+    flex-wrap:wrap
+}
+.invoice-history-cloud-status{
+    display:inline-flex;
+    align-items:center;
+    min-height:26px;
+    padding:0 8px;
+    border:1px solid #dce6e9;
+    border-radius:7px;
+    background:#f7f9fa;
+    color:#778a92;
+    font-size:7px;
+    font-weight:850;
+    white-space:nowrap
+}
+.invoice-history-cloud-status.ok{
+    border-color:#bce3d8;
+    background:#edf9f5;
+    color:#087863
+}
+.invoice-history-cloud-status.warning{
+    border-color:#efd8a5;
+    background:#fff7e8;
+    color:#9b6812
+}
+.invoice-history-cloud-status.error{
+    border-color:#f0c7c9;
+    background:#fff0f0;
+    color:#bf3d43
+}
+.invoice-history-cloud-status.checking{
+    border-color:#dce6e9;
+    background:#f7f9fa;
+    color:#778a92
+}
+.invoice-history-current-badge.cloud{
+    background:#e9f7f3;
+    color:#087863
+}
+.invoice-history-cloud-badge{
+    display:inline-flex;
+    align-items:center;
+    margin-left:5px;
+    padding:2px 5px;
+    border-radius:999px;
+    background:#e9f7f3;
+    color:#087863;
+    font-size:5.8px;
+    font-weight:900;
+    vertical-align:middle
+}
+.invoice-history-local-badge{
+    display:inline-flex;
+    align-items:center;
+    margin-left:5px;
+    padding:2px 5px;
+    border-radius:999px;
+    background:#fff3db;
+    color:#966313;
+    font-size:5.8px;
+    font-weight:900;
+    vertical-align:middle
+}
+.invoice-history-syncing-row td{
+    background:#f7fbfc!important;
+    color:#71858d
+}

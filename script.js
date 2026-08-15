@@ -61,6 +61,11 @@ const DB_INVENTORY_TRANSACTIONS = "inventory_transactions";
 const DB_INVENTORY_TRANSIT_SNAPSHOTS = "inventory_transit_snapshots";
 const DB_INVENTORY_TRANSIT_ROWS = "inventory_transit_rows";
 
+// V39 - Lịch sử hóa đơn Cloud
+const DB_INVOICE_IMPORTS = "invoice_imports";
+const DB_INVOICE_GROUPS = "invoice_groups";
+const DB_INVOICE_LINES = "invoice_lines";
+
 const inventoryState = {
     items: [],
     stocktakes: [],
@@ -205,9 +210,9 @@ function createDefaultShiftStatusSet() {
 
 
 /* ======================== SUPABASE CLOUD ======================== */
-const APP_VERSION = "V38.0";
+const APP_VERSION = "V39.0";
 const APP_BUILD_DATE = "2026-08-15";
-const APP_CACHE_VERSION = "38";
+const APP_CACHE_VERSION = "39";
 
 const systemHealthStateV38 = {
     running: false,
@@ -939,6 +944,13 @@ async function enterAuthenticatedApp(session) {
 
     await loadInventoryData();
 
+    // V39: lịch sử hóa đơn Cloud là nguồn dùng chung nhiều máy.
+    // Lần đầu sau nâng cấp sẽ tự migrate cache V27/V38 nếu có.
+    await syncInvoiceHistoryCloudV39({
+        migrateLocal: true,
+        loadLatestIfEmpty: true
+    });
+
     const savedUi = readUiStateV17();
 
     const reportDates = [...new Set(
@@ -1015,7 +1027,7 @@ async function enterAuthenticatedApp(session) {
     // V38: kiểm tra hệ thống nền sau khi toàn bộ dữ liệu Cloud đã tải.
     setTimeout(() => {
         runSystemHealthCheckV38({ silent: true }).catch(error => {
-            console.warn("V38 health check:", error);
+            console.warn("V39 health check:", error);
         });
     }, 150);
 
@@ -6374,6 +6386,9 @@ const invoiceState = {
 
 const invoiceHistoryState = {
     loaded: false,
+    cloudLoaded: false,
+    syncing: false,
+    lastCloudError: "",
     items: []
 };
 
@@ -6856,14 +6871,32 @@ function buildInvoiceHistoryItem(source = invoiceState) {
 }
 
 function saveInvoiceHistoryLocal() {
+    // V39: LocalStorage chỉ còn là CACHE dự phòng, Cloud mới là nguồn chính.
     try {
+        const cacheItems = invoiceHistoryState.items
+            .slice(0, INVOICE_HISTORY_MAX_ITEMS)
+            .map(item => ({
+                ...item,
+                rows: Array.isArray(item.rows) ? item.rows : [],
+                lineRows: Array.isArray(item.lineRows) ? item.lineRows : []
+            }));
+
         localStorage.setItem(
             INVOICE_HISTORY_STORAGE_KEY,
-            JSON.stringify(invoiceHistoryState.items.slice(0, INVOICE_HISTORY_MAX_ITEMS))
+            JSON.stringify(cacheItems)
         );
     } catch (error) {
-        console.warn("Không lưu được lịch sử thống kê hóa đơn.", error);
+        console.warn("Không lưu được cache lịch sử hóa đơn.", error);
     }
+}
+
+function setInvoiceHistoryCloudStatusV39(status, text) {
+    const el = $("invoiceHistoryCloudStatus");
+    if (!el) return;
+
+    el.classList.remove("ok", "warning", "error", "checking");
+    el.classList.add(status || "checking");
+    el.textContent = text || "☁️ Cloud";
 }
 
 function ensureInvoiceHistoryLoaded() {
@@ -6877,14 +6910,25 @@ function ensureInvoiceHistoryLoaded() {
         );
 
         invoiceHistoryState.items = Array.isArray(saved)
-            ? saved.filter(item => item && item.id && Array.isArray(item.rows))
+            ? saved
+                .filter(item => item && item.id)
+                .map(item => ({
+                    ...item,
+                    cloud: Boolean(item.cloud),
+                    detailsLoaded:
+                        Array.isArray(item.rows) &&
+                        Array.isArray(item.lineRows) &&
+                        (item.rows.length > 0 || item.lineRows.length > 0),
+                    rows: Array.isArray(item.rows) ? item.rows : [],
+                    lineRows: Array.isArray(item.lineRows) ? item.lineRows : []
+                }))
             : [];
     } catch (error) {
-        console.warn("Không đọc được lịch sử hóa đơn.", error);
+        console.warn("Không đọc được cache lịch sử hóa đơn.", error);
         invoiceHistoryState.items = [];
     }
 
-    // Tự đưa dữ liệu V23-V26 đang có vào lịch sử lần đầu.
+    // Dữ liệu bảng hiện tại của bản cũ vẫn được giữ làm nguồn migration.
     ensureInvoiceStatsLoaded();
 
     if (invoiceState.rows.length && invoiceState.fileName) {
@@ -6897,6 +6941,8 @@ function ensureInvoiceHistoryLoaded() {
             invoiceState.currentHistoryId = existing.id;
         } else {
             const seeded = buildInvoiceHistoryItem(invoiceState);
+            seeded.cloud = false;
+            seeded.detailsLoaded = true;
             invoiceHistoryState.items.unshift(seeded);
             invoiceState.currentHistoryId = seeded.id;
             saveInvoiceHistoryLocal();
@@ -6907,7 +6953,330 @@ function ensureInvoiceHistoryLoaded() {
     updateInvoiceHistoryCount();
 }
 
-function addCurrentInvoiceToHistory() {
+function stableInvoiceLineForFingerprintV39(row) {
+    return {
+        invoiceNo: String(row?.invoiceNo || "").trim(),
+        invoiceDate: String(row?.invoiceDate || "").trim(),
+        productCode: String(row?.productCode || "").trim(),
+        productName: String(row?.productName || "").trim(),
+        quantity: Number(row?.quantity || 0),
+        vat: Number(row?.vat || 0),
+        payment: Number(row?.payment || 0),
+        preTax: Number(row?.preTax || 0),
+        promo: Boolean(row?.promo),
+        issued: row?.issued !== false
+    };
+}
+
+function buildInvoiceFingerprintPayloadV39(source) {
+    const lines = cloneInvoiceRows(source?.lineRows || [])
+        .map(stableInvoiceLineForFingerprintV39)
+        .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+
+    return JSON.stringify({
+        dateFrom: source?.dateFrom || "",
+        dateTo: source?.dateTo || "",
+        invoiceCount: Number(source?.invoiceCount || 0),
+        lines
+    });
+}
+
+async function sha256TextV39(text) {
+    if (globalThis.crypto?.subtle) {
+        const bytes = new TextEncoder().encode(String(text || ""));
+        const digest = await crypto.subtle.digest("SHA-256", bytes);
+
+        return [...new Uint8Array(digest)]
+            .map(byte => byte.toString(16).padStart(2, "0"))
+            .join("");
+    }
+
+    // Fallback cho trình duyệt cũ - không dùng cho bảo mật, chỉ chống trùng dữ liệu.
+    let hash = 2166136261;
+    const input = String(text || "");
+
+    for (let i = 0; i < input.length; i++) {
+        hash ^= input.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+    }
+
+    return `fallback_${(hash >>> 0).toString(16)}`;
+}
+
+async function buildInvoiceFingerprintV39(source) {
+    return `invoice_v39_${await sha256TextV39(buildInvoiceFingerprintPayloadV39(source))}`;
+}
+
+function mapInvoiceImportFromCloudV39(row, existingDetail = null) {
+    return {
+        id: row.id,
+        cloud: true,
+        detailsLoaded: Boolean(existingDetail?.detailsLoaded),
+        fileFingerprint: row.file_fingerprint || "",
+        fileName: row.file_name || "",
+        importedAt: row.imported_at || row.created_at || "",
+        dateFrom: row.date_from || "",
+        dateTo: row.date_to || "",
+        sourceRowCount: Number(row.source_row_count || 0),
+        issuedLineCount: Number(row.issued_line_count || 0),
+        unissuedLineCount: Number(row.unissued_line_count || 0),
+        invoiceCount: Number(row.invoice_count || 0),
+        productCount: Number(row.product_count || 0),
+        totalQuantity: Number(row.total_quantity || 0),
+        vatTotal: Number(row.vat_total || 0),
+        paymentTotal: Number(row.payment_total || 0),
+        preTaxTotal: Number(row.pre_tax_total || 0),
+        createdEmail: row.created_email || "",
+        rows: existingDetail?.detailsLoaded
+            ? cloneInvoiceRows(existingDetail.rows)
+            : [],
+        lineRows: existingDetail?.detailsLoaded
+            ? cloneInvoiceRows(existingDetail.lineRows)
+            : []
+    };
+}
+
+function invoiceGroupToCloudV39(item, index) {
+    return {
+        sortOrder: index + 1,
+        productName: item.productName || "",
+        quantity: Number(item.quantity || 0),
+        vat: Number(item.vat || 0),
+        payment: Number(item.payment || 0),
+        preTax: Number(item.preTax || 0),
+        promo: Boolean(item.promo)
+    };
+}
+
+function invoiceLineToCloudV39(item, index) {
+    return {
+        sortOrder: index + 1,
+        invoiceNo: item.invoiceNo || "",
+        invoiceDate: item.invoiceDate || "",
+        productCode: item.productCode || "",
+        productName: item.productName || "",
+        quantity: Number(item.quantity || 0),
+        vat: Number(item.vat || 0),
+        payment: Number(item.payment || 0),
+        preTax: Number(item.preTax || 0),
+        promo: Boolean(item.promo),
+        promoFlag: item.promoFlag || "",
+        taxStatus: item.taxStatus || "",
+        invoiceStatus: item.invoiceStatus || "",
+        issued: item.issued !== false
+    };
+}
+
+async function saveInvoiceHistoryToCloudV39(item) {
+    if (!state.user) {
+        throw new Error("Chưa đăng nhập nên không thể lưu lịch sử hóa đơn lên Cloud.");
+    }
+
+    const client = initSupabaseClient();
+    const fingerprint = item.fileFingerprint || await buildInvoiceFingerprintV39(item);
+
+    const importPayload = {
+        fileFingerprint: fingerprint,
+        fileName: item.fileName || "",
+        importedAt: item.importedAt || new Date().toISOString(),
+        dateFrom: item.dateFrom || "",
+        dateTo: item.dateTo || "",
+        sourceRowCount: Number(item.sourceRowCount || 0),
+        issuedLineCount: Number(item.issuedLineCount || 0),
+        unissuedLineCount: Number(item.unissuedLineCount || 0),
+        invoiceCount: Number(item.invoiceCount || 0),
+        productCount: Number(item.productCount || item.rows?.length || 0),
+        totalQuantity: Number(item.totalQuantity || 0),
+        vatTotal: Number(item.vatTotal || 0),
+        paymentTotal: Number(item.paymentTotal || 0),
+        preTaxTotal: Number(item.preTaxTotal || 0)
+    };
+
+    const groups = (Array.isArray(item.rows) ? item.rows : [])
+        .map(invoiceGroupToCloudV39);
+
+    const lines = (Array.isArray(item.lineRows) ? item.lineRows : [])
+        .map(invoiceLineToCloudV39);
+
+    const { data, error } = await client.rpc("save_invoice_history", {
+        p_import: importPayload,
+        p_groups: groups,
+        p_lines: lines
+    });
+
+    if (error) throw error;
+
+    const result = data && typeof data === "object"
+        ? data
+        : {};
+
+    return {
+        id: String(result.id || ""),
+        duplicate: Boolean(result.duplicate),
+        fingerprint
+    };
+}
+
+async function fetchInvoiceHistoryDetailsV39(historyId) {
+    const client = initSupabaseClient();
+
+    const [groupsResult, linesResult] = await Promise.all([
+        client
+            .from(DB_INVOICE_GROUPS)
+            .select("*")
+            .eq("import_id", historyId)
+            .order("sort_order", { ascending: true }),
+
+        client
+            .from(DB_INVOICE_LINES)
+            .select("*")
+            .eq("import_id", historyId)
+            .order("sort_order", { ascending: true })
+    ]);
+
+    if (groupsResult.error) throw groupsResult.error;
+    if (linesResult.error) throw linesResult.error;
+
+    const rows = (groupsResult.data || []).map(row => ({
+        productName: row.product_name || "",
+        quantity: Number(row.quantity || 0),
+        vat: Number(row.vat || 0),
+        payment: Number(row.payment || 0),
+        preTax: Number(row.pre_tax || 0),
+        promo: Boolean(row.promo)
+    }));
+
+    const lineRows = (linesResult.data || []).map(row => ({
+        invoiceNo: row.invoice_no || "",
+        invoiceDate: row.invoice_date || "",
+        productCode: row.product_code || "",
+        productName: row.product_name || "",
+        quantity: Number(row.quantity || 0),
+        vat: Number(row.vat || 0),
+        payment: Number(row.payment || 0),
+        preTax: Number(row.pre_tax || 0),
+        promo: Boolean(row.promo),
+        promoFlag: row.promo_flag || "",
+        taxStatus: row.tax_status || "",
+        invoiceStatus: row.invoice_status || "",
+        issued: row.issued !== false
+    }));
+
+    return { rows, lineRows };
+}
+
+async function migrateLocalInvoiceHistoryToCloudV39(localItems) {
+    if (!state.user || !localItems.length) return { migrated: 0, duplicates: 0, failed: 0 };
+
+    let migrated = 0;
+    let duplicates = 0;
+    let failed = 0;
+
+    for (const localItem of localItems) {
+        if (!Array.isArray(localItem.rows) || !localItem.rows.length) continue;
+
+        try {
+            const result = await saveInvoiceHistoryToCloudV39(localItem);
+            if (result.duplicate) duplicates++;
+            else migrated++;
+        } catch (error) {
+            failed++;
+            console.warn("Không migrate được lịch sử hóa đơn cũ:", localItem.fileName, error);
+        }
+    }
+
+    return { migrated, duplicates, failed };
+}
+
+async function syncInvoiceHistoryCloudV39({
+    migrateLocal = false,
+    loadLatestIfEmpty = false
+} = {}) {
+    ensureInvoiceHistoryLoaded();
+
+    if (!state.user || invoiceHistoryState.syncing) return;
+
+    invoiceHistoryState.syncing = true;
+    invoiceHistoryState.lastCloudError = "";
+    setInvoiceHistoryCloudStatusV39("checking", "☁️ Đang đồng bộ Cloud");
+
+    const localBeforeCloud = invoiceHistoryState.items.filter(item =>
+        !item.cloud && Array.isArray(item.rows) && item.rows.length
+    );
+
+    try {
+        if (migrateLocal && localBeforeCloud.length) {
+            await migrateLocalInvoiceHistoryToCloudV39(localBeforeCloud);
+        }
+
+        const client = initSupabaseClient();
+        const { data, error } = await client
+            .from(DB_INVOICE_IMPORTS)
+            .select("*")
+            .order("imported_at", { ascending: false })
+            .limit(INVOICE_HISTORY_MAX_ITEMS);
+
+        if (error) throw error;
+
+        const oldById = new Map(
+            invoiceHistoryState.items.map(item => [item.id, item])
+        );
+
+        invoiceHistoryState.items = (data || []).map(row =>
+            mapInvoiceImportFromCloudV39(row, oldById.get(row.id))
+        );
+
+        invoiceHistoryState.cloudLoaded = true;
+        invoiceHistoryState.lastCloudError = "";
+
+        // Đồng bộ currentHistoryId nếu cache local đang trỏ vào cùng file/ngày.
+        if (invoiceState.rows.length && !invoiceState.currentHistoryId) {
+            const match = invoiceHistoryState.items.find(item =>
+                item.fileName === invoiceState.fileName &&
+                item.dateFrom === invoiceState.dateFrom &&
+                item.dateTo === invoiceState.dateTo &&
+                Number(item.invoiceCount || 0) === Number(invoiceState.invoiceCount || 0)
+            );
+
+            if (match) invoiceState.currentHistoryId = match.id;
+        }
+
+        saveInvoiceHistoryLocal();
+        updateInvoiceHistoryCount();
+        renderInvoiceHistory();
+
+        setInvoiceHistoryCloudStatusV39(
+            "ok",
+            `☁️ Cloud · ${formatNumber(invoiceHistoryState.items.length)} bản`
+        );
+
+        if (
+            loadLatestIfEmpty &&
+            !invoiceState.rows.length &&
+            invoiceHistoryState.items.length
+        ) {
+            await loadInvoiceHistoryItem(
+                invoiceHistoryState.items[0].id,
+                { closeModal: false, silent: true }
+            );
+        }
+    } catch (error) {
+        invoiceHistoryState.cloudLoaded = false;
+        invoiceHistoryState.lastCloudError = error?.message || "Không đồng bộ được Cloud.";
+
+        setInvoiceHistoryCloudStatusV39(
+            "error",
+            "☁️ Lỗi Cloud - đang dùng cache máy"
+        );
+
+        console.error("Invoice history Cloud V39:", error);
+    } finally {
+        invoiceHistoryState.syncing = false;
+        updateInvoiceHistoryCount();
+    }
+}
+
+async function addCurrentInvoiceToHistory() {
     ensureInvoiceHistoryLoaded();
 
     if (!invoiceState.rows.length) return null;
@@ -6915,18 +7284,65 @@ function addCurrentInvoiceToHistory() {
     invoiceState.currentHistoryId = createInvoiceHistoryId(invoiceState.importedAt);
 
     const item = buildInvoiceHistoryItem(invoiceState);
+    item.cloud = false;
+    item.detailsLoaded = true;
+    item.fileFingerprint = await buildInvoiceFingerprintV39(item);
 
+    if (state.user) {
+        const result = await saveInvoiceHistoryToCloudV39(item);
+
+        if (!result.id) {
+            throw new Error("Cloud không trả về ID lịch sử hóa đơn.");
+        }
+
+        invoiceState.currentHistoryId = result.id;
+        item.id = result.id;
+        item.cloud = true;
+        item.fileFingerprint = result.fingerprint;
+
+        // Nếu fingerprint đã tồn tại thì tuyệt đối không tạo bản thứ hai.
+        if (result.duplicate) {
+            await syncInvoiceHistoryCloudV39({ migrateLocal: false });
+
+            const existing = invoiceHistoryState.items.find(row => row.id === result.id);
+            if (existing) {
+                existing.rows = cloneInvoiceRows(item.rows);
+                existing.lineRows = cloneInvoiceRows(item.lineRows);
+                existing.detailsLoaded = true;
+                invoiceState.importedAt = existing.importedAt || invoiceState.importedAt;
+                invoiceState.fileName = existing.fileName || invoiceState.fileName;
+            }
+
+            saveInvoiceStatsLocal();
+            saveInvoiceHistoryLocal();
+            updateInvoiceHistoryCount();
+
+            return {
+                item: existing || item,
+                duplicate: true
+            };
+        }
+    }
+
+    invoiceHistoryState.items = invoiceHistoryState.items.filter(row => row.id !== item.id);
     invoiceHistoryState.items.unshift(item);
-    invoiceHistoryState.items = invoiceHistoryState.items.slice(
-        0,
-        INVOICE_HISTORY_MAX_ITEMS
-    );
+    invoiceHistoryState.items = invoiceHistoryState.items.slice(0, INVOICE_HISTORY_MAX_ITEMS);
 
     saveInvoiceHistoryLocal();
     saveInvoiceStatsLocal();
     updateInvoiceHistoryCount();
 
-    return item;
+    if (state.user) {
+        setInvoiceHistoryCloudStatusV39(
+            "ok",
+            `☁️ Cloud · ${formatNumber(invoiceHistoryState.items.length)} bản`
+        );
+    }
+
+    return {
+        item,
+        duplicate: false
+    };
 }
 
 function updateInvoiceHistoryCount() {
@@ -6941,10 +7357,7 @@ function formatInvoiceHistoryDateTime(isoValue) {
     const date = new Date(isoValue || "");
 
     if (Number.isNaN(date.getTime())) {
-        return {
-            date: "-",
-            time: "-"
-        };
+        return { date: "-", time: "-" };
     }
 
     return {
@@ -6986,6 +7399,7 @@ function renderInvoiceHistory() {
         const dateTime = formatInvoiceHistoryDateTime(item.importedAt);
         const haystack = normalizeText([
             item.fileName,
+            item.createdEmail,
             dateTime.date,
             dateTime.time,
             formatInvoiceSourceDateRange(item)
@@ -7007,7 +7421,7 @@ function renderInvoiceHistory() {
                 <td colspan="9" class="empty-table">
                     ${invoiceHistoryState.items.length
                         ? "Không tìm thấy lịch sử phù hợp."
-                        : "Chưa có lịch sử thống kê hóa đơn."}
+                        : "Chưa có lịch sử thống kê hóa đơn trên Cloud."}
                 </td>
             </tr>
         `;
@@ -7021,27 +7435,23 @@ function renderInvoiceHistory() {
         return `
             <tr class="${isCurrent ? "invoice-history-current" : ""}">
                 <td>${index + 1}</td>
-
                 <td>${escapeHTML(dt.date)}</td>
-
                 <td><strong>${escapeHTML(dt.time)}</strong></td>
-
                 <td>${escapeHTML(formatInvoiceSourceDateRange(item))}</td>
 
                 <td title="${escapeHTML(item.fileName)}">
                     ${escapeHTML(item.fileName)}
+                    ${item.cloud
+                        ? '<span class="invoice-history-cloud-badge">CLOUD</span>'
+                        : '<span class="invoice-history-local-badge">CACHE</span>'}
                     ${isCurrent
-                        ? '<span class="invoice-history-current-badge">ĐANG XEM</span>'
+                        ? '<span class="invoice-history-current-badge cloud">ĐANG XEM</span>'
                         : ""}
                 </td>
 
                 <td>${formatNumber(item.invoiceCount || 0)}</td>
-
                 <td><strong>${formatNumber(item.totalQuantity || 0)}</strong></td>
-
-                <td class="invoice-history-money">
-                    ${invoiceMoney(item.paymentTotal || 0)}
-                </td>
+                <td class="invoice-history-money">${invoiceMoney(item.paymentTotal || 0)}</td>
 
                 <td>
                     <div class="invoice-history-actions">
@@ -7067,19 +7477,19 @@ function renderInvoiceHistory() {
     }).join("");
 
     document.querySelectorAll("[data-invoice-history-view]").forEach(button => {
-        button.addEventListener("click", () => {
-            loadInvoiceHistoryItem(button.dataset.invoiceHistoryView);
+        button.addEventListener("click", async () => {
+            await loadInvoiceHistoryItem(button.dataset.invoiceHistoryView);
         });
     });
 
     document.querySelectorAll("[data-invoice-history-delete]").forEach(button => {
-        button.addEventListener("click", () => {
-            deleteInvoiceHistoryItem(button.dataset.invoiceHistoryDelete);
+        button.addEventListener("click", async () => {
+            await deleteInvoiceHistoryItem(button.dataset.invoiceHistoryDelete);
         });
     });
 }
 
-function openInvoiceHistoryModal() {
+async function openInvoiceHistoryModal() {
     ensureInvoiceHistoryLoaded();
 
     if ($("invoiceHistorySearch")) {
@@ -7088,13 +7498,17 @@ function openInvoiceHistoryModal() {
 
     renderInvoiceHistory();
     $("invoiceHistoryModal")?.classList.remove("hidden");
+
+    if (state.user) {
+        await syncInvoiceHistoryCloudV39({ migrateLocal: true });
+    }
 }
 
 function closeInvoiceHistoryModal() {
     $("invoiceHistoryModal")?.classList.add("hidden");
 }
 
-function loadInvoiceHistoryItem(historyId) {
+async function loadInvoiceHistoryItem(historyId, options = {}) {
     ensureInvoiceHistoryLoaded();
 
     const item = invoiceHistoryState.items.find(row => row.id === historyId);
@@ -7102,6 +7516,26 @@ function loadInvoiceHistoryItem(historyId) {
     if (!item) {
         alert("Không tìm thấy bản lịch sử này.");
         return;
+    }
+
+    if (item.cloud && !item.detailsLoaded) {
+        setInvoiceHistoryCloudStatusV39("checking", "☁️ Đang tải chi tiết...");
+
+        try {
+            const detail = await fetchInvoiceHistoryDetailsV39(historyId);
+            item.rows = detail.rows;
+            item.lineRows = detail.lineRows;
+            item.detailsLoaded = true;
+            saveInvoiceHistoryLocal();
+            setInvoiceHistoryCloudStatusV39(
+                "ok",
+                `☁️ Cloud · ${formatNumber(invoiceHistoryState.items.length)} bản`
+            );
+        } catch (error) {
+            setInvoiceHistoryCloudStatusV39("error", "☁️ Không tải được chi tiết");
+            alert("Không tải được chi tiết lịch sử từ Cloud.\n\n" + (error?.message || ""));
+            return;
+        }
     }
 
     invoiceState.loadedFromStorage = true;
@@ -7125,7 +7559,9 @@ function loadInvoiceHistoryItem(historyId) {
     renderInvoiceStats();
     renderInvoiceHistory();
 
-    closeInvoiceHistoryModal();
+    if (options.closeModal !== false) {
+        closeInvoiceHistoryModal();
+    }
 
     const info = $("invoiceFileInfo");
     const dt = formatInvoiceHistoryDateTime(item.importedAt);
@@ -7133,53 +7569,88 @@ function loadInvoiceHistoryItem(historyId) {
     if (info) {
         info.classList.add("history-viewing");
         info.innerHTML +=
-            ` · <strong>Đang xem lịch sử upload ${escapeHTML(dt.date)} ${escapeHTML(dt.time)}</strong>`;
+            ` · <strong>Đang xem Cloud ${escapeHTML(dt.date)} ${escapeHTML(dt.time)}</strong>`;
     }
 
-    showToast(`Đang xem lịch sử ${dt.date} ${dt.time}.`);
+    if (!options.silent) {
+        showToast(`Đang xem lịch sử Cloud ${dt.date} ${dt.time}.`);
+    }
 }
 
-function deleteInvoiceHistoryItem(historyId) {
+async function verifyAdminAndDeleteInvoiceHistoryV39(historyId, password) {
+    if (!password) throw new Error("Hãy nhập mật khẩu admin.");
+
+    const adminClient = createAdminVerificationClient();
+
+    try {
+        const { data, error: loginError } = await adminClient.auth.signInWithPassword({
+            email: ADMIN_EMAIL,
+            password
+        });
+
+        if (loginError || !data?.user) {
+            throw new Error("Mật khẩu admin không đúng.");
+        }
+
+        if (String(data.user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+            throw new Error("Tài khoản xác thực không phải admin.");
+        }
+
+        const { data: result, error } = await adminClient.rpc(
+            "admin_delete_invoice_history",
+            { p_import_id: historyId }
+        );
+
+        if (error) throw error;
+        return result;
+    } finally {
+        await adminClient.auth.signOut().catch(() => {});
+    }
+}
+
+async function deleteInvoiceHistoryItem(historyId) {
     ensureInvoiceHistoryLoaded();
 
     const item = invoiceHistoryState.items.find(row => row.id === historyId);
-
     if (!item) return;
 
     const dt = formatInvoiceHistoryDateTime(item.importedAt);
 
     const ok = confirm(
-        `Xóa bản lịch sử này?\n\n` +
+        `Xóa bản lịch sử hóa đơn trên CLOUD?\n\n` +
         `Ngày upload: ${dt.date}\n` +
         `Giờ: ${dt.time}\n` +
         `File: ${item.fileName}\n\n` +
-        `Thao tác này chỉ xóa bản lịch sử hóa đơn trên trình duyệt hiện tại.`
+        `Sau khi xóa, các máy khác cũng không còn thấy bản này.`
     );
 
     if (!ok) return;
 
-    invoiceHistoryState.items = invoiceHistoryState.items.filter(
-        row => row.id !== historyId
+    const password = prompt(
+        `Nhập mật khẩu ADMIN (${ADMIN_EMAIL}) để xác nhận xóa:`
     );
 
-    saveInvoiceHistoryLocal();
+    if (password === null) return;
 
-    if (invoiceState.currentHistoryId === historyId) {
-        const next = invoiceHistoryState.items[0];
-
-        if (next) {
-            invoiceState.currentHistoryId = next.id;
-            invoiceState.fileName = next.fileName || "";
-            invoiceState.importedAt = next.importedAt || "";
-            invoiceState.dateFrom = next.dateFrom || "";
-            invoiceState.dateTo = next.dateTo || "";
-            invoiceState.sourceRowCount = Number(next.sourceRowCount || 0);
-            invoiceState.issuedLineCount = Number(next.issuedLineCount || 0);
-            invoiceState.unissuedLineCount = Number(next.unissuedLineCount || 0);
-            invoiceState.invoiceCount = Number(next.invoiceCount || 0);
-            invoiceState.rows = cloneInvoiceRows(next.rows);
-            invoiceState.lineRows = cloneInvoiceRows(next.lineRows || []);
+    try {
+        if (item.cloud) {
+            await verifyAdminAndDeleteInvoiceHistoryV39(historyId, password);
         } else {
+            // Cache cũ chưa migrate: vẫn xác thực admin trước khi xóa local.
+            const adminClient = createAdminVerificationClient();
+            const { data, error } = await adminClient.auth.signInWithPassword({
+                email: ADMIN_EMAIL,
+                password
+            });
+            await adminClient.auth.signOut().catch(() => {});
+            if (error || !data?.user) throw new Error("Mật khẩu admin không đúng.");
+        }
+
+        invoiceHistoryState.items = invoiceHistoryState.items.filter(
+            row => row.id !== historyId
+        );
+
+        if (invoiceState.currentHistoryId === historyId) {
             invoiceState.currentHistoryId = "";
             invoiceState.fileName = "";
             invoiceState.importedAt = "";
@@ -7191,15 +7662,24 @@ function deleteInvoiceHistoryItem(historyId) {
             invoiceState.invoiceCount = 0;
             invoiceState.rows = [];
             invoiceState.lineRows = [];
+            saveInvoiceStatsLocal();
+            renderInvoiceStats();
         }
 
-        saveInvoiceStatsLocal();
-        renderInvoiceStats();
-    }
+        saveInvoiceHistoryLocal();
 
-    renderInvoiceHistory();
-    updateInvoiceHistoryCount();
-    showToast(`Đã xóa lịch sử ${dt.date} ${dt.time}.`);
+        if (state.user) {
+            await syncInvoiceHistoryCloudV39({ migrateLocal: false });
+        } else {
+            renderInvoiceHistory();
+        }
+
+        updateInvoiceHistoryCount();
+        showToast(`Đã xóa lịch sử ${dt.date} ${dt.time}.`);
+    } catch (error) {
+        console.error("Delete invoice history V39:", error);
+        alert("Không xóa được lịch sử.\n\n" + (error?.message || ""));
+    }
 }
 
 function getInvoiceTotals() {
@@ -7434,8 +7914,8 @@ async function handleInvoiceUpload(file) {
         invoiceState.rows = result.rows;
         invoiceState.lineRows = result.lineRows;
 
-        // V27: mỗi lần upload tạo một bản lịch sử riêng.
-        addCurrentInvoiceToHistory();
+        // V39: lưu Cloud theo fingerprint; file trùng không tạo bản thứ hai.
+        const historyResult = await addCurrentInvoiceToHistory();
 
         if ($("invoiceSearchInput")) {
             $("invoiceSearchInput").value = "";
@@ -7450,10 +7930,17 @@ async function handleInvoiceUpload(file) {
             renderInventoryMisaUploadInfo();
         }
 
-        showToast(
-            `Đã đọc ${formatNumber(result.invoiceCount)} số hóa đơn · ` +
-            `${formatNumber(getInvoiceTotals().quantity)} sản phẩm đã phát hành.`
-        );
+        if (historyResult?.duplicate) {
+            showToast(
+                `File này đã có trên Cloud. Không tạo bản trùng · ` +
+                `${formatNumber(result.invoiceCount)} số hóa đơn.`
+            );
+        } else {
+            showToast(
+                `Đã lưu Cloud ${formatNumber(result.invoiceCount)} số hóa đơn · ` +
+                `${formatNumber(getInvoiceTotals().quantity)} sản phẩm đã phát hành.`
+            );
+        }
     } catch (error) {
         console.error("Invoice upload error:", error);
 
@@ -7576,7 +8063,11 @@ $("invoiceFileInput")?.addEventListener("change", event => {
 
 $("invoiceSearchInput")?.addEventListener("input", renderInvoiceStats);
 
-$("btnInvoiceHistory")?.addEventListener("click", openInvoiceHistoryModal);
+$("btnInvoiceHistory")?.addEventListener("click", () => {
+    openInvoiceHistoryModal().catch(error => {
+        console.error("Open invoice history V39:", error);
+    });
+});
 
 $("btnCloseInvoiceHistory")?.addEventListener("click", closeInvoiceHistoryModal);
 $("btnCloseInvoiceHistoryFooter")?.addEventListener("click", closeInvoiceHistoryModal);
@@ -8431,62 +8922,56 @@ async function v38ProbeTableGroup(client, key, label, tables) {
     }
 }
 
-async function v38ProbeRpcOpenApi(client) {
+async function v39ProbeSystemHealthRpc(client) {
     try {
-        const { data } = await client.auth.getSession();
-        const token =
-            data?.session?.access_token ||
-            SUPABASE_PUBLISHABLE_KEY;
+        const { data, error } = await client.rpc("app_health_check");
 
-        const response = await fetch(
-            `${SUPABASE_URL}/rest/v1/`,
-            {
-                method: "GET",
-                headers: {
-                    apikey: SUPABASE_PUBLISHABLE_KEY,
-                    Authorization: `Bearer ${token}`,
-                    Accept: "application/openapi+json"
-                }
-            }
-        );
+        if (error) throw error;
 
-        if (!response.ok) {
-            throw new Error(`OpenAPI HTTP ${response.status}`);
-        }
+        const rpcs = data?.rpcs || {};
+        const tables = data?.tables || {};
 
-        const schema = await response.json();
-        const paths = schema?.paths || {};
-
-        const requiredRpc = [
+        const requiredRpcs = [
             "replace_shift_data",
-            "admin_delete_shopee_data"
+            "admin_delete_shopee_data",
+            "save_invoice_history",
+            "admin_delete_invoice_history"
         ];
 
-        const missing = requiredRpc.filter(name =>
-            !paths[`/rpc/${name}`]
-        );
+        const missingRpcs = requiredRpcs.filter(name => rpcs[name] !== true);
 
-        if (missing.length) {
+        const requiredTables = [
+            "invoice_imports",
+            "invoice_groups",
+            "invoice_lines"
+        ];
+
+        const missingTables = requiredTables.filter(name => tables[name] !== true);
+
+        if (missingRpcs.length || missingTables.length) {
             return v38HealthCheckItem(
                 "rpc",
-                "RPC Supabase",
+                "RPC & SQL V39",
                 "error",
-                `Thiếu: ${missing.join(", ")}. Cần kiểm tra SQL migration.`
+                [
+                    missingRpcs.length ? `Thiếu RPC: ${missingRpcs.join(", ")}` : "",
+                    missingTables.length ? `Thiếu bảng: ${missingTables.join(", ")}` : ""
+                ].filter(Boolean).join(" · ")
             );
         }
 
         return v38HealthCheckItem(
             "rpc",
-            "RPC Supabase",
+            "RPC & SQL V39",
             "ok",
-            "Có replace_shift_data và admin_delete_shopee_data."
+            "RPC upload/xóa + 3 bảng lịch sử hóa đơn Cloud đã sẵn sàng."
         );
     } catch (error) {
         return v38HealthCheckItem(
             "rpc",
-            "RPC Supabase",
-            "warning",
-            `Không đọc được OpenAPI để xác minh RPC: ${error?.message || "không rõ lỗi"}.`
+            "RPC & SQL V39",
+            "error",
+            `Chưa chạy SQL V39 hoặc app_health_check chưa sẵn sàng: ${error?.message || "không rõ lỗi"}.`
         );
     }
 }
@@ -8506,18 +8991,18 @@ async function runSystemHealthCheckV38({ silent = false } = {}) {
     systemHealthStateV38.checks = [
         v38HealthCheckItem(
             "version",
-            "Phiên bản V38",
+            "Phiên bản V39",
             (
-                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=38") &&
-                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=38")
+                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=39") &&
+                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=39")
             )
                 ? "ok"
                 : "warning",
             (
-                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=38") &&
-                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=38")
+                document.querySelector('link[href*="style.css"]')?.getAttribute("href")?.includes("v=39") &&
+                document.querySelector('script[src*="script.js"]')?.getAttribute("src")?.includes("v=39")
             )
-                ? "index.html đang gọi style.css?v=38 và script.js?v=38."
+                ? "index.html đang gọi style.css?v=39 và script.js?v=39."
                 : "Trình duyệt có thể đang dùng file cache hoặc index cũ."
         ),
 
@@ -8603,7 +9088,18 @@ async function runSystemHealthCheckV38({ silent = false } = {}) {
                 ]
             ),
 
-            v38ProbeRpcOpenApi(client)
+            v38ProbeTableGroup(
+                client,
+                "invoice-history-cloud",
+                "Lịch sử hóa đơn Cloud",
+                [
+                    DB_INVOICE_IMPORTS,
+                    DB_INVOICE_GROUPS,
+                    DB_INVOICE_LINES
+                ]
+            ),
+
+            v39ProbeSystemHealthRpc(client)
         ]);
 
         systemHealthStateV38.checks.push(...cloudChecks);

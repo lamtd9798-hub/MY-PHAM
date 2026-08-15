@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RUCOS - Thống kê Shopee</title>
-    <!-- V38: Trung tâm cảnh báo vận hành + kiểm tra hệ thống | giữ nguyên toàn bộ chức năng V37 -->
+    <!-- V39: Lịch sử hóa đơn Supabase Cloud + chống trùng + health check RPC an toàn -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=38">
+    <link rel="stylesheet" href="style.css?v=39">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -192,7 +192,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V38.0</span>
+                <span class="v38-sidebar-version">V39.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -287,7 +287,7 @@
                         <div>
                             <h2>🩺 Kiểm tra hệ thống</h2>
                             <p>
-                                <strong id="v38VersionText">V38.0</strong>
+                                <strong id="v38VersionText">V39.0</strong>
                                 · <span id="v38HealthCheckedAt">Chưa kiểm tra</span>
                             </p>
                         </div>
@@ -1487,8 +1487,8 @@
             <div class="invoice-history-modal">
                 <div class="invoice-history-modal-header">
                     <div>
-                        <h2>🕘 Lịch sử thống kê hóa đơn</h2>
-                        <p>Mỗi lần upload file sẽ được lưu thành một bản lịch sử riêng.</p>
+                        <h2>☁️ Lịch sử thống kê hóa đơn</h2>
+                        <p>Lưu trên Supabase Cloud · dùng chung giữa máy công ty và máy nhà.</p>
                     </div>
 
                     <button type="button" id="btnCloseInvoiceHistory" class="invoice-history-close">×</button>
@@ -1505,9 +1505,15 @@
                         >
                     </div>
 
-                    <span id="invoiceHistorySummary" class="invoice-history-summary">
-                        0 bản lịch sử
-                    </span>
+                    <div class="invoice-history-cloud-meta">
+                        <span id="invoiceHistoryCloudStatus" class="invoice-history-cloud-status checking">
+                            ☁️ Đang đồng bộ Cloud
+                        </span>
+
+                        <span id="invoiceHistorySummary" class="invoice-history-summary">
+                            0 bản lịch sử
+                        </span>
+                    </div>
                 </div>
 
                 <div class="invoice-history-table-wrap">
@@ -1548,7 +1554,7 @@
 
                 <div class="invoice-history-modal-footer">
                     <div class="invoice-history-note">
-                        Lịch sử đang lưu trên trình duyệt của máy này.
+                        Lịch sử được lưu trên Supabase Cloud. Xóa lịch sử yêu cầu mật khẩu ADMIN.
                     </div>
 
                     <button type="button" id="btnCloseInvoiceHistoryFooter" class="btn btn-light">
@@ -1577,7 +1583,7 @@
 
                     <div class="invoice-upload-actions">
                         <button type="button" id="btnInvoiceHistory" class="invoice-history-button">
-                            🕘 Lịch sử thống kê
+                            ☁️ Lịch sử Cloud
                             <span id="invoiceHistoryCount" class="invoice-history-count">0</span>
                         </button>
 
@@ -1827,6 +1833,6 @@
 </div>
 
 <div id="toast" class="toast"></div>
-    <script src="script.js?v=38"></script>
+    <script src="script.js?v=39"></script>
 </body>
 </html>
