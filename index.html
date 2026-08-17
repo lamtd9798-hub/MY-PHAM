@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style-v56-6.css?v=566">
+    <link rel="stylesheet" href="style-v56-7.css?v=567">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -228,36 +228,9 @@
                 <span>Tồn kho & luân chuyển</span>
                 <span class="nav-badge" id="navInventoryCount">0</span>
             </button>
-            <button class="nav-item" data-view="history">
-                <span class="nav-icon">🗓️</span>
-                <span>Lịch sử thống kê</span>
-                <span class="nav-badge" id="navHistoryCount">0</span>
-            </button>
         </nav>
 
-        <div class="sidebar-section-title second-section">ĐỐI SOÁT</div>
-        <nav class="sidebar-menu future-menu">
-            <button class="nav-item" data-view="orders">
-                <span class="nav-icon">📦</span><span>Đơn hàng</span>
-                <span class="nav-badge" id="navOrderCount">0</span>
-            </button>
-            <button class="nav-item" data-view="fees">
-                <span class="nav-icon">💳</span><span>Phí sàn</span>
-                <span class="nav-badge" id="navFeeCount">0</span>
-            </button>
-            <button class="nav-item" data-view="returns">
-                <span class="nav-icon">↩️</span><span>Hoàn / Hủy</span>
-                <span class="nav-badge warning" id="navReturnCount">0</span>
-            </button>
-            <button class="nav-item" data-view="payments">
-                <span class="nav-icon">💰</span><span>Thanh toán</span>
-                <span class="nav-badge" id="navPaymentCount">0</span>
-            </button>
-            <button class="nav-item" data-view="issues">
-                <span class="nav-icon">⚠️</span><span>Sai lệch</span>
-                <span class="nav-badge warning" id="navIssueCount">0</span>
-            </button>
-        </nav>
+        <!-- V56.7: Đã bỏ Lịch sử thống kê và toàn bộ nhóm Đối soát khỏi sidebar theo yêu cầu. -->
 
         <div class="sidebar-footer">
             <div class="shop-info">
@@ -269,7 +242,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V56.6</span>
+                <span class="v38-sidebar-version">V56.7</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -2937,6 +2910,6 @@
         </div>
     </div>
 
-    <script src="script-v56-6.js?v=566"></script>
+    <script src="script-v56-7.js?v=567"></script>
 </body>
 </html>
