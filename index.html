@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style-v56-5.css?v=565">
+    <link rel="stylesheet" href="style-v56-6.css?v=566">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -269,7 +269,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V56.5</span>
+                <span class="v38-sidebar-version">V56.6</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -741,7 +741,7 @@
                     <div class="panel-header">
                         <div>
                             <h2>Bộ lọc thống kê của ngày</h2>
-                            <p>File được lưu toàn bộ. Thay đổi ngày đơn / trạng thái bên dưới thì bảng tính lại ngay.</p>
+                            <p>File được lưu toàn bộ. Có thể chọn 1, 2 hoặc nhiều ngày đơn cùng lúc; bảng sẽ cộng chung các ngày đã chọn.</p>
                         </div>
                     </div>
 
@@ -754,10 +754,10 @@
 
                             <div class="stats-shift-filter-body">
                                 <div class="stats-filter-date-row">
-                                    <div class="stats-filter-date-label">NGÀY ĐƠN</div>
+                                    <div class="stats-filter-date-label">NGÀY ĐƠN <span class="multi-date-badge">CHỌN NHIỀU</span></div>
                                     <div class="stats-filter-date-control">
-                                        <input id="morningSourceDate" type="date">
-                                        <div id="morningAvailableDates" class="stats-filter-date-buttons"></div>
+                                        <div class="multi-date-hint">Bấm từng ngày để chọn/bỏ chọn. Có thể chọn 2–3 ngày cùng lúc.</div>
+                                        <div id="morningAvailableDates" class="stats-filter-date-buttons multi-select-dates"></div>
                                     </div>
                                 </div>
 
@@ -786,10 +786,10 @@
 
                             <div class="stats-shift-filter-body">
                                 <div class="stats-filter-date-row">
-                                    <div class="stats-filter-date-label">NGÀY ĐƠN</div>
+                                    <div class="stats-filter-date-label">NGÀY ĐƠN <span class="multi-date-badge">CHỌN NHIỀU</span></div>
                                     <div class="stats-filter-date-control">
-                                        <input id="afternoonSourceDate" type="date">
-                                        <div id="afternoonAvailableDates" class="stats-filter-date-buttons"></div>
+                                        <div class="multi-date-hint">Bấm từng ngày để chọn/bỏ chọn. Có thể chọn 2–3 ngày cùng lúc.</div>
+                                        <div id="afternoonAvailableDates" class="stats-filter-date-buttons multi-select-dates"></div>
                                     </div>
                                 </div>
 
@@ -2937,6 +2937,6 @@
         </div>
     </div>
 
-    <script src="script-v56-5.js?v=565"></script>
+    <script src="script-v56-6.js?v=566"></script>
 </body>
 </html>
