@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style-v56-9.css?v=569">
+    <link rel="stylesheet" href="style-v57.css?v=570">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -209,11 +209,7 @@
 
         <div class="sidebar-section-title">SHOPEE</div>
         <nav class="sidebar-menu">
-            <button class="nav-item active" data-view="overview">
-                <span class="nav-icon">📊</span>
-                <span>Tổng quan</span>
-            </button>
-            <button class="nav-item" data-view="sku-stats">
+            <button class="nav-item active" data-view="sku-stats">
                 <span class="nav-icon">🧮</span>
                 <span>Thống kê SKU</span>
                 <span class="nav-badge" id="navSkuCount">0</span>
@@ -225,7 +221,7 @@
             </button>
         </nav>
 
-        <!-- V56.9: Sidebar chỉ giữ Tổng quan / Thống kê SKU / Thống kê hóa đơn. -->
+        <!-- V57.0: Sidebar chỉ giữ Thống kê SKU / Thống kê hóa đơn. -->
 
         <div class="sidebar-footer">
             <div class="shop-info">
@@ -237,7 +233,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V56.9</span>
+                <span class="v38-sidebar-version">V57.0</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -248,8 +244,8 @@
     <main class="main-content">
         <header class="topbar">
             <div>
-                <h1 id="pageTitle">Tổng quan thống kê Shopee</h1>
-                <p id="pageSubtitle">Thống kê SKU và quy đổi số lượng hàng thực tế cần chuẩn bị</p>
+                <h1 id="pageTitle">Thống kê SKU theo ngày</h1>
+                <p id="pageSubtitle">Chọn năm → chọn ngày → upload file Sáng / Chiều → lọc và quy đổi</p>
             </div>
 
             <div class="topbar-actions">
@@ -270,7 +266,7 @@
         </header>
 
         <!-- ======================== TỔNG QUAN ======================== -->
-        <section id="view-overview" class="view active">
+        <section id="view-overview" class="view">
             <div class="kpi-grid four">
                 <div class="kpi-card">
                     <div class="kpi-top"><span>DÒNG SKU ĐƯỢC TÍNH</span><div class="kpi-icon blue">🧾</div></div>
@@ -433,15 +429,15 @@
         </section>
 
         <!-- ======================== THỐNG KÊ SKU ======================== -->
-        <section id="view-sku-stats" class="view">
+        <section id="view-sku-stats" class="view active">
 
             <!-- ===== MÀN HÌNH 1: LỊCH 12 THÁNG ===== -->
             <div id="statsCalendarScreen" class="stats-screen">
                 <div class="panel stats-dashboard-shell">
                     <div class="stats-dashboard-toolbar">
                         <div>
-                            <h2>Tổng quan thống kê SKU</h2>
-                            <p>Chọn Tháng → Năm để xem lịch ngày, số lượng theo tuần và theo tháng.</p>
+                            <h2>Lịch thống kê SKU</h2>
+                            <p>Chọn Tháng → Năm để xem lịch ngày và mở chi tiết từng ngày.</p>
                         </div>
 
                         <div class="stats-period-controls">
@@ -529,117 +525,6 @@
                     </div>
                 </div>
 
-                <!-- THEO TUẦN -->
-                <div class="panel analytics-section">
-                    <div class="analytics-section-title">
-                        <div>
-                            <h3>Thống kê số lượng theo tuần</h3>
-                            <p id="weeklyStatsSubtitle">Các tuần trong tháng đang chọn.</p>
-                        </div>
-                    </div>
-
-                    <div class="analytics-split">
-                        <div class="analytics-table-card">
-                            <table class="analytics-table">
-                                <thead>
-                                    <tr>
-                                        <th>STT</th>
-                                        <th>Tuần</th>
-                                        <th>Khoảng ngày</th>
-                                        <th>Sáng</th>
-                                        <th>Chiều</th>
-                                        <th>Tổng</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="weeklyStatsBody">
-                                    <tr><td colspan="6" class="empty-table">Chưa có dữ liệu.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="analytics-chart-card">
-                            <div class="analytics-chart-title">
-                                <strong>Biểu đồ theo tuần</strong>
-                                <span>2 cột song song: Sáng / Chiều</span>
-                            </div>
-                            <div id="weeklyStatsChart" class="horizontal-chart"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- THEO THÁNG -->
-                <div class="panel analytics-section">
-                    <div class="analytics-section-title">
-                        <div>
-                            <h3>Thống kê số lượng theo tháng</h3>
-                            <p id="monthlyStatsSubtitle">12 tháng của năm đang chọn.</p>
-                        </div>
-                    </div>
-
-                    <div class="analytics-split">
-                        <div class="analytics-table-card analytics-table-scroll">
-                            <table class="analytics-table">
-                                <thead>
-                                    <tr>
-                                        <th>STT</th>
-                                        <th>Tháng</th>
-                                        <th>Sáng</th>
-                                        <th>Chiều</th>
-                                        <th>Tổng</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="monthlyStatsBody">
-                                    <tr><td colspan="5" class="empty-table">Chưa có dữ liệu.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="analytics-chart-card">
-                            <div class="analytics-chart-title">
-                                <strong>Biểu đồ 12 tháng</strong>
-                                <span id="monthlyChartYearLabel">2 cột Sáng / Chiều · Năm 2026</span>
-                            </div>
-                            <div id="monthlyStatsChart" class="horizontal-chart"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- THEO NĂM - V56.5 ẨN THEO YÊU CẦU -->
-                <div class="panel analytics-section yearly-stats-section">
-                    <div class="analytics-section-title">
-                        <div>
-                            <h3>Thống kê số lượng theo năm</h3>
-                            <p>Tổng hợp các năm từ 2026 đến 2035.</p>
-                        </div>
-                    </div>
-
-                    <div class="analytics-split">
-                        <div class="analytics-table-card analytics-table-scroll">
-                            <table class="analytics-table">
-                                <thead>
-                                    <tr>
-                                        <th>STT</th>
-                                        <th>Năm</th>
-                                        <th>Sáng</th>
-                                        <th>Chiều</th>
-                                        <th>Tổng</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="yearlyStatsBody">
-                                    <tr><td colspan="5" class="empty-table">Chưa có dữ liệu.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="analytics-chart-card">
-                            <div class="analytics-chart-title">
-                                <strong>Biểu đồ theo năm</strong>
-                                <span>2 cột Sáng / Chiều · 2026 → 2035</span>
-                            </div>
-                            <div id="yearlyStatsChart" class="horizontal-chart"></div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- ===== MÀN HÌNH 2: CHI TIẾT MỘT NGÀY ===== -->
@@ -2905,6 +2790,6 @@
         </div>
     </div>
 
-    <script src="script-v56-9.js?v=569"></script>
+    <script src="script-v57.js?v=570"></script>
 </body>
 </html>
