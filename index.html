@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style-v57-1.css?v=571">
+    <link rel="stylesheet" href="style-v57-2.css?v=572">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -233,7 +233,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V57.1</span>
+                <span class="v38-sidebar-version">V57.2</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -590,15 +590,15 @@
                     <div class="stats-upload-card cancel-v571">
                         <div class="stats-upload-icon">🚫</div>
                         <div class="stats-upload-info">
-                            <strong>ĐƠN HỦY TỪ FILE CHIỀU</strong>
+                            <strong>ĐƠN NGÀY TRƯỚC BỊ HỦY TRONG FILE CHIỀU</strong>
                             <span id="cancelAutoSummaryV571" class="stats-upload-file-status">Chưa có file chiều để đối chiếu.</span>
-                            <small id="cancelAutoDeductV571" class="cancel-deduct-note-v571">Tự động trừ những đơn đã có trong Buổi sáng.</small>
+                            <small id="cancelAutoDeductV571" class="cancel-deduct-note-v571">File chiều ngày D chỉ lọc đơn đặt ngày D-1 bị Đã hủy, rồi trừ nếu đơn đó đã được tính ở Buổi sáng.</small>
                         </div>
                         <button type="button" id="btnCancelDetailV571" class="btn btn-danger-outline cancel-detail-btn-v571">Xem đơn hủy</button>
                     </div>
                 </div>
 
-                <!-- BỘ LỌC SÁNG / CHIỀU: V57.1 chuyển vào popup để màn hình gọn -->
+                <!-- BỘ LỌC SÁNG / CHIỀU: V57.2 chuyển vào popup để màn hình gọn -->
 
                 <div id="shiftFilterModalV571" class="v50-modal-overlay hidden">
                     <div class="v50-modal v571-filter-modal">
@@ -2814,7 +2814,7 @@
         <div class="v50-modal v571-cancel-modal">
             <div class="v50-modal-header">
                 <div>
-                    <h3>🚫 Đơn hủy phát hiện từ file BUỔI CHIỀU</h3>
+                    <h3>🚫 Đơn ngày trước bị hủy trong file BUỔI CHIỀU</h3>
                     <p id="cancelDetailSummaryV571">Chưa có dữ liệu.</p>
                 </div>
                 <button type="button" id="btnCloseCancelDetailV571" class="v50-modal-close">×</button>
@@ -2843,6 +2843,6 @@
         </div>
     </div>
 
-    <script src="script-v57-1.js?v=571"></script>
+    <script src="script-v57-2.js?v=572"></script>
 </body>
 </html>
