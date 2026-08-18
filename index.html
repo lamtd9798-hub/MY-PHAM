@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style-v57.css?v=570">
+    <link rel="stylesheet" href="style-v57-1.css?v=571">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -233,7 +233,7 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V57.0</span>
+                <span class="v38-sidebar-version">V57.1</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
                     Đang kiểm tra
                 </span>
@@ -556,17 +556,20 @@
                 </div>
 
                 <!-- UPLOAD NGAY TRONG THỐNG KÊ -->
-                <div class="stats-upload-grid">
+                <div class="stats-upload-grid v571-upload-grid">
                     <div class="stats-upload-card morning">
                         <div class="stats-upload-icon">🌤️</div>
                         <div class="stats-upload-info">
                             <strong>File BUỔI SÁNG</strong>
                             <span id="morningFileStatus" class="stats-upload-file-status">Chưa upload file sáng.</span>
                         </div>
-                        <label class="upload-button primary">
-                            Upload SÁNG
-                            <input type="file" id="morningFile" accept=".xlsx,.xls,.csv">
-                        </label>
+                        <div class="stats-upload-actions-v571">
+                            <button type="button" class="btn btn-light stats-filter-mini-v571" data-open-shift-filter-v571="morning">⚙ Lọc</button>
+                            <label class="upload-button primary">
+                                Upload SÁNG
+                                <input type="file" id="morningFile" accept=".xlsx,.xls,.csv">
+                            </label>
+                        </div>
                     </div>
 
                     <div class="stats-upload-card afternoon">
@@ -575,30 +578,39 @@
                             <strong>File BUỔI CHIỀU</strong>
                             <span id="afternoonFileStatus" class="stats-upload-file-status">Chưa upload file chiều.</span>
                         </div>
-                        <label class="upload-button primary">
-                            Upload CHIỀU
-                            <input type="file" id="afternoonFile" accept=".xlsx,.xls,.csv">
-                        </label>
-                    </div>
-                </div>
-
-                <div class="sku-top-grid">
-                    <div class="mini-kpi accent"><span>SL SKU BUỔI SÁNG</span><strong id="skuMorningCount">0</strong></div>
-                    <div class="mini-kpi"><span>SL SKU BUỔI CHIỀU</span><strong id="skuAfternoonCount">0</strong></div>
-                    <div class="mini-kpi"><span>TỔNG SKU</span><strong id="skuTotalCount">0</strong></div>
-                    <div class="mini-kpi total"><span>TỔNG SP SAU QUY ĐỔI</span><strong id="skuConvertedTotal">0</strong></div>
-                </div>
-
-                <!-- BỘ LỌC SÁNG / CHIỀU -->
-                <div class="panel">
-                    <div class="panel-header">
-                        <div>
-                            <h2>Bộ lọc thống kê của ngày</h2>
-                            <p>File được lưu toàn bộ. Có thể chọn 1, 2 hoặc nhiều ngày đơn cùng lúc; bảng sẽ cộng chung các ngày đã chọn.</p>
+                        <div class="stats-upload-actions-v571">
+                            <button type="button" class="btn btn-light stats-filter-mini-v571" data-open-shift-filter-v571="afternoon">⚙ Lọc</button>
+                            <label class="upload-button primary">
+                                Upload CHIỀU
+                                <input type="file" id="afternoonFile" accept=".xlsx,.xls,.csv">
+                            </label>
                         </div>
                     </div>
 
-                    <div class="stats-shift-filter-grid">
+                    <div class="stats-upload-card cancel-v571">
+                        <div class="stats-upload-icon">🚫</div>
+                        <div class="stats-upload-info">
+                            <strong>ĐƠN HỦY TỪ FILE CHIỀU</strong>
+                            <span id="cancelAutoSummaryV571" class="stats-upload-file-status">Chưa có file chiều để đối chiếu.</span>
+                            <small id="cancelAutoDeductV571" class="cancel-deduct-note-v571">Tự động trừ những đơn đã có trong Buổi sáng.</small>
+                        </div>
+                        <button type="button" id="btnCancelDetailV571" class="btn btn-danger-outline cancel-detail-btn-v571">Xem đơn hủy</button>
+                    </div>
+                </div>
+
+                <!-- BỘ LỌC SÁNG / CHIỀU: V57.1 chuyển vào popup để màn hình gọn -->
+
+                <div id="shiftFilterModalV571" class="v50-modal-overlay hidden">
+                    <div class="v50-modal v571-filter-modal">
+                        <div class="v50-modal-header">
+                            <div>
+                                <h3>⚙ Lọc ngày & trạng thái</h3>
+                                <p>Chức năng lọc vẫn giữ nguyên, nhưng được đưa vào popup để màn hình chính gọn hơn.</p>
+                            </div>
+                            <button type="button" id="btnCloseShiftFilterV571" class="v50-modal-close">×</button>
+                        </div>
+                        <div class="v571-filter-modal-body">
+<div class="stats-shift-filter-grid">
                         <div class="stats-shift-filter-card morning">
                             <div class="stats-shift-filter-header">
                                 <strong>🌤️ BUỔI SÁNG</strong>
@@ -663,6 +675,11 @@
                             </div>
                         </div>
                     </div>
+                        </div>
+                        <div class="v50-modal-footer">
+                            <button type="button" id="btnDoneShiftFilterV571" class="btn primary">✓ Xong</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- BẢNG SKU -->
@@ -708,6 +725,7 @@
                                     <col class="col-sku">
                                     <col class="col-shift">
                                     <col class="col-shift">
+                                    <col class="col-shift">
                                     <col class="col-total">
                                 </colgroup>
                                 <thead>
@@ -716,11 +734,12 @@
                                         <th>SKU kho / SKU quy đổi</th>
                                         <th class="center">Buổi sáng</th>
                                         <th class="center">Buổi chiều</th>
+                                        <th class="center cancel-head-v571">Hủy (-)</th>
                                         <th class="center">TỔNG</th>
                                     </tr>
                                 </thead>
                                 <tbody id="convertedTotalsBody">
-                                    <tr><td colspan="5" class="empty-table">Chưa có dữ liệu</td></tr>
+                                    <tr><td colspan="6" class="empty-table">Chưa có dữ liệu</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -2790,6 +2809,40 @@
         </div>
     </div>
 
-    <script src="script-v57.js?v=570"></script>
+
+    <div id="cancelDetailModalV571" class="v50-modal-overlay hidden">
+        <div class="v50-modal v571-cancel-modal">
+            <div class="v50-modal-header">
+                <div>
+                    <h3>🚫 Đơn hủy phát hiện từ file BUỔI CHIỀU</h3>
+                    <p id="cancelDetailSummaryV571">Chưa có dữ liệu.</p>
+                </div>
+                <button type="button" id="btnCloseCancelDetailV571" class="v50-modal-close">×</button>
+            </div>
+            <div class="v571-cancel-table-wrap">
+                <table class="v571-cancel-table">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Mã đơn</th>
+                            <th>Ngày đơn</th>
+                            <th>SKU</th>
+                            <th>Tên sản phẩm</th>
+                            <th class="center">SL trừ</th>
+                            <th>Trạng thái file chiều</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cancelDetailBodyV571">
+                        <tr><td colspan="7" class="empty-table">Chưa có đơn hủy cần trừ.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="v50-modal-footer">
+                <button type="button" id="btnDoneCancelDetailV571" class="btn primary">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script-v57-1.js?v=571"></script>
 </body>
 </html>
