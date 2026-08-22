@@ -1,0 +1,28 @@
+RUCOS V57.4 - DÙNG CHUNG SUPABASE
+=================================
+
+Project dùng chung:
+lamtd9798-hub's Project
+
+BƯỚC 1 - SUPABASE
+1. Mở project lamtd9798-hub's Project.
+2. SQL Editor -> New query.
+3. Mở file 1_CHAY_SQL_MY_PHAM.sql, copy toàn bộ, dán vào SQL Editor.
+4. Bấm Run.
+5. Dòng kết quả cuối phải có v57_4_shared_project = true và các mục mypham_* = true.
+
+BƯỚC 2 - GITHUB
+Upload/thay 3 file sau vào thư mục gốc repo MY-PHAM:
+- index.html
+- style-v57-4.css
+- script-v57-4.js
+
+BƯỚC 3
+Commit changes -> chờ GitHub Pages cập nhật -> Ctrl + F5.
+Góc trái dưới phải hiện V57.4.
+
+LƯU Ý
+- Không cần tạo tài khoản Supabase Authentication.
+- Không xóa/chỉnh các bảng khác trong project hiện tại.
+- Dữ liệu RUCOS dùng bảng có tiền tố mypham_.
+- Dữ liệu project MY-PHAM cũ đã xóa không tự quay lại. Cần upload lại các file Shopee và hóa đơn đang giữ.

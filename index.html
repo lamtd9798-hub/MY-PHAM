@@ -9,46 +9,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style-v57-2.css?v=572">
+    <link rel="stylesheet" href="style-v57-4.css?v=574">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-
-<div id="authGate" class="auth-gate">
-    <form id="authForm" class="auth-card" autocomplete="on">
-        <div class="auth-logo">
-            <div class="auth-logo-icon">R</div>
-            <div>
-                <div class="auth-logo-title">RUCOS</div>
-                <div class="auth-logo-sub">SHOPEE CLOUD</div>
-            </div>
-        </div>
-
-        <h2>Đăng nhập hệ thống</h2>
-        <p>Dữ liệu Shopee và bảng quy đổi được lưu trên Supabase Cloud để các máy dùng chung.</p>
-
-        <div class="auth-field">
-            <label>EMAIL</label>
-            <input id="loginEmail" type="email" autocomplete="username" required placeholder="email@congty.com">
-        </div>
-
-        <div class="auth-field">
-            <label>MẬT KHẨU</label>
-            <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••">
-        </div>
-
-        <button id="btnLogin" class="auth-submit" type="submit">ĐĂNG NHẬP</button>
-        <div id="authError" class="auth-error"></div>
-
-        <div class="auth-help">
-            Tài khoản được tạo trong Supabase → Authentication → Users.
-            Không dùng Secret key/service_role trên trang web.
-        </div>
-    </form>
-</div>
-
 
 <!-- ======================== V20 - XÓA DỮ LIỆU CÓ XÁC THỰC ADMIN ======================== -->
 <div id="adminDeleteModal" class="admin-delete-overlay hidden">
@@ -233,9 +199,9 @@
             </div>
 
             <div class="v38-sidebar-system">
-                <span class="v38-sidebar-version">V57.2</span>
+                <span class="v38-sidebar-version">V57.4</span>
                 <span id="v38SidebarHealth" class="v38-sidebar-health checking">
-                    Đang kiểm tra
+                    Cloud dùng chung
                 </span>
             </div>
         </div>
@@ -253,16 +219,9 @@
                     <span class="file-dot"></span>
                     <span id="topFileText">Chưa có dữ liệu Shopee</span>
                 </div>
-                <div class="cloud-user v40-cloud-user" title="Tài khoản đang đăng nhập">
-                    <span class="cloud-user-dot"></span>
-                    <span class="cloud-user-email" id="cloudUserEmail">-</span>
-                    <span id="cloudUserRole" class="v40-role-badge role-loading">ĐANG TẢI QUYỀN</span>
-                </div>
-                <button class="btn btn-light v40-admin-only hidden" id="btnManageRoles">👥 Phân quyền</button>
-                <button class="btn btn-light" id="btnGoImport">Nhập file Shopee</button>
-                <button class="btn btn-danger-outline" id="btnReset">Xóa dữ liệu cloud</button>
-                <button class="btn-logout" id="btnLogout">Đăng xuất</button>
-            </div>
+                <div class="public-no-login-badge" title="Chế độ dùng chung không cần tài khoản">🌐 Dùng chung · Không đăng nhập</div>
+<button class="btn btn-light" id="btnGoImport">Nhập file Shopee</button>
+</div>
         </header>
 
         <!-- ======================== TỔNG QUAN ======================== -->
@@ -2843,6 +2802,6 @@
         </div>
     </div>
 
-    <script src="script-v57-2.js?v=572"></script>
+    <script src="script-v57-4.js?v=574"></script>
 </body>
 </html>

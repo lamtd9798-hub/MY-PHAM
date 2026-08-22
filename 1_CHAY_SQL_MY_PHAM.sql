@@ -1,0 +1,525 @@
+-- ============================================================================
+-- RUCOS / MY-PHAM V57.4 - DÙNG CHUNG PROJECT "lamtd9798-hub's Project"
+-- Chạy TOÀN BỘ file này 1 lần trong Supabase -> SQL Editor -> New query -> Run
+--
+-- Mục tiêu:
+--   - Không cần tạo project Supabase thứ 3.
+--   - Không cần đăng nhập RUCOS.
+--   - Tất cả bảng của RUCOS có tiền tố mypham_ để KHÔNG đụng dữ liệu app khác.
+--
+-- LƯU Ý BẢO MẬT:
+--   Web GitHub Pages là public. Vì RUCOS đang ở chế độ KHÔNG ĐĂNG NHẬP,
+--   ai biết URL web có thể đọc/upload dữ liệu theo các quyền bên dưới.
+-- ============================================================================
+
+begin;
+
+create extension if not exists pgcrypto;
+grant usage on schema public to anon, authenticated;
+
+-- ============================================================================
+-- 1. SHOPEE - DÒNG ĐƠN HÀNG
+-- ============================================================================
+create table if not exists public.mypham_shopee_rows (
+    row_key text primary key,
+    order_date date,
+    report_date date,
+    import_slot text,
+    order_id text,
+    status text,
+    sku text not null default '',
+    product text,
+    quantity numeric not null default 0,
+    source_file text,
+    updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_mypham_shopee_rows_order_date
+    on public.mypham_shopee_rows(order_date);
+create index if not exists idx_mypham_shopee_rows_report_date
+    on public.mypham_shopee_rows(report_date);
+create index if not exists idx_mypham_shopee_rows_report_slot
+    on public.mypham_shopee_rows(report_date, import_slot);
+create index if not exists idx_mypham_shopee_rows_order_id
+    on public.mypham_shopee_rows(order_id);
+create index if not exists idx_mypham_shopee_rows_sku
+    on public.mypham_shopee_rows(sku);
+
+-- ============================================================================
+-- 2. LỊCH SỬ FILE SÁNG / CHIỀU + CẤU HÌNH LỌC NHIỀU NGÀY
+-- ============================================================================
+create table if not exists public.mypham_imports (
+    file_hash text primary key,
+    file_name text not null default '',
+    file_size bigint,
+    imported_at timestamptz not null default now(),
+    row_count integer not null default 0,
+    added integer not null default 0,
+    updated integer not null default 0,
+    unchanged integer not null default 0,
+    dates date[] not null default '{}',
+    report_date date,
+    import_slot text,
+    source_date date,
+    selected_statuses text[] not null default '{}',
+    saved_all_rows boolean not null default false
+);
+
+create index if not exists idx_mypham_imports_report_slot
+    on public.mypham_imports(report_date, import_slot);
+create index if not exists idx_mypham_imports_imported_at
+    on public.mypham_imports(imported_at desc);
+
+-- ============================================================================
+-- 3. QUY ĐỔI SKU
+-- ============================================================================
+create table if not exists public.mypham_conversion_targets (
+    target_sku text primary key,
+    sort_order integer not null default 0,
+    updated_at timestamptz not null default now()
+);
+
+create table if not exists public.mypham_conversion_rules (
+    source_sku text not null,
+    target_sku text not null,
+    factor numeric not null default 0,
+    updated_at timestamptz not null default now(),
+    primary key (source_sku, target_sku)
+);
+
+-- ============================================================================
+-- 4. THỐNG KÊ HÓA ĐƠN THEO TÊN HÀNG
+-- ============================================================================
+create table if not exists public.mypham_invoice_imports (
+    id uuid primary key default gen_random_uuid(),
+    file_fingerprint text not null unique,
+    file_name text not null default '',
+    imported_at timestamptz not null default now(),
+    date_from date,
+    date_to date,
+    source_row_count integer not null default 0,
+    issued_line_count integer not null default 0,
+    unissued_line_count integer not null default 0,
+    invoice_count integer not null default 0,
+    order_ref_header text not null default '',
+    order_ref_line_count integer not null default 0,
+    product_count integer not null default 0,
+    total_quantity numeric not null default 0,
+    vat_total numeric not null default 0,
+    payment_total numeric not null default 0,
+    pre_tax_total numeric not null default 0,
+    created_by uuid,
+    created_email text not null default 'PUBLIC-NO-LOGIN',
+    created_at timestamptz not null default now()
+);
+
+create index if not exists idx_mypham_invoice_imports_imported_at
+    on public.mypham_invoice_imports(imported_at desc);
+create index if not exists idx_mypham_invoice_imports_date_range
+    on public.mypham_invoice_imports(date_from, date_to);
+
+create table if not exists public.mypham_invoice_groups (
+    id bigint generated by default as identity primary key,
+    import_id uuid not null references public.mypham_invoice_imports(id) on delete cascade,
+    sort_order integer not null default 0,
+    product_name text not null default '',
+    quantity numeric not null default 0,
+    vat numeric not null default 0,
+    payment numeric not null default 0,
+    pre_tax numeric not null default 0,
+    promo boolean not null default false
+);
+
+create index if not exists idx_mypham_invoice_groups_import
+    on public.mypham_invoice_groups(import_id, sort_order);
+
+create table if not exists public.mypham_invoice_lines (
+    id bigint generated by default as identity primary key,
+    import_id uuid not null references public.mypham_invoice_imports(id) on delete cascade,
+    sort_order integer not null default 0,
+    invoice_no text not null default '',
+    invoice_date date,
+    product_code text not null default '',
+    product_name text not null default '',
+    quantity numeric not null default 0,
+    vat numeric not null default 0,
+    payment numeric not null default 0,
+    pre_tax numeric not null default 0,
+    promo boolean not null default false,
+    promo_flag text not null default '',
+    tax_status text not null default '',
+    invoice_status text not null default '',
+    issued boolean not null default true,
+    order_ref text not null default '',
+    order_ref_source text not null default ''
+);
+
+create index if not exists idx_mypham_invoice_lines_import
+    on public.mypham_invoice_lines(import_id, sort_order);
+create index if not exists idx_mypham_invoice_lines_invoice_no
+    on public.mypham_invoice_lines(invoice_no);
+create index if not exists idx_mypham_invoice_lines_invoice_date
+    on public.mypham_invoice_lines(invoice_date);
+create index if not exists idx_mypham_invoice_lines_product_code
+    on public.mypham_invoice_lines(product_code);
+create index if not exists idx_mypham_invoice_lines_order_ref
+    on public.mypham_invoice_lines(order_ref);
+
+-- ============================================================================
+-- 5. RLS - PUBLIC MODE KHÔNG ĐĂNG NHẬP
+-- ============================================================================
+alter table public.mypham_shopee_rows enable row level security;
+alter table public.mypham_imports enable row level security;
+alter table public.mypham_conversion_targets enable row level security;
+alter table public.mypham_conversion_rules enable row level security;
+alter table public.mypham_invoice_imports enable row level security;
+alter table public.mypham_invoice_groups enable row level security;
+alter table public.mypham_invoice_lines enable row level security;
+
+-- Shopee: web cần đọc + ghi + thay file cùng ca/ngày.
+grant select, insert, update, delete on public.mypham_shopee_rows to anon, authenticated;
+grant select, insert, update, delete on public.mypham_imports to anon, authenticated;
+
+-- Quy đổi: web cần thêm/sửa/xóa trực tiếp.
+grant select, insert, update, delete on public.mypham_conversion_targets to anon, authenticated;
+grant select, insert, update, delete on public.mypham_conversion_rules to anon, authenticated;
+
+-- Hóa đơn: đọc trực tiếp, ghi qua RPC an toàn theo transaction.
+grant select on public.mypham_invoice_imports to anon, authenticated;
+grant select on public.mypham_invoice_groups to anon, authenticated;
+grant select on public.mypham_invoice_lines to anon, authenticated;
+
+-- Xóa policy V57.4 cũ nếu chạy lại SQL.
+drop policy if exists mypham_shopee_rows_public_all on public.mypham_shopee_rows;
+create policy mypham_shopee_rows_public_all
+on public.mypham_shopee_rows for all to anon
+using (true) with check (true);
+
+drop policy if exists mypham_imports_public_all on public.mypham_imports;
+create policy mypham_imports_public_all
+on public.mypham_imports for all to anon
+using (true) with check (true);
+
+drop policy if exists mypham_conversion_targets_public_all on public.mypham_conversion_targets;
+create policy mypham_conversion_targets_public_all
+on public.mypham_conversion_targets for all to anon
+using (true) with check (true);
+
+drop policy if exists mypham_conversion_rules_public_all on public.mypham_conversion_rules;
+create policy mypham_conversion_rules_public_all
+on public.mypham_conversion_rules for all to anon
+using (true) with check (true);
+
+drop policy if exists mypham_invoice_imports_public_select on public.mypham_invoice_imports;
+create policy mypham_invoice_imports_public_select
+on public.mypham_invoice_imports for select to anon
+using (true);
+
+drop policy if exists mypham_invoice_groups_public_select on public.mypham_invoice_groups;
+create policy mypham_invoice_groups_public_select
+on public.mypham_invoice_groups for select to anon
+using (true);
+
+drop policy if exists mypham_invoice_lines_public_select on public.mypham_invoice_lines;
+create policy mypham_invoice_lines_public_select
+on public.mypham_invoice_lines for select to anon
+using (true);
+
+-- Tạo policy tương tự cho authenticated để nếu sau này bật login lại vẫn dùng được.
+drop policy if exists mypham_shopee_rows_auth_all on public.mypham_shopee_rows;
+create policy mypham_shopee_rows_auth_all
+on public.mypham_shopee_rows for all to authenticated
+using (true) with check (true);
+
+drop policy if exists mypham_imports_auth_all on public.mypham_imports;
+create policy mypham_imports_auth_all
+on public.mypham_imports for all to authenticated
+using (true) with check (true);
+
+drop policy if exists mypham_conversion_targets_auth_all on public.mypham_conversion_targets;
+create policy mypham_conversion_targets_auth_all
+on public.mypham_conversion_targets for all to authenticated
+using (true) with check (true);
+
+drop policy if exists mypham_conversion_rules_auth_all on public.mypham_conversion_rules;
+create policy mypham_conversion_rules_auth_all
+on public.mypham_conversion_rules for all to authenticated
+using (true) with check (true);
+
+drop policy if exists mypham_invoice_imports_auth_select on public.mypham_invoice_imports;
+create policy mypham_invoice_imports_auth_select
+on public.mypham_invoice_imports for select to authenticated
+using (true);
+
+drop policy if exists mypham_invoice_groups_auth_select on public.mypham_invoice_groups;
+create policy mypham_invoice_groups_auth_select
+on public.mypham_invoice_groups for select to authenticated
+using (true);
+
+drop policy if exists mypham_invoice_lines_auth_select on public.mypham_invoice_lines;
+create policy mypham_invoice_lines_auth_select
+on public.mypham_invoice_lines for select to authenticated
+using (true);
+
+-- ============================================================================
+-- 6. RPC UPLOAD SHOPEE: THAY ĐÚNG NGÀY BÁO CÁO + CA
+-- ============================================================================
+create or replace function public.mypham_replace_shift_data(
+    p_report_date date,
+    p_slot text,
+    p_rows jsonb,
+    p_import jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    if p_slot not in ('morning', 'afternoon') then
+        raise exception 'INVALID_SLOT';
+    end if;
+
+    if p_report_date is null then
+        raise exception 'REPORT_DATE_REQUIRED';
+    end if;
+
+    if p_rows is null
+       or jsonb_typeof(p_rows) <> 'array'
+       or jsonb_array_length(p_rows) = 0 then
+        raise exception 'EMPTY_UPLOAD_NOT_ALLOWED';
+    end if;
+
+    delete from public.mypham_shopee_rows
+    where report_date = p_report_date
+      and import_slot = p_slot;
+
+    delete from public.mypham_imports
+    where report_date = p_report_date
+      and import_slot = p_slot;
+
+    insert into public.mypham_shopee_rows (
+        row_key, order_date, report_date, import_slot, order_id,
+        status, sku, product, quantity, source_file, updated_at
+    )
+    select
+        x.row_key,
+        x.order_date,
+        coalesce(x.report_date, p_report_date),
+        coalesce(nullif(x.import_slot, ''), p_slot),
+        x.order_id,
+        x.status,
+        coalesce(x.sku, ''),
+        x.product,
+        coalesce(x.quantity, 0),
+        x.source_file,
+        coalesce(x.updated_at, now())
+    from jsonb_to_recordset(p_rows) as x(
+        row_key text,
+        order_date date,
+        report_date date,
+        import_slot text,
+        order_id text,
+        status text,
+        sku text,
+        product text,
+        quantity numeric,
+        source_file text,
+        updated_at timestamptz
+    )
+    on conflict (row_key)
+    do update set
+        order_date = excluded.order_date,
+        report_date = excluded.report_date,
+        import_slot = excluded.import_slot,
+        order_id = excluded.order_id,
+        status = excluded.status,
+        sku = excluded.sku,
+        product = excluded.product,
+        quantity = excluded.quantity,
+        source_file = excluded.source_file,
+        updated_at = excluded.updated_at;
+
+    insert into public.mypham_imports (
+        file_hash, file_name, file_size, imported_at,
+        row_count, added, updated, unchanged, dates,
+        report_date, import_slot, source_date,
+        selected_statuses, saved_all_rows
+    )
+    values (
+        p_import->>'file_hash',
+        coalesce(p_import->>'file_name', ''),
+        nullif(p_import->>'file_size', '')::bigint,
+        coalesce(nullif(p_import->>'imported_at', '')::timestamptz, now()),
+        coalesce(nullif(p_import->>'row_count', '')::integer, 0),
+        coalesce(nullif(p_import->>'added', '')::integer, 0),
+        coalesce(nullif(p_import->>'updated', '')::integer, 0),
+        coalesce(nullif(p_import->>'unchanged', '')::integer, 0),
+        array(
+            select value::date
+            from jsonb_array_elements_text(coalesce(p_import->'dates', '[]'::jsonb)) t(value)
+        ),
+        p_report_date,
+        p_slot,
+        nullif(p_import->>'source_date', '')::date,
+        array(
+            select value
+            from jsonb_array_elements_text(coalesce(p_import->'selected_statuses', '[]'::jsonb)) t(value)
+        ),
+        coalesce((p_import->>'saved_all_rows')::boolean, false)
+    )
+    on conflict (file_hash)
+    do update set
+        file_name = excluded.file_name,
+        file_size = excluded.file_size,
+        imported_at = excluded.imported_at,
+        row_count = excluded.row_count,
+        added = excluded.added,
+        updated = excluded.updated,
+        unchanged = excluded.unchanged,
+        dates = excluded.dates,
+        report_date = excluded.report_date,
+        import_slot = excluded.import_slot,
+        source_date = excluded.source_date,
+        selected_statuses = excluded.selected_statuses,
+        saved_all_rows = excluded.saved_all_rows;
+end;
+$$;
+
+revoke all on function public.mypham_replace_shift_data(date,text,jsonb,jsonb) from public;
+grant execute on function public.mypham_replace_shift_data(date,text,jsonb,jsonb) to anon, authenticated;
+
+-- ============================================================================
+-- 7. RPC LƯU THỐNG KÊ HÓA ĐƠN
+-- ============================================================================
+create or replace function public.mypham_save_invoice_history(
+    p_import jsonb,
+    p_groups jsonb default '[]'::jsonb,
+    p_lines jsonb default '[]'::jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_id uuid;
+    v_fingerprint text;
+begin
+    v_fingerprint := nullif(trim(p_import ->> 'fileFingerprint'), '');
+
+    if v_fingerprint is null then
+        raise exception 'Missing file fingerprint';
+    end if;
+
+    select id into v_id
+    from public.mypham_invoice_imports
+    where file_fingerprint = v_fingerprint
+    limit 1;
+
+    if v_id is not null then
+        return jsonb_build_object('id', v_id, 'duplicate', true);
+    end if;
+
+    insert into public.mypham_invoice_imports (
+        file_fingerprint, file_name, imported_at, date_from, date_to,
+        source_row_count, issued_line_count, unissued_line_count,
+        invoice_count, order_ref_header, order_ref_line_count,
+        product_count, total_quantity, vat_total, payment_total,
+        pre_tax_total, created_by, created_email
+    )
+    values (
+        v_fingerprint,
+        coalesce(p_import ->> 'fileName', ''),
+        coalesce(nullif(p_import ->> 'importedAt', '')::timestamptz, now()),
+        nullif(p_import ->> 'dateFrom', '')::date,
+        nullif(p_import ->> 'dateTo', '')::date,
+        coalesce((p_import ->> 'sourceRowCount')::integer, 0),
+        coalesce((p_import ->> 'issuedLineCount')::integer, 0),
+        coalesce((p_import ->> 'unissuedLineCount')::integer, 0),
+        coalesce((p_import ->> 'invoiceCount')::integer, 0),
+        coalesce(p_import ->> 'orderRefHeader', ''),
+        coalesce((p_import ->> 'orderRefLineCount')::integer, 0),
+        coalesce((p_import ->> 'productCount')::integer, 0),
+        coalesce((p_import ->> 'totalQuantity')::numeric, 0),
+        coalesce((p_import ->> 'vatTotal')::numeric, 0),
+        coalesce((p_import ->> 'paymentTotal')::numeric, 0),
+        coalesce((p_import ->> 'preTaxTotal')::numeric, 0),
+        null,
+        'PUBLIC-NO-LOGIN'
+    )
+    returning id into v_id;
+
+    insert into public.mypham_invoice_groups (
+        import_id, sort_order, product_name, quantity, vat, payment, pre_tax, promo
+    )
+    select
+        v_id,
+        coalesce((x.elem ->> 'sortOrder')::integer, x.ordinality::integer),
+        coalesce(x.elem ->> 'productName', ''),
+        coalesce((x.elem ->> 'quantity')::numeric, 0),
+        coalesce((x.elem ->> 'vat')::numeric, 0),
+        coalesce((x.elem ->> 'payment')::numeric, 0),
+        coalesce((x.elem ->> 'preTax')::numeric, 0),
+        coalesce((x.elem ->> 'promo')::boolean, false)
+    from jsonb_array_elements(coalesce(p_groups, '[]'::jsonb))
+         with ordinality as x(elem, ordinality);
+
+    insert into public.mypham_invoice_lines (
+        import_id, sort_order, invoice_no, invoice_date, product_code,
+        product_name, quantity, vat, payment, pre_tax, promo,
+        promo_flag, tax_status, invoice_status, issued,
+        order_ref, order_ref_source
+    )
+    select
+        v_id,
+        coalesce((x.elem ->> 'sortOrder')::integer, x.ordinality::integer),
+        coalesce(x.elem ->> 'invoiceNo', ''),
+        nullif(x.elem ->> 'invoiceDate', '')::date,
+        coalesce(x.elem ->> 'productCode', ''),
+        coalesce(x.elem ->> 'productName', ''),
+        coalesce((x.elem ->> 'quantity')::numeric, 0),
+        coalesce((x.elem ->> 'vat')::numeric, 0),
+        coalesce((x.elem ->> 'payment')::numeric, 0),
+        coalesce((x.elem ->> 'preTax')::numeric, 0),
+        coalesce((x.elem ->> 'promo')::boolean, false),
+        coalesce(x.elem ->> 'promoFlag', ''),
+        coalesce(x.elem ->> 'taxStatus', ''),
+        coalesce(x.elem ->> 'invoiceStatus', ''),
+        coalesce((x.elem ->> 'issued')::boolean, true),
+        coalesce(x.elem ->> 'orderRef', ''),
+        coalesce(x.elem ->> 'orderRefSource', '')
+    from jsonb_array_elements(coalesce(p_lines, '[]'::jsonb))
+         with ordinality as x(elem, ordinality);
+
+    return jsonb_build_object('id', v_id, 'duplicate', false);
+end;
+$$;
+
+revoke all on function public.mypham_save_invoice_history(jsonb,jsonb,jsonb) from public;
+grant execute on function public.mypham_save_invoice_history(jsonb,jsonb,jsonb) to anon, authenticated;
+
+commit;
+
+-- ============================================================================
+-- 8. KIỂM TRA SAU KHI RUN
+-- Kết quả phải trả về các mục = true.
+-- ============================================================================
+select jsonb_build_object(
+    'v57_4_shared_project', true,
+    'mypham_shopee_rows', to_regclass('public.mypham_shopee_rows') is not null,
+    'mypham_imports', to_regclass('public.mypham_imports') is not null,
+    'mypham_conversion_targets', to_regclass('public.mypham_conversion_targets') is not null,
+    'mypham_conversion_rules', to_regclass('public.mypham_conversion_rules') is not null,
+    'mypham_invoice_imports', to_regclass('public.mypham_invoice_imports') is not null,
+    'mypham_invoice_groups', to_regclass('public.mypham_invoice_groups') is not null,
+    'mypham_invoice_lines', to_regclass('public.mypham_invoice_lines') is not null,
+    'mypham_replace_shift_data', exists(
+        select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname = 'public' and p.proname = 'mypham_replace_shift_data'
+    ),
+    'mypham_save_invoice_history', exists(
+        select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname = 'public' and p.proname = 'mypham_save_invoice_history'
+    )
+) as rucos_v57_4;
